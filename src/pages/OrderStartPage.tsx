@@ -2,29 +2,23 @@ import { useOrder } from '../context/OrderContext'
 import Icon from '../components/Icon'
 
 export default function OrderStartPage() {
-  const { go, setData, INITIAL, setFiles, emptyFiles, setSuggestions, setTouched, setAiErrors } =
-    useOrder()
+  const { go, startDraft, resumeDraft, session, busy, config } = useOrder()
   return (
     <main key="start" className="start-content page-transition">
       <p className="eyebrow">주문 시작하기</p>
       <h1>어떻게 시작할까요?</h1>
+      {session && (
+        <button className="button secondary" disabled={busy} onClick={resumeDraft}>
+          이 브라우저의 주문서 이어서 보기
+        </button>
+      )}
       <div className="start-cards">
         <article>
           <span className="start-icon">
             <Icon name="plus" />
           </span>
           <h2>처음 작성하시나요?</h2>
-          <button
-            className="button primary"
-            onClick={() => {
-              setTouched({})
-              setAiErrors({})
-              setData({ ...INITIAL })
-              setFiles(emptyFiles())
-              setSuggestions({})
-              go('template')
-            }}
-          >
+          <button className="button primary" disabled={busy || !config} onClick={startDraft}>
             주문서 작성하러가기
           </button>
         </article>

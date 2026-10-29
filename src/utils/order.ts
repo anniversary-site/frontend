@@ -11,7 +11,7 @@ export function formatPhone(value: string) {
 
 export function canProceed(page: Page, data: OrderData, earliestDate = '') {
   if (page === 'template')
-    return data.template !== null && (data.occasion !== '기타' || Boolean(data.other.trim()))
+    return data.template >= 0 && (data.occasion !== '기타' || Boolean(data.other.trim()))
   if (page === 'info')
     return Boolean(
       data.name.trim() &&

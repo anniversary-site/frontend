@@ -8,12 +8,13 @@ interface DateRange {
   end: string
 }
 interface CalendarProps {
+  minDateValue?: string
   value: DateRange
   onChange: (value: DateRange) => void
 }
 
-export default function Calendar({ value, onChange }: CalendarProps) {
-  const min = minDate()
+export default function Calendar({ value, onChange, minDateValue }: CalendarProps) {
+  const min = minDateValue ? new Date(`${minDateValue}T00:00:00`) : minDate()
   const [choosingEnd, setChoosingEnd] = useState(false)
   const [month, setMonth] = useState(() => {
     const date = value.start ? new Date(`${value.start}T00:00:00`) : min

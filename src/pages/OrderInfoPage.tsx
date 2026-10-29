@@ -4,8 +4,9 @@ import { formatPhone } from '../utils/order'
 import { periodPrice } from '../utils/period'
 
 export default function OrderInfoPage() {
-  const { data, setData, update, touched, setTouched, setError } = useOrder()
+  const { data, setData, update, touched, setTouched, setError, config } = useOrder()
   const pricing = periodPrice(data.date, data.endDate)
+  if (!config) return <p role="status">주문 설정을 불러오는 중이에요.</p>
   return (
     <>
       <div className="page-heading">
@@ -23,7 +24,7 @@ export default function OrderInfoPage() {
           aria-invalid={(touched.name && !data.name.trim()) || undefined}
           autoComplete="name"
           required
-          maxLength={40}
+          maxLength={50}
         />
         {touched.name && !data.name.trim() && (
           <small className="field-error">이름을 입력해 주세요.</small>
@@ -56,10 +57,9 @@ export default function OrderInfoPage() {
       </label>
       <section className="calendar-section">
         <h2>희망 수령 기간 선택</h2>
-        <p className="description">
-          주문일 기준 7일 이후부터 시작할 수 있어요. 처음 7일은 무료예요.
-        </p>
+        <p className="description">주문일 기준 {config.minLeadDays}일 이후부터 시작할 수 있어요.</p>
         <Calendar
+          minDateValue={config.minUseStartDate}
           value={{ start: data.date, end: data.endDate }}
           onChange={(v) => {
             setData((current) => ({ ...current, date: v.start, endDate: v.end }))

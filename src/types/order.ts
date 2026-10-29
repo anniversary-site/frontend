@@ -1,4 +1,12 @@
 import type { Dispatch, FormEvent, ReactNode, SetStateAction } from 'react'
+import type {
+  DraftMatch,
+  Order,
+  OrderConfig,
+  Session,
+  Template,
+  TemplateDetail,
+} from '../services/API'
 
 export type Page = 'main' | 'start' | 'load' | 'template' | 'info' | 'content' | 'review' | 'done'
 export type Occasion = '연애 기념일' | '생일' | '결혼 기념일' | '기타'
@@ -19,6 +27,9 @@ export interface OrderData {
 }
 
 export interface MediaItem {
+  mediaId?: number
+  documentNo?: number
+  slot?: number
   file: File
   url: string
   text: string
@@ -36,7 +47,7 @@ export type Sheet =
   | { type: 'caption'; kind: MediaKind; index: number }
   | { type: 'guide' }
   | { type: 'save-draft' }
-  | { type: 'position'; target: PreviewTarget }
+  | { type: 'position'; target: PreviewTarget; documentNo?: number }
   | { type: 'preview'; target?: undefined }
 
 export interface SavedDraft {
@@ -66,10 +77,21 @@ export interface OrderContextValue {
   update: <K extends keyof OrderData>(key: K, value: OrderData[K]) => void
   go: (page: Page) => void
   open: (sheet: Sheet) => void
-  load: (phone: string) => Promise<boolean>
+  load: (name: string, phone: string) => Promise<DraftMatch[]>
+  selectDraft: (draft: DraftMatch) => Promise<void>
+  startDraft: () => Promise<void>
+  resumeDraft: () => Promise<void>
+  session: Session | null
+  busy: boolean
+  config: OrderConfig | null
+  templates: Template[]
+  templateDetail: TemplateDetail | null
+  order: Order | null
   setToast: Setter<string>
   setError: Setter<string>
   generate: (key: PhraseField) => void
+  applySuggestion: (key: PhraseField) => Promise<void>
+  reportError: (cause: unknown) => string
   mediaSection: (kind: MediaKind) => ReactNode
   INITIAL: OrderData
   OCCASIONS: readonly Occasion[]

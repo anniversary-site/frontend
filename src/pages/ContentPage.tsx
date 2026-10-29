@@ -3,6 +3,7 @@ import Icon from '../components/Icon'
 
 export default function ContentPage() {
   const {
+    config,
     data,
     update,
     open,
@@ -10,7 +11,7 @@ export default function ContentPage() {
     generating,
     aiErrors,
     suggestions,
-    setSuggestions,
+    applySuggestion,
     mediaSection,
   } = useOrder()
   return (
@@ -53,7 +54,9 @@ export default function ContentPage() {
               placeholder="문구를 입력해 주세요"
               value={data[key]}
               onChange={(e) => update(key, e.target.value)}
-              maxLength={key === 'main' ? 100 : 200}
+              maxLength={
+                key === 'main' ? config?.limits.mainTextMaxLength : config?.limits.subTextMaxLength
+              }
             />
             <button
               className="ai-button"
@@ -83,19 +86,7 @@ export default function ContentPage() {
             <div className="suggestion">
               <span>✦</span>
               <p>{suggestions[key]}</p>
-              <button
-                type="button"
-                onClick={() => {
-                  const suggestion = suggestions[key]
-                  if (!suggestion) return
-                  update(key, suggestion)
-                  setSuggestions((s) => {
-                    const copy = { ...s }
-                    delete copy[key]
-                    return copy
-                  })
-                }}
-              >
+              <button type="button" onClick={() => applySuggestion(key)}>
                 사용하기
               </button>
             </div>
