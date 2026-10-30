@@ -87,3 +87,33 @@
   min-height: 48px;
   border-bottom: 1px solid var(--color-grey-200);
 }
+
+.policy-content .policy-effective {
+  margin: 0 0 32px;
+}
+.policy-description {
+  margin-bottom: 32px;
+}
+.policy-table-scroll {
+  overflow-x: auto;
+  margin: 20px 0;
+}
+.policy-table-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--text-sub);
+  line-height: 1.7;
+  color: var(--color-grey-700);
+}
+.policy-table-scroll th,
+.policy-table-scroll td {
+  border: 1px solid var(--color-grey-200);
+  padding: 12px;
+  text-align: left;
+  vertical-align: top;
+  min-width: 120px;
+}
+.policy-table-scroll th {
+  background: var(--color-grey-100);
+  font-weight: 600;
+}
