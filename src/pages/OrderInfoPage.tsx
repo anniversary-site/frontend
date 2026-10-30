@@ -14,7 +14,13 @@ export default function OrderInfoPage() {
         <p className="description">사이트 제작과 전달에 필요한 정보예요.</p>
       </div>
       <label className="name-field field-label">
-        이름
+        <span>
+          이름
+          <span className="required-mark" aria-label="필수">
+            {' '}
+            *
+          </span>
+        </span>
         <input
           className="text-input"
           placeholder="이름을 입력해 주세요"
@@ -31,7 +37,14 @@ export default function OrderInfoPage() {
         )}
       </label>
       <label className="phone-field field-label">
-        전화번호<small>주문 확정·완료 알림을 받을 번호예요.</small>
+        <span>
+          전화번호
+          <span className="required-mark" aria-label="필수">
+            {' '}
+            *
+          </span>
+        </span>
+        <small>주문 확정·완료 알림을 받을 번호예요.</small>
         <input
           className="text-input"
           placeholder="010-0000-0000"
@@ -56,7 +69,13 @@ export default function OrderInfoPage() {
         )}
       </label>
       <section className="calendar-section">
-        <h2>희망 수령 기간 선택</h2>
+        <h2>
+          희망 수령 기간 선택
+          <span className="required-mark" aria-label="필수">
+            {' '}
+            *
+          </span>
+        </h2>
         <p className="description">주문일 기준 {config.minLeadDays}일 이후부터 시작할 수 있어요.</p>
         <Calendar
           minDateValue={config.minUseStartDate}

@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import type { PointerEvent } from 'react'
 import Icon from './Icon'
 import { dateKey, minDate } from '../utils/order'
-import { addDays, FREE_PERIOD_DAYS } from '../utils/period'
 
 interface DateRange {
   start: string
@@ -16,6 +16,28 @@ interface CalendarProps {
 export default function Calendar({ value, onChange, minDateValue }: CalendarProps) {
   const min = minDateValue ? new Date(`${minDateValue}T00:00:00`) : minDate()
   const [choosingEnd, setChoosingEnd] = useState(false)
+  const drag = useRef<{ pointerId: number; anchor: string; end: string } | null>(null)
+  const [preview, setPreview] = useState<DateRange | null>(null)
+  const selected = preview ?? value
+  const range = (a: string, b: string): DateRange =>
+    a <= b ? { start: a, end: b } : { start: b, end: a }
+  const dateAt = (event: PointerEvent<HTMLDivElement>) => {
+    const button = event.currentTarget.ownerDocument
+      .elementFromPoint(event.clientX, event.clientY)
+      ?.closest<HTMLButtonElement>('button[data-date]')
+    return button && event.currentTarget.contains(button) && !button.disabled
+      ? button.dataset.date
+      : undefined
+  }
+  const move = (event: PointerEvent<HTMLDivElement>) => {
+    const current = drag.current
+    if (!current || current.pointerId !== event.pointerId) return
+    const key = dateAt(event)
+    if (key) {
+      current.end = key
+      setPreview(range(current.anchor, key))
+    }
+  }
   const [month, setMonth] = useState(() => {
     const date = value.start ? new Date(`${value.start}T00:00:00`) : min
     return new Date(date.getFullYear(), date.getMonth(), 1)
@@ -27,7 +49,7 @@ export default function Calendar({ value, onChange, minDateValue }: CalendarProp
   const today = dateKey(new Date())
   const selectDate = (key: string) => {
     if (!choosingEnd || !value.start) {
-      onChange({ start: key, end: addDays(key, FREE_PERIOD_DAYS - 1) })
+      onChange({ start: key, end: key })
       setChoosingEnd(true)
       return
     }
@@ -64,17 +86,42 @@ export default function Calendar({ value, onChange, minDateValue }: CalendarProp
           <span key={day}>{day}</span>
         ))}
       </div>
-      <div className="calendar-days range-calendar">
+      <div
+        className="calendar-days range-calendar"
+        onPointerDown={(event) => {
+          if (!event.isPrimary || event.button !== 0) return
+          const key = dateAt(event)
+          if (!key) return
+          const anchor = key === value.start ? value.end : key === value.end ? value.start : key
+          drag.current = { pointerId: event.pointerId, anchor: anchor || key, end: key }
+          setPreview(range(anchor || key, key))
+          setChoosingEnd(false)
+          event.currentTarget.setPointerCapture(event.pointerId)
+          event.preventDefault()
+        }}
+        onPointerMove={move}
+        onPointerUp={(event) => {
+          move(event)
+          const current = drag.current
+          if (!current || current.pointerId !== event.pointerId) return
+          onChange(range(current.anchor, current.end))
+          drag.current = null
+          setPreview(null)
+          event.currentTarget.releasePointerCapture(event.pointerId)
+        }}
+        onPointerCancel={() => { drag.current = null; setPreview(null) }}
+        onLostPointerCapture={() => { drag.current = null; setPreview(null) }}
+      >
         {Array.from({ length: Math.ceil((leading + count) / 7) * 7 }, (_, index) => {
           const day = index - leading + 1
           if (day < 1 || day > count) return <span className="calendar-empty" key={index} />
           const date = new Date(year, monthIndex, day)
           const key = dateKey(date)
           const inRange = Boolean(
-            value.start && value.end && key >= value.start && key <= value.end,
+            selected.start && selected.end && key >= selected.start && key <= selected.end,
           )
-          const isStart = key === value.start
-          const isEnd = key === value.end
+          const isStart = key === selected.start
+          const isEnd = key === selected.end
           const classes = [
             'calendar-day',
             inRange && 'in-range',
@@ -88,11 +135,12 @@ export default function Calendar({ value, onChange, minDateValue }: CalendarProp
             <div className={classes} key={index}>
               <button
                 type="button"
+                data-date={key}
                 disabled={date < min}
                 aria-label={`${year}년 ${monthIndex + 1}월 ${day}일${isStart ? ', 시작일' : ''}${isEnd ? ', 종료일' : ''}`}
                 aria-pressed={inRange}
                 className={isStart || isEnd ? 'range-endpoint' : ''}
-                onClick={() => selectDate(key)}
+                onClick={(event) => { if (event.detail === 0) selectDate(key) }}
               >
                 <span>{day}</span>
               </button>
@@ -102,8 +150,8 @@ export default function Calendar({ value, onChange, minDateValue }: CalendarProp
       </div>
       <p className="calendar-instruction" aria-live="polite">
         {choosingEnd
-          ? '종료일을 선택해 주세요. 다시 선택하면 기간이 조정돼요.'
-          : '시작일을 고르면 기본 7일이 선택돼요. 두 번째 날짜로 종료일을 정하세요.'}
+          ? '종료일을 선택해 주세요.'
+          : '날짜를 누른 채 드래그해 기간을 선택하세요. 시작일·종료일을 끌어 조정할 수 있어요. 키보드는 두 날짜를 차례로 선택하세요.'}
       </p>
     </div>
   )

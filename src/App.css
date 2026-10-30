@@ -556,7 +556,7 @@ textarea {
   flex: 1;
 }
 .required-mark {
-  color: var(--color-error-text);
+  color: #f97316;
 }
 .ai-input {
   position: relative;
@@ -1416,3 +1416,7 @@ a.logo,
     text-align: left;
   }
 }
+
+.range-calendar { touch-action: none; user-select: none; }
+.range-calendar button { cursor: grab; }
+.range-calendar button:active { cursor: grabbing; }

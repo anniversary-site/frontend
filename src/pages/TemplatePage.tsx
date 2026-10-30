@@ -6,7 +6,13 @@ export default function TemplatePage() {
   return (
     <>
       <section className="template-section">
-        <h1>템플릿 선택</h1>
+        <h1>
+          템플릿 선택
+          <span className="required-mark" aria-label="필수">
+            {' '}
+            *
+          </span>
+        </h1>
         <p className="description">마음을 가장 잘 표현할 디자인을 골라주세요.</p>
         <div className="template-grid" role="group" aria-label="템플릿 선택">
           {templates.map((template) => (
@@ -36,7 +42,13 @@ export default function TemplatePage() {
         </div>
       </section>
       <section className="occasion-section">
-        <h2>기념일 종류 입력</h2>
+        <h2>
+          기념일 종류 입력
+          <span className="required-mark" aria-label="필수">
+            {' '}
+            *
+          </span>
+        </h2>
         <div className="occasion-list" role="group" aria-label="기념일 종류">
           {OCCASIONS.filter((o) => config?.anniversaryTypes.some((type) => type.label === o)).map(
             (o) => (

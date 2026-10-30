@@ -222,7 +222,9 @@ export default function App() {
     mainText: data.main || null,
     subText: data.sub || null,
   })
+  const needsOrderData = page !== 'main'
   useEffect(() => {
+    if (!needsOrderData) return
     let active = true
     Promise.all([api.getOrderConfig(), api.getTemplates()])
       .then(async ([settings, list]) => {
@@ -257,7 +259,7 @@ export default function App() {
     return () => {
       active = false
     }
-  }, [])
+  }, [needsOrderData])
   useEffect(() => {
     if (!initialized) return
     if (['template', 'info', 'content', 'review', 'done'].includes(page) && !sessionRef.current)
@@ -915,7 +917,7 @@ export default function App() {
             )}
           </>
         )}
-        {!initialized ? <p role="status">주문 정보를 불러오는 중이에요.</p> : <AppRoutes />}
+        {!initialized && needsOrderData ? <p role="status">주문 정보를 불러오는 중이에요.</p> : <AppRoutes />}
         {error && (
           <p className="form-error" role="alert">
             {error}
