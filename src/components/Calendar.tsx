@@ -2,6 +2,12 @@ import { useRef, useState } from 'react'
 import type { PointerEvent } from 'react'
 import Icon from './Icon'
 import { dateKey, minDate } from '../utils/order'
+import { addDays } from '../utils/period'
+
+function parseDate(value: string | undefined): Date | null {
+  if (!value || !addDays(value, 0)) return null
+  return new Date(`${value}T00:00:00`)
+}
 
 interface DateRange {
   start: string
@@ -14,7 +20,7 @@ interface CalendarProps {
 }
 
 export default function Calendar({ value, onChange, minDateValue }: CalendarProps) {
-  const min = minDateValue ? new Date(`${minDateValue}T00:00:00`) : minDate()
+  const min = parseDate(minDateValue) ?? minDate()
   const [choosingEnd, setChoosingEnd] = useState(false)
   const drag = useRef<{ pointerId: number; anchor: string; end: string } | null>(null)
   const [preview, setPreview] = useState<DateRange | null>(null)
@@ -39,7 +45,7 @@ export default function Calendar({ value, onChange, minDateValue }: CalendarProp
     }
   }
   const [month, setMonth] = useState(() => {
-    const date = value.start ? new Date(`${value.start}T00:00:00`) : min
+    const date = parseDate(value.start) ?? min
     return new Date(date.getFullYear(), date.getMonth(), 1)
   })
   const year = month.getFullYear()

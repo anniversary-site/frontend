@@ -7,9 +7,9 @@ let sequence = 1024
 const copy = (value) => structuredClone(value)
 const now = () => new Date().toISOString()
 const dateAfter = (days) => {
-  const date = new Date()
+  const date = new Date(Date.now() + 9 * 60 * 60 * 1000)
   date.setUTCDate(date.getUTCDate() + days)
-  return date.toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
+  return date.toISOString().slice(0, 10)
 }
 const bankAccount = { bankName: '국민', accountNumber: '000000000000', accountHolder: 'URLUV' }
 export const mockOrderConfig = {

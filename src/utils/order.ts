@@ -31,7 +31,8 @@ export function mediaDuration(seconds: number) {
 export const dateKey = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 export const minDate = () => {
-  const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
+  const seoulDate = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  const d = new Date(`${seoulDate}T00:00:00`)
   d.setHours(0, 0, 0, 0)
   d.setDate(d.getDate() + 7)
   return d

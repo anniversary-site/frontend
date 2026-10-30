@@ -30,7 +30,7 @@ import type {
   TemplateDetail,
 } from './services/API'
 import { canProceed, mediaDuration, dateKey, minDate, formatPhone } from './utils/order'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { OrderContext } from './context/OrderContext'
 import { PAGE_PATHS, pageFromPath } from './routes/paths'
 import AppRoutes from './routes/AppRoutes'
@@ -260,11 +260,6 @@ export default function App() {
       active = false
     }
   }, [needsOrderData])
-  useEffect(() => {
-    if (!initialized) return
-    if (['template', 'info', 'content', 'review', 'done'].includes(page) && !sessionRef.current)
-      navigateFromEffect('start')
-  }, [page, initialized, session])
   useEffect(() => {
     if (!initialized || page !== 'done' || !session || order) return
     let active = true
@@ -841,6 +836,10 @@ export default function App() {
         </div>
       </section>
     ))
+  // 세션이 없는 직접 접속은 주문 화면을 렌더링하기 전에 시작 화면으로 보냅니다.
+  if (['template', 'info', 'content', 'review', 'done'].includes(page) && !session) {
+    return <Navigate to={PAGE_PATHS.start} replace />
+  }
   return (
     <OrderContext.Provider
       value={{
