@@ -7,8 +7,7 @@ export default function HomePage() {
   return (
     <>
       <main key="main" className="home-content page-transition">
-        <p className="eyebrow">마음을 오래 간직하는 방법</p>
-        <h1>HOOKING 문구</h1>
+        <h1>추억을 새로운 방식으로 기념하는 방법</h1>
         <p className="home-description">
           소중한 날의 사진과 이야기를 하나의 웹사이트로 만들어 드려요.
         </p>
