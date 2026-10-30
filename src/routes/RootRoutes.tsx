@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
-const OrderApp = lazy(() => import('../App'))
+const OrderApp = lazy(() => import('../App.tsx'))
 const AdminRoute = lazy(() => import('../pages/admin/AdminRoute'))
 
 // 관리자 화면은 주문서 Context와 API 초기화에서 분리합니다.
