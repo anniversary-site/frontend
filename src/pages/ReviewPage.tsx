@@ -52,7 +52,8 @@ export default function ReviewPage() {
         <div>
           <span>입금 계좌</span>
           <b>
-            {account.bankName} {account.accountNumber} ({account.accountHolder})
+            {account.bankName} {account.accountNumber}
+            {account.accountHolder && ` (${account.accountHolder})`}
           </b>
           <button
             aria-label="계좌번호 복사"

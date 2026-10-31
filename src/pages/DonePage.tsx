@@ -60,7 +60,7 @@ export default function DonePage() {
           ['결제 금액', `${order.totalPrice.toLocaleString('ko-KR')}원`],
           [
             '입금 계좌',
-            `${order.bankAccount.bankName} ${order.bankAccount.accountNumber} (${order.bankAccount.accountHolder})`,
+            `${order.bankAccount.bankName} ${order.bankAccount.accountNumber}${order.bankAccount.accountHolder ? ` (${order.bankAccount.accountHolder})` : ''}`,
           ],
           ['입금자명', order.depositorName],
           [
