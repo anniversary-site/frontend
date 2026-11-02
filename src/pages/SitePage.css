@@ -1,0 +1,38 @@
+.delivered-site {
+  width: min(760px, calc(100% - 48px));
+  margin: 64px auto;
+  color: var(--color-grey-900);
+}
+.delivered-site form {
+  max-width: 420px;
+  margin: 15vh auto;
+  display: grid;
+  gap: 20px;
+}
+.delivered-site input,
+.delivered-site button {
+  padding: 16px;
+  border: 1px solid var(--color-grey-200);
+  border-radius: 12px;
+}
+.delivered-site button {
+  background: var(--color-primary);
+  color: white;
+}
+.delivered-site section {
+  margin-top: 40px;
+}
+.delivered-site img,
+.delivered-site video {
+  max-width: 100%;
+  border-radius: 16px;
+}
+.delivered-site figure {
+  margin: 24px 0;
+}
+.site-story {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.9;
+  margin-top: 24px;
+}

@@ -1,6 +1,9 @@
 // 페이지 새로고침 시 초기화되는 메모리 목업입니다. 실제 서버 요청은 하지 않습니다.
 const drafts = new Map()
 const tokens = new Map()
+const passwords = new Map()
+const aiCounts = new Map()
+const siteTokens = new Map()
 const orders = new Map()
 const requests = new Map()
 let sequence = 1024
@@ -23,12 +26,13 @@ export const mockOrderConfig = {
     { code: 'ETC', label: '기타' },
   ],
   limits: {
-    mainTextMaxLength: 50,
-    subTextMaxLength: 100,
+    memoryInputMinLength: 20,
+    memoryInputMaxLength: 2000,
+    letterMaxLength: 2000,
     captionMaxLength: 50,
     videoTitleMaxLength: 30,
     photoMaxSizeMb: 10,
-    videoMaxSizeMb: 200,
+    videoMaxSizeMb: 70,
     videoMaxDurationSec: 60,
     photoTypes: ['image/jpeg', 'image/png', 'image/heic'],
     videoTypes: ['video/mp4', 'video/quicktime'],
@@ -53,7 +57,7 @@ function templateDetail(templateId) {
   if (!template) fail(404, 'TEMPLATE_NOT_FOUND', '템플릿을 찾을 수 없어요.')
   return {
     ...template,
-    guides: { mainText: guide, subText: guide },
+    guides: { memoryTitle: guide, memoryStory: guide },
     documents: [
       {
         documentNo: 1,
@@ -90,9 +94,12 @@ function validate(draft, step, code = 'VALIDATION_FAILED') {
     if (!draft.customerName?.trim()) missing('customerName', 2)
     if (!/^01\d{8,9}$/.test(draft.phone ?? '')) missing('phone', 2)
     if (!draft.useStartDate) missing('useStartDate', 2)
+    if (!draft.useEndDate) missing('useEndDate', 2)
   }
   if (step >= 3) {
-    if (!draft.mainText?.trim()) missing('mainText', 3)
+    if (!draft.memoryTitle?.trim() || !draft.memoryStory?.trim()) missing('memoryStory', 3)
+    if (!draft.sitePasswordSet) missing('sitePassword', 3)
+    if (!draft.musics?.length) missing('musics', 3)
     if (!draft.documents[0]?.photos.length) missing('documents.1.photos', 3)
   }
   if (details.length) fail(400, code, '필수 입력 항목을 확인해 주세요.', details)
@@ -102,6 +109,33 @@ function validate(draft, step, code = 'VALIDATION_FAILED') {
 export async function mockRequest(path, { method = 'GET', token, body } = {}) {
   const [pathname, query] = path.split('?')
   const parts = pathname.split('/').filter(Boolean)
+  if (parts[0] === 'sites') {
+    // 독립된 완성 사이트 시연용 주소 /s/demo, 비밀번호 1225.
+    if (parts[1] !== 'demo') fail(404, 'SITE_NOT_FOUND', '사이트를 찾을 수 없어요.')
+    if (parts[2] === 'unlock' && method === 'POST') {
+      if (!body.password) fail(400, 'VALIDATION_FAILED', '비밀번호를 입력해 주세요.')
+      if (body.password !== '1225') fail(401, 'WRONG_SITE_PASSWORD', '비밀번호를 확인해 주세요.')
+      const siteAccessToken = crypto.randomUUID()
+      const expiresAt = new Date(Date.now() + 86400000).toISOString()
+      siteTokens.set(siteAccessToken, { siteKey: parts[1], expiresAt })
+      return { siteAccessToken, expiresAt }
+    }
+    const session = siteTokens.get(token)
+    if (!session || session.siteKey !== parts[1] || Date.parse(session.expiresAt) <= Date.now())
+      fail(401, 'INVALID_SITE_TOKEN', '비밀번호를 다시 입력해 주세요.')
+    return {
+      templateId: 1,
+      anniversaryType: 'COUPLE',
+      anniversaryEtcText: null,
+      memoryTitle: '함께 간직하는 추억',
+      memoryStory: '기념 사이트의 샘플 이야기입니다.',
+      musics: [],
+      letters: [{ content: '소중한 하루를 오래 기억해요.' }],
+      documents: [],
+      useStartDate: dateAfter(0),
+      useEndDate: dateAfter(6),
+    }
+  }
   if (pathname === '/order-config' && method === 'GET')
     return copy({ ...mockOrderConfig, minUseStartDate: dateAfter(7) })
   if (parts[0] === 'templates' && method === 'GET') {
@@ -126,8 +160,12 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
       phone: null,
       useStartDate: null,
       useEndDate: null,
-      mainText: null,
-      subText: null,
+      memoryInput: null,
+      musics: [],
+      letters: [],
+      sitePasswordSet: false,
+      memoryTitle: null,
+      memoryStory: null,
       documents: [{ documentNo: 1, photos: [], videos: [] }],
       updatedAt: now(),
     })
@@ -176,8 +214,9 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
         'phone',
         'useStartDate',
         'useEndDate',
-        'mainText',
-        'subText',
+        'memoryInput',
+        'musics',
+        'letters',
       ])
         if (body[key] !== undefined) candidate[key] = body[key]
       if (candidate.useStartDate && candidate.useStartDate < dateAfter(7))
@@ -192,6 +231,42 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
         candidate.useEndDate < candidate.useStartDate
       )
         fail(400, 'INVALID_USE_END_DATE', '종료일은 시작일 이후로 선택해 주세요.')
+      if (body.sitePassword !== undefined) {
+        if (!/^[^\s]{4,20}$/.test(body.sitePassword ?? ''))
+          fail(400, 'VALIDATION_FAILED', '비밀번호는 공백 없이 4~20자로 입력해 주세요.', [
+            { field: 'sitePassword', reason: 'INVALID_FORMAT', value: 3 },
+          ])
+        candidate.sitePasswordSet = true
+      }
+      candidate.musics ??= []
+      candidate.letters ??= []
+      if ((candidate.memoryInput?.length ?? 0) > 2000)
+        fail(400, 'TEXT_TOO_LONG', '추억 원문은 2000자 이내로 적어 주세요.')
+      for (const [index, music] of candidate.musics.entries()) {
+        if (
+          ['title', 'artist', 'album'].some((key) => !music[key]?.trim() || music[key].length > 100)
+        )
+          fail(400, 'VALIDATION_FAILED', '곡 이름, 가수, 앨범을 1~100자로 입력해 주세요.', [
+            { field: `musics[${index}]`, reason: 'INVALID_FORMAT', value: 3 },
+          ])
+        if (music.youtubeUrl) {
+          let valid = false
+          try {
+            const url = new URL(music.youtubeUrl)
+            valid =
+              ['http:', 'https:'].includes(url.protocol) &&
+              ['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'].includes(url.hostname)
+          } catch {}
+          if (!valid)
+            fail(400, 'INVALID_YOUTUBE_URL', '유튜브 주소를 확인해 주세요.', [
+              { field: `musics[${index}].youtubeUrl`, reason: 'INVALID_URL', value: 3 },
+            ])
+        }
+      }
+      if (
+        candidate.letters.some((letter) => !letter.content?.trim() || letter.content.length > 2000)
+      )
+        fail(400, 'VALIDATION_FAILED', '편지는 1~2000자로 입력해 주세요.')
       if (body.validateStep !== undefined) {
         if (![1, 2, 3].includes(body.validateStep))
           fail(400, 'VALIDATION_FAILED', '단계 번호를 확인해 주세요.')
@@ -199,18 +274,27 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
         candidate.currentStep = Math.max(candidate.currentStep, body.validateStep + 1)
       }
       candidate.updatedAt = now()
+      if (body.sitePassword !== undefined) passwords.set(candidate.draftId, body.sitePassword)
       drafts.set(candidate.draftId, candidate)
       return copy(candidate)
     }
-    if (parts[2] === 'ai-phrases' && method === 'POST') {
-      if (!['MAIN_TEXT', 'SUB_TEXT'].includes(body.target))
-        fail(400, 'VALIDATION_FAILED', '문구 종류를 확인해 주세요.')
+    if (parts[2] === 'ai-story' && method === 'POST') {
+      if (!body.memoryInput || body.memoryInput.trim().length < 20)
+        fail(400, 'MEMORY_INPUT_TOO_SHORT', '추억을 조금 더 자세히 적어 주세요.')
+      if (body.memoryInput.length > 2000)
+        fail(400, 'TEXT_TOO_LONG', '추억은 2000자 이내로 적어 주세요.')
+      const count = aiCounts.get(draft.draftId) ?? 0
+      if (count >= 10) fail(429, 'AI_RATE_LIMITED', '이야기 생성 횟수를 모두 사용했어요.')
+      aiCounts.set(draft.draftId, count + 1)
+      draft.memoryInput = body.memoryInput
+      draft.memoryTitle = '함께 간직하는 우리의 추억'
+      draft.memoryStory = body.memoryInput
+      draft.updatedAt = now()
       return {
-        target: body.target,
-        text:
-          body.target === 'MAIN_TEXT'
-            ? `함께라서 더 빛나는 ${body.inputText || '우리의 오늘'}`
-            : '너와 함께하는 모든 순간을 오래 기억할게.',
+        memoryInput: draft.memoryInput,
+        memoryTitle: draft.memoryTitle,
+        memoryStory: draft.memoryStory,
+        remainingCount: 9 - count,
       }
     }
     if (parts[2] === 'media') {

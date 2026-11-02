@@ -166,6 +166,8 @@ export default function AdminOrderDialog({
                   : (anniversaryLabels[content.anniversaryType ?? ''] ?? '미정'),
               ],
               ['템플릿', content.template?.name ?? '미선택'],
+              ['사이트 비밀번호', order.sitePasswordSet ? '설정 완료' : '미설정'],
+              ['사이트 키', order.siteKey ?? '미발급'],
             ].map(([label, value]) => (
               <div key={label}>
                 <dt>{label}</dt>
@@ -287,8 +289,19 @@ export default function AdminOrderDialog({
           {tab === 'content' && (
             <section className="admin-detail-content">
               <h3>문구</h3>
-              <p>{content.mainText || '메인 문구 없음'}</p>
-              <p>{content.subText || '서브 문구 없음'}</p>
+              <p>{content.memoryTitle || '추억 제목 없음'}</p>
+              <p>{content.memoryInput}</p>
+              {(content.musics ?? []).map((music, index) => (
+                <p key={`music-${index}`}>
+                  {music.title} · {music.artist} · {music.album} · {music.youtubeUrl}
+                </p>
+              ))}
+              {(content.letters ?? []).map((letter, index) => (
+                <p style={{ whiteSpace: 'pre-wrap' }} key={`letter-${index}`}>
+                  {letter.content}
+                </p>
+              ))}
+              <p>{content.memoryStory || '추억 이야기 없음'}</p>
               {content.documents.map((document) => (
                 <section key={document.documentNo}>
                   <h3>document {document.documentNo}</h3>

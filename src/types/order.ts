@@ -24,6 +24,11 @@ export interface OrderData {
   endDate: string
   main: string
   sub: string
+  memoryInput: string
+  musics: import('../services/API').Music[]
+  letters: import('../services/API').Letter[]
+  sitePassword: string
+  sitePasswordSet: boolean
 }
 
 export interface MediaItem {
@@ -90,7 +95,6 @@ export interface OrderContextValue {
   setToast: Setter<string>
   setError: Setter<string>
   generate: (key: PhraseField) => void
-  applySuggestion: (key: PhraseField) => Promise<void>
   reportError: (cause: unknown) => string
   mediaSection: (kind: MediaKind) => ReactNode
   INITIAL: OrderData

@@ -55,6 +55,8 @@ export interface AdminDetail {
     totalPrice: number
     depositorName: string
     paidAt: string | null
+    siteKey: string | null
+    sitePasswordSet: boolean
     siteUrl: string | null
     adminMemo: string | null
     submittedAt: string

@@ -21,6 +21,10 @@ export default function ReviewPage() {
           ['기념일 종류', data.occasion === '기타' ? data.other : data.occasion],
           ['이름', data.name],
           ['전화번호', data.phone],
+          ['추억 제목', data.main],
+          ['추천 음악', `${data.musics.length}곡`],
+          ['편지', `${data.letters.length}개`],
+          ['사이트 비밀번호', data.sitePasswordSet ? '설정 완료' : '미설정'],
           [
             '희망 수령 기간',
             data.date && data.endDate

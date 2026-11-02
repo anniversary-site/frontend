@@ -84,7 +84,7 @@ export const getDraft = (draftId, token) => request(`/drafts/${id(draftId)}`, { 
 /**
  * 6. 주문서 부분 저장. null은 비우기, 생략한 필드는 유지합니다.
  * fields: templateId, anniversaryType, anniversaryEtcText, customerName,
- * phone, useStartDate, useEndDate, mainText, subText, validateStep.
+ * phone, useStartDate, useEndDate, memoryInput, musics, letters, sitePassword, validateStep.
  * '다음'일 때만 validateStep(1~3)을 전달합니다.
  */
 export function updateDraft(draftId, fields, token) {
@@ -132,14 +132,6 @@ export const updateMedia = (draftId, mediaId, fields, token) =>
 export const deleteMedia = (draftId, mediaId, token) =>
   request(`/drafts/${id(draftId)}/media/${id(mediaId)}`, { method: 'DELETE', token })
 
-// 12. AI 문구 생성. target: MAIN_TEXT | SUB_TEXT. 생성 결과는 자동 저장되지 않습니다.
-export const generateAiPhrase = (draftId, { target, inputText }, token) =>
-  request(`/drafts/${id(draftId)}/ai-phrases`, {
-    method: 'POST',
-    token,
-    body: { target, inputText },
-  })
-
 // 13. 주문서 제출. depositorName 생략 시 주문자 이름을 사용합니다.
 export const submitOrder = (draftId, token, depositorName) =>
   request('/orders', { method: 'POST', token, body: { draftId, depositorName } })
@@ -158,3 +150,9 @@ export const createOrderRequest = (orderId, { content, requestType }, token) =>
 // 16. 요구사항 목록 (최근 순)
 export const getOrderRequests = (orderId, token) =>
   request(`/orders/${id(orderId)}/requests`, { token })
+
+export const generateAiStory = (draftId, memoryInput, token) =>
+  request(`/drafts/${id(draftId)}/ai-story`, { method: 'POST', body: { memoryInput }, token })
+export const unlockSite = (siteKey, password) =>
+  request(`/sites/${id(siteKey)}/unlock`, { method: 'POST', body: { password } })
+export const getSite = (siteKey, token) => request(`/sites/${id(siteKey)}`, { token })

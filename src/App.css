@@ -1417,6 +1417,44 @@ a.logo,
   }
 }
 
-.range-calendar { touch-action: none; user-select: none; }
-.range-calendar button { cursor: grab; }
-.range-calendar button:active { cursor: grabbing; }
+.range-calendar {
+  touch-action: none;
+  user-select: none;
+}
+.range-calendar button {
+  cursor: grab;
+}
+.range-calendar button:active {
+  cursor: grabbing;
+}
+
+.story-input {
+  height: auto;
+  min-height: 160px;
+  padding: 16px;
+  resize: vertical;
+}
+.story-result {
+  padding: 20px;
+  margin-top: 16px;
+  border-radius: 16px;
+  background: var(--color-grey-100);
+}
+.story-result p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin-top: 12px;
+}
+.content-entry {
+  border: 1px solid var(--color-grey-200);
+  border-radius: 16px;
+  margin: 20px 0;
+  padding: 20px;
+}
+.content-entry label {
+  display: block;
+  margin-bottom: 16px;
+}
+.content-entry .text-input {
+  margin-top: 8px;
+}

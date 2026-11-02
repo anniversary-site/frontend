@@ -10,7 +10,7 @@ export interface Template {
   sampleSiteUrl: string | null
 }
 export interface TemplateDetail extends Template {
-  guides: { mainText?: Guide; subText?: Guide }
+  guides: { memoryTitle?: Guide; memoryStory?: Guide }
   documents: {
     documentNo: number
     photoSlots: number
@@ -27,8 +27,9 @@ export interface OrderConfig {
   minUseStartDate: string
   anniversaryTypes: { code: string; label: string }[]
   limits: {
-    mainTextMaxLength: number
-    subTextMaxLength: number
+    memoryInputMinLength: number
+    memoryInputMaxLength: number
+    letterMaxLength: number
     captionMaxLength: number
     videoTitleMaxLength: number
     photoMaxSizeMb: number
@@ -72,8 +73,12 @@ export interface Draft {
   phone: string | null
   useStartDate: string | null
   useEndDate: string | null
-  mainText: string | null
-  subText: string | null
+  memoryInput: string | null
+  musics: Music[]
+  letters: Letter[]
+  sitePasswordSet: boolean
+  memoryTitle: string | null
+  memoryStory: string | null
   documents: { documentNo: number; photos: Media[]; videos: Media[] }[]
   updatedAt: string
 }
@@ -85,8 +90,10 @@ export interface DraftFields {
   phone?: string | null
   useStartDate?: string | null
   useEndDate?: string | null
-  mainText?: string | null
-  subText?: string | null
+  memoryInput?: string | null
+  musics?: Music[] | null
+  letters?: Letter[] | null
+  sitePassword?: string
   validateStep?: number
 }
 export interface Order {
@@ -147,11 +154,6 @@ export function updateMedia(
   token: string,
 ): Promise<Media>
 export function deleteMedia(draftId: number, mediaId: number, token: string): Promise<void>
-export function generateAiPhrase(
-  draftId: number,
-  fields: { target: string; inputText?: string },
-  token: string,
-): Promise<{ target: string; text: string }>
 export function submitOrder(draftId: number, token: string, depositorName?: string): Promise<Order>
 export function getOrder(orderId: number, token: string): Promise<Order>
 export function createOrderRequest(
@@ -160,3 +162,38 @@ export function createOrderRequest(
   token: string,
 ): Promise<OrderRequest>
 export function getOrderRequests(orderId: number, token: string): Promise<OrderRequest[]>
+
+export interface Music {
+  title: string
+  artist: string
+  album: string
+  youtubeUrl?: string | null
+}
+export interface Letter {
+  content: string
+}
+export interface Story {
+  memoryInput: string
+  memoryTitle: string
+  memoryStory: string
+  remainingCount: number
+}
+export function generateAiStory(draftId: number, memoryInput: string, token: string): Promise<Story>
+export interface SiteSession {
+  siteAccessToken: string
+  expiresAt: string
+}
+export type SiteContent = Pick<
+  Draft,
+  | 'memoryTitle'
+  | 'memoryStory'
+  | 'musics'
+  | 'letters'
+  | 'documents'
+  | 'anniversaryType'
+  | 'anniversaryEtcText'
+  | 'useStartDate'
+  | 'useEndDate'
+> & { templateId: number }
+export function unlockSite(siteKey: string, password: string): Promise<SiteSession>
+export function getSite(siteKey: string, token: string): Promise<SiteContent>

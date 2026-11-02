@@ -18,7 +18,37 @@ export function canProceed(page: Page, data: OrderData, earliestDate = '') {
       /^01\d-\d{3,4}-\d{4}$/.test(data.phone) &&
       isValidPeriod(data, earliestDate),
     )
-  if (page === 'content') return Boolean(data.main.trim())
+  if (page === 'content') {
+    const validPassword = /^[^\s]{4,20}$/.test(data.sitePassword)
+    const validMusics =
+      data.musics.length > 0 &&
+      data.musics.every((music) => {
+        if (
+          ![music.title, music.artist, music.album].every(
+            (value) => value?.trim() && value.length <= 100,
+          )
+        )
+          return false
+        if (!music.youtubeUrl) return true
+        try {
+          const url = new URL(music.youtubeUrl)
+          return (
+            ['https:', 'http:'].includes(url.protocol) &&
+            /^(www\.|m\.)?(youtube\.com|youtu\.be)$/.test(url.hostname)
+          )
+        } catch {
+          return false
+        }
+      })
+    return Boolean(
+      data.main.trim() &&
+      data.sub.trim() &&
+      (data.sitePasswordSet || validPassword) &&
+      (!data.sitePassword || validPassword) &&
+      validMusics &&
+      data.letters.every((letter) => letter.content.trim() && letter.content.length <= 2000),
+    )
+  }
   return true
 }
 

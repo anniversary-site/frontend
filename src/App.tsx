@@ -46,6 +46,11 @@ const INITIAL: OrderData = {
   phone: '',
   date: dateKey(minDate()),
   endDate: addDays(dateKey(minDate()), FREE_PERIOD_DAYS - 1),
+  memoryInput: '',
+  musics: [],
+  letters: [],
+  sitePassword: '',
+  sitePasswordSet: false,
   main: '',
   sub: '',
 }
@@ -99,6 +104,7 @@ export default function App() {
   const timers = useRef(new Set<ReturnType<typeof setTimeout>>())
   const ready = Boolean(
     config &&
+    !generating.main &&
     templateDetail &&
     templateDetail.templateId === data.template &&
     canProceed(page, data, config.minUseStartDate) &&
@@ -207,8 +213,13 @@ export default function App() {
       phone: formatPhone(draft.phone ?? ''),
       date: draft.useStartDate ?? '',
       endDate: draft.useEndDate ?? '',
-      main: draft.mainText ?? '',
-      sub: draft.subText ?? '',
+      memoryInput: draft.memoryInput ?? '',
+      musics: draft.musics ?? [],
+      letters: draft.letters ?? [],
+      sitePassword: '',
+      sitePasswordSet: draft.sitePasswordSet ?? false,
+      main: draft.memoryTitle ?? '',
+      sub: draft.memoryStory ?? '',
     })
   }
   const fields = (): DraftFields => ({
@@ -219,8 +230,10 @@ export default function App() {
     phone: data.phone || null,
     useStartDate: data.date || null,
     useEndDate: data.endDate || null,
-    mainText: data.main || null,
-    subText: data.sub || null,
+    memoryInput: data.memoryInput || null,
+    musics: data.musics,
+    letters: data.letters,
+    ...(data.sitePassword ? { sitePassword: data.sitePassword } : {}),
   })
   const needsOrderData = page !== 'main'
   useEffect(() => {
@@ -510,7 +523,7 @@ export default function App() {
     }
   }
   const persistDraft = async (phone: string): Promise<boolean> => {
-    if (saveLock.current) return false
+    if (saveLock.current || generating.main) return false
     saveLock.current = true
     setSaving(true)
     setSaveError('')
@@ -522,7 +535,16 @@ export default function App() {
           .some((item) => item && item.status !== 'ready')
       )
         throw new Error('첨부 파일 처리를 완료해 주세요.')
-      await api.updateDraft(saved.draftId, { ...fields(), phone: phone || null }, saved.draftToken)
+      const result = await api.updateDraft(
+        saved.draftId,
+        { ...fields(), phone: phone || null },
+        saved.draftToken,
+      )
+      setData((current) => ({
+        ...current,
+        sitePasswordSet: result.sitePasswordSet,
+        sitePassword: current.sitePassword === data.sitePassword ? '' : current.sitePassword,
+      }))
       update('phone', formatPhone(phone))
       setToast(
         data.name && phone
@@ -599,24 +621,28 @@ export default function App() {
       setSaving(false)
     }
   }
-  const generate = async (key: PhraseField) => {
-    if (!data[key].trim() || generating[key]) return
-    setGenerating((state) => ({ ...state, [key]: true }))
-    setAiErrors((state) => ({ ...state, [key]: false }))
+  const generate = async (_key: PhraseField) => {
+    if (
+      saveLock.current ||
+      generating.main ||
+      !config ||
+      data.memoryInput.trim().length < config.limits.memoryInputMinLength
+    )
+      return
+    setGenerating({ main: true })
+    setAiErrors({})
     try {
       const saved = requireSession()
-      await api.updateDraft(saved.draftId, fields(), saved.draftToken)
-      const result = await api.generateAiPhrase(
-        saved.draftId,
-        { target: key === 'main' ? 'MAIN_TEXT' : 'SUB_TEXT', inputText: data[key] },
-        saved.draftToken,
-      )
-      setSuggestions((state) => ({ ...state, [key]: result.text }))
+      const input = data.memoryInput
+      const result = await api.generateAiStory(saved.draftId, input, saved.draftToken)
+      if (sessionRef.current?.draftId !== saved.draftId) return
+      setData((current) => ({ ...current, main: result.memoryTitle, sub: result.memoryStory }))
+      setToast(`추억 이야기를 저장했어요. 남은 생성 횟수 ${result.remainingCount}회`)
     } catch (cause) {
       handleError(cause)
-      setAiErrors((state) => ({ ...state, [key]: true }))
+      setAiErrors({ main: true })
     } finally {
-      setGenerating((state) => ({ ...state, [key]: false }))
+      setGenerating({})
     }
   }
   const removeMedia = async (kind: MediaKind, index: number) => {
@@ -676,29 +702,6 @@ export default function App() {
     if (!item) return
     setCaption(item.text)
     open({ type: 'caption', kind, index })
-  }
-  const applySuggestion = async (key: PhraseField) => {
-    const suggestion = suggestions[key]
-    if (!suggestion || saving) return
-    setSaving(true)
-    try {
-      const saved = requireSession()
-      await api.updateDraft(
-        saved.draftId,
-        key === 'main' ? { mainText: suggestion } : { subText: suggestion },
-        saved.draftToken,
-      )
-      update(key, suggestion)
-      setSuggestions((current) => {
-        const result = { ...current }
-        delete result[key]
-        return result
-      })
-    } catch (cause) {
-      handleError(cause)
-    } finally {
-      setSaving(false)
-    }
   }
   const back = () => {
     const previousPages: Partial<Record<Page, Page>> = {
@@ -864,7 +867,7 @@ export default function App() {
         setToast,
         setError,
         generate,
-        applySuggestion,
+
         reportError: handleError,
         mediaSection,
         INITIAL,
@@ -916,7 +919,11 @@ export default function App() {
             )}
           </>
         )}
-        {!initialized && needsOrderData ? <p role="status">주문 정보를 불러오는 중이에요.</p> : <AppRoutes />}
+        {!initialized && needsOrderData ? (
+          <p role="status">주문 정보를 불러오는 중이에요.</p>
+        ) : (
+          <AppRoutes />
+        )}
         {error && (
           <p className="form-error" role="alert">
             {error}

@@ -2,7 +2,7 @@ import type { PreviewTarget } from '../types/order'
 import Icon from './Icon'
 import { useOrder } from '../context/OrderContext'
 
-const LABELS = { main: '메인 문구', sub: '서브 문구', photos: '사진', videos: '영상' }
+const LABELS = { main: '추억 제목', sub: '추억 이야기', photos: '사진', videos: '영상' }
 
 interface PositionPreviewProps {
   target?: PreviewTarget
@@ -17,9 +17,9 @@ export default function PositionPreview({ target, documentNo, onClose }: Positio
     templateDetail?.documents[0]
   const guide =
     target === 'main'
-      ? templateDetail?.guides.mainText
+      ? templateDetail?.guides.memoryTitle
       : target === 'sub'
-        ? templateDetail?.guides.subText
+        ? templateDetail?.guides.memoryStory
         : target === 'photos'
           ? document?.photoGuide
           : document?.videoGuide
