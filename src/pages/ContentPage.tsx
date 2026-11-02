@@ -87,16 +87,9 @@ export default function ContentPage() {
         <button
           type="button"
           className="link-button"
-          onClick={() => open({ type: 'position', target: 'main' })}
+          onClick={() => open({ type: 'position', target: 'story' })}
         >
-          제목 위치 보기
-        </button>
-        <button
-          type="button"
-          className="link-button"
-          onClick={() => open({ type: 'position', target: 'sub' })}
-        >
-          이야기 위치 보기
+          사이트에서의 위치 보기
         </button>
       </section>
       <section className="content-section">

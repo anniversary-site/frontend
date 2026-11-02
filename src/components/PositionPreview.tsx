@@ -2,7 +2,13 @@ import type { PreviewTarget } from '../types/order'
 import Icon from './Icon'
 import { useOrder } from '../context/OrderContext'
 
-const LABELS = { main: '추억 제목', sub: '추억 이야기', photos: '사진', videos: '영상' }
+const LABELS = {
+  story: '제목과 이야기',
+  main: '추억 제목',
+  sub: '추억 이야기',
+  photos: '사진',
+  videos: '영상',
+}
 
 interface PositionPreviewProps {
   target?: PreviewTarget
@@ -15,14 +21,27 @@ export default function PositionPreview({ target, documentNo, onClose }: Positio
   const document =
     templateDetail?.documents.find((item) => item.documentNo === documentNo) ??
     templateDetail?.documents[0]
-  const guide =
-    target === 'main'
-      ? templateDetail?.guides.memoryTitle
-      : target === 'sub'
-        ? templateDetail?.guides.memoryStory
-        : target === 'photos'
-          ? document?.photoGuide
-          : document?.videoGuide
+  const guides =
+    target === 'story'
+      ? [
+          { label: '추억 제목', guide: templateDetail?.guides.memoryTitle },
+          { label: '추억 이야기', guide: templateDetail?.guides.memoryStory },
+        ]
+      : target
+        ? [
+            {
+              label: LABELS[target],
+              guide:
+                target === 'main'
+                  ? templateDetail?.guides.memoryTitle
+                  : target === 'sub'
+                    ? templateDetail?.guides.memoryStory
+                    : target === 'photos'
+                      ? document?.photoGuide
+                      : document?.videoGuide,
+            },
+          ]
+        : []
   return (
     <>
       <header className="preview-modal-header">
@@ -38,45 +57,48 @@ export default function PositionPreview({ target, documentNo, onClose }: Positio
       </header>
 
       <div className="preview-modal-body" style={{ overflow: 'auto' }}>
-        {target ? (
-          guide ? (
-            <div style={{ position: 'relative' }}>
-              <img
-                src={guide.imageUrl}
-                alt={`${LABELS[target]} 위치 안내`}
-                style={{ width: '100%', display: 'block' }}
-              />
-              <span
-                aria-label="입력 내용 표시 위치"
-                style={{
-                  position: 'absolute',
-                  border: '2px solid #d45c84',
-                  boxSizing: 'border-box',
-                  left: `${guide.highlight.x * 100}%`,
-                  top: `${guide.highlight.y * 100}%`,
-                  width: `${guide.highlight.width * 100}%`,
-                  height: `${guide.highlight.height * 100}%`,
-                }}
-              />
-            </div>
-          ) : (
-            <p>위치 안내 이미지가 아직 등록되지 않았어요.</p>
-          )
-        ) : (
-          templates.map((template) => (
-            <article key={template.templateId}>
-              <img src={template.thumbnailUrl} alt={template.name} style={{ maxWidth: '100%' }} />
-              <h3>{template.name}</h3>
-              {template.sampleSiteUrl ? (
-                <a href={template.sampleSiteUrl} target="_blank" rel="noreferrer">
-                  샘플 사이트 보기
-                </a>
-              ) : (
-                <p>샘플 사이트 준비 중</p>
-              )}
-            </article>
-          ))
-        )}
+        {target
+          ? guides.map(({ label, guide }) => (
+              <section key={label} style={{ marginBottom: 24 }}>
+                <h3>{label}</h3>
+                {guide ? (
+                  <div style={{ position: 'relative' }}>
+                    <img
+                      src={guide.imageUrl}
+                      alt={`${label} 위치 안내`}
+                      style={{ width: '100%', display: 'block' }}
+                    />
+                    <span
+                      aria-label={`${label} 표시 위치`}
+                      style={{
+                        position: 'absolute',
+                        border: '2px solid #d45c84',
+                        boxSizing: 'border-box',
+                        left: `${guide.highlight.x * 100}%`,
+                        top: `${guide.highlight.y * 100}%`,
+                        width: `${guide.highlight.width * 100}%`,
+                        height: `${guide.highlight.height * 100}%`,
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <p>{label} 위치 안내 이미지가 아직 등록되지 않았어요.</p>
+                )}
+              </section>
+            ))
+          : templates.map((template) => (
+              <article key={template.templateId}>
+                <img src={template.thumbnailUrl} alt={template.name} style={{ maxWidth: '100%' }} />
+                <h3>{template.name}</h3>
+                {template.sampleSiteUrl ? (
+                  <a href={template.sampleSiteUrl} target="_blank" rel="noreferrer">
+                    샘플 사이트 보기
+                  </a>
+                ) : (
+                  <p>샘플 사이트 준비 중</p>
+                )}
+              </article>
+            ))}
       </div>
 
       <footer className="preview-modal-footer">
