@@ -47,9 +47,11 @@ const INITIAL: OrderData = {
   date: dateKey(minDate()),
   endDate: addDays(dateKey(minDate()), FREE_PERIOD_DAYS - 1),
   memoryInput: '',
+  externalUrl: '',
   musics: [],
   letters: [{ input: null, content: '' }],
   sitePassword: '',
+  sitePasswordHint: '',
   sitePasswordSet: false,
   main: '',
   sub: '',
@@ -93,8 +95,11 @@ export default function App() {
   const [generating, setGenerating] = useState<PhraseFlags>({})
   const [aiErrors, setAiErrors] = useState<PhraseFlags>({})
   const [touched, setTouched] = useState<TouchedFields>({})
+  const [previewExpanded, setPreviewExpanded] = useState(false)
   const isPreview = sheet?.type === 'position' || sheet?.type === 'preview'
   const swipeStart = useRef<number | null>(null)
+  const previewSwipeStart = useRef<number | null>(null)
+  const previewWasDragged = useRef(false)
   const timers = useRef(new Set<ReturnType<typeof setTimeout>>())
   const ready = Boolean(
     config &&
@@ -168,7 +173,7 @@ export default function App() {
         slot: i + 1,
       })),
     )
-  const applyDraft = async (draft: Draft) => {
+  const applyDraft = async (draft: Draft, preserveLocalContent = true) => {
     const detail = draft.template ? await api.getTemplate(draft.template.templateId) : null
     setTemplateDetail(detail)
     const restored: MediaFiles = { photos: [], videos: [] }
@@ -196,7 +201,7 @@ export default function App() {
         : []
     }
     setFiles(restored)
-    setData({
+    setData((current) => ({
       template: draft.template?.templateId ?? -1,
       occasion:
         (Object.keys(occasionCodes) as Occasion[]).find(
@@ -208,13 +213,15 @@ export default function App() {
       date: draft.useStartDate ?? '',
       endDate: draft.useEndDate ?? '',
       memoryInput: draft.memoryInput ?? '',
+      externalUrl: preserveLocalContent ? current.externalUrl : '',
       musics: draft.musics ?? [],
       letters: draft.letters?.slice(0, 1) ?? [],
       sitePassword: '',
+      sitePasswordHint: preserveLocalContent ? current.sitePasswordHint : '',
       sitePasswordSet: draft.sitePasswordSet ?? false,
       main: draft.memoryTitle ?? '',
       sub: draft.memoryStory ?? '',
-    })
+    }))
   }
   const fields = (): DraftFields => ({
     templateId: data.template >= 0 ? data.template : null,
@@ -333,10 +340,12 @@ export default function App() {
   }
   const open = (value: Sheet) => {
     opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    setPreviewExpanded(false)
     setSheet(value)
   }
   const close = () => {
     setSheet(null)
+    setPreviewExpanded(false)
     opener.current?.focus()
   }
   useEffect(() => {
@@ -523,7 +532,7 @@ export default function App() {
   const selectDraft = async (match: DraftMatch) => {
     rememberSession(match)
     const draft = await api.getDraft(match.draftId, match.draftToken)
-    await applyDraft(draft)
+    await applyDraft(draft, false)
     setSuggestions({})
     setAiErrors({})
     setTouched({})
@@ -944,7 +953,7 @@ export default function App() {
               ref={dialog}
               className={
                 isPreview
-                  ? 'preview-modal'
+                  ? `preview-sheet${previewExpanded ? ' is-expanded' : ''}`
                   : sheet.type === 'guide' || sheet.type === 'save-draft'
                     ? 'dialog-panel'
                     : 'bottom-sheet'
@@ -954,6 +963,43 @@ export default function App() {
               aria-labelledby="sheet-heading"
               onClick={(e) => e.stopPropagation()}
             >
+              {isPreview && (
+                <div
+                  className="preview-drag-area"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={previewExpanded ? '미리보기 축소' : '미리보기 확장'}
+                  onClick={() => {
+                    if (previewWasDragged.current) {
+                      previewWasDragged.current = false
+                      return
+                    }
+                    setPreviewExpanded((expanded) => !expanded)
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      setPreviewExpanded((expanded) => !expanded)
+                    }
+                  }}
+                  onPointerDown={(event) => {
+                    previewSwipeStart.current = event.clientY
+                    previewWasDragged.current = false
+                    event.currentTarget.setPointerCapture(event.pointerId)
+                  }}
+                  onPointerUp={(event) => {
+                    if (previewSwipeStart.current !== null) {
+                      const distance = event.clientY - previewSwipeStart.current
+                      if (Math.abs(distance) > 40) previewWasDragged.current = true
+                      if (distance < -40) setPreviewExpanded(true)
+                      if (distance > 40) setPreviewExpanded(false)
+                    }
+                    previewSwipeStart.current = null
+                  }}
+                >
+                  <div className="sheet-handle" />
+                </div>
+              )}
               {sheet.type === 'caption' && (
                 <div
                   className="sheet-drag-area"

@@ -6,9 +6,10 @@ import type { OrderFormGuideProps } from '../types'
 const titles = {
   main: 'OUR STORY 위치 및 예시',
   sub: 'OUR STORY 위치 및 예시',
-  story: 'OUR STORY 위치 및 예시',
+  story: 'INFORMATION 위치 및 예시',
   letters: 'LETTER 위치 및 예시',
   music: 'MUSIC 위치 및 예시',
+  url: 'URL 위치 및 예시',
   photos: '사진 위치 및 예시',
   videos: '영상 위치 및 예시',
 } as const
@@ -72,6 +73,13 @@ export default function PinkSiteGuideModal({ target, documentNo, onClose }: Orde
             <strong>음악 제목</strong>
             <p>가수</p>
             <small>YouTube 링크가 있으면 음악을 바로 열 수 있어요.</small>
+          </div>
+        )}
+        {target === 'url' && (
+          <div className="folder-example url-example">
+            <span>INTERNET</span>
+            <strong>외부 사이트로 이동</strong>
+            <p>입력한 URL이 웹사이트 하단의 INTERNET 아이콘에 연결돼요.</p>
           </div>
         )}
         {target === 'photos' && <GuideImage label="사진" guide={document?.photoGuide} />}

@@ -109,7 +109,7 @@ export default function PinkSiteContentForm() {
             className="link-button"
             onClick={() => open({ type: 'position', target: 'story' })}
           >
-            폴더 위치 및 예시 보러가기 ›
+            INFORMATION 위치 및 예시 보러가기 ›
           </button>
         </div>
         <p className="description information-description">
@@ -168,6 +168,8 @@ export default function PinkSiteContentForm() {
               setLetterSuggestion(null)
             }}
           />
+        </div>
+        <div className="letter-actions">
           <button
             type="button"
             className="small-button letter-ai-button"
@@ -194,6 +196,33 @@ export default function PinkSiteContentForm() {
             </button>
           </div>
         )}
+      </section>
+
+      <section className="content-section url-section">
+        <div className="section-heading">
+          <h2>URL 작성</h2>
+          <button
+            type="button"
+            className="link-button"
+            onClick={() => open({ type: 'position', target: 'url' })}
+          >
+            폴더 위치 및 예시 보러가기 ›
+          </button>
+        </div>
+        <p className="description">
+          웹사이트 하단의 INTERNET 아이콘을 누르면 연결될 사이트 링크를 넣어주세요.
+        </p>
+        <input
+          className="text-input url-input"
+          type="url"
+          inputMode="url"
+          autoComplete="url"
+          maxLength={500}
+          value={data.externalUrl}
+          placeholder="https://youtube.com/..."
+          aria-label="연결할 사이트 URL"
+          onChange={(event) => update('externalUrl', event.target.value)}
+        />
       </section>
 
       <section className="content-section music-section">
