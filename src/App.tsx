@@ -613,6 +613,13 @@ export default function App() {
         await applyDraft(await api.getDraft(saved.draftId, saved.draftToken))
         setConfig(await api.getOrderConfig())
       } else if (page === 'template') await applyDraft(result)
+      else if (page === 'info')
+        // 비밀번호는 2단계에서 저장됩니다. 저장된 뒤에는 다시 보내지 않도록 입력값을 비웁니다.
+        setData((current) => ({
+          ...current,
+          sitePasswordSet: result.sitePasswordSet,
+          sitePassword: current.sitePassword === data.sitePassword ? '' : current.sitePassword,
+        }))
       go(page === 'template' ? 'info' : page === 'info' ? 'content' : 'review')
     } catch (cause) {
       handleError(cause)
