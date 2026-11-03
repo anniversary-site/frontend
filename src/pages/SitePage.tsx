@@ -26,7 +26,6 @@ function SiteView({ siteKey }: { siteKey: string }) {
   useEffect(() => {
     if (!session) return
     let active = true
-    setBusy(true)
     api
       .getSite(siteKey, session.siteAccessToken)
       .then((result) => {

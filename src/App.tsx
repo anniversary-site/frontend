@@ -102,7 +102,6 @@ export default function App() {
   const [touched, setTouched] = useState<TouchedFields>({})
   const [previewExpanded, setPreviewExpanded] = useState(false)
   const isPreview = sheet?.type === 'position' || sheet?.type === 'preview'
-  const swipeStart = useRef<number | null>(null)
   const previewSwipeStart = useRef<number | null>(null)
   const previewWasDragged = useRef(false)
   const timers = useRef(new Set<ReturnType<typeof setTimeout>>())
@@ -325,7 +324,7 @@ export default function App() {
     return () => {
       active = false
     }
-  }, [data.template])
+  }, [data.template, templateDetail?.templateId])
   const startDraft = async () => {
     if (saveLock.current) return
     saveLock.current = true
@@ -365,9 +364,10 @@ export default function App() {
   }
   useEffect(() => {
     const created = urls.current
+    const activeTimers = timers.current
     return () => {
       created.forEach((u) => URL.revokeObjectURL(u))
-      timers.current.forEach(clearTimeout)
+      activeTimers.forEach(clearTimeout)
     }
   }, [])
   useEffect(() => {
@@ -949,19 +949,20 @@ export default function App() {
                   ? `preview-sheet${previewExpanded ? ' is-expanded' : ''}`
                   : sheet.type === 'guide' || sheet.type === 'save-draft'
                     ? 'dialog-panel'
-                    : 'bottom-sheet'
+                    : `bottom-sheet${previewExpanded ? ' is-expanded' : ''}`
               }
               role="dialog"
               aria-modal="true"
               aria-labelledby="sheet-heading"
               onClick={(e) => e.stopPropagation()}
             >
-              {isPreview && (
+              {(isPreview || sheet.type === 'caption') && (
                 <div
                   className="preview-drag-area"
                   role="button"
                   tabIndex={0}
-                  aria-label={previewExpanded ? '미리보기 축소' : '미리보기 확장'}
+                  aria-label={previewExpanded ? '하단 모드로 축소' : '전체 화면으로 확장'}
+                  aria-expanded={previewExpanded}
                   onClick={() => {
                     if (previewWasDragged.current) {
                       previewWasDragged.current = false
@@ -988,22 +989,6 @@ export default function App() {
                       if (distance > 40) setPreviewExpanded(false)
                     }
                     previewSwipeStart.current = null
-                  }}
-                >
-                  <div className="sheet-handle" />
-                </div>
-              )}
-              {sheet.type === 'caption' && (
-                <div
-                  className="sheet-drag-area"
-                  onPointerDown={(event) => {
-                    swipeStart.current = event.clientY
-                    event.currentTarget.setPointerCapture(event.pointerId)
-                  }}
-                  onPointerUp={(event) => {
-                    if (swipeStart.current !== null && event.clientY - swipeStart.current > 64)
-                      close()
-                    swipeStart.current = null
                   }}
                 >
                   <div className="sheet-handle" />

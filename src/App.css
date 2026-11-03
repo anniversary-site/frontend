@@ -1123,7 +1123,22 @@ a.logo,
   transition: height var(--motion-dialog);
 }
 .preview-sheet.is-expanded {
-  height: calc(100dvh - 24px);
+  height: 100%;
+  max-height: 100%;
+  width: 100%;
+  border-radius: 0;
+}
+.bottom-sheet.is-expanded {
+  height: 100%;
+  max-height: 100%;
+  width: 100%;
+  border-radius: 0;
+}
+.preview-overlay:has(.is-expanded) {
+  padding: 0;
+}
+.preview-sheet {
+  max-height: 100%;
 }
 .preview-drag-area {
   height: 28px;
@@ -1186,7 +1201,7 @@ a.logo,
     height: 56svh;
   }
   .preview-sheet.is-expanded {
-    height: calc(100dvh - 12px);
+    height: 100%;
   }
   .preview-modal-header {
     padding: var(--space-16);

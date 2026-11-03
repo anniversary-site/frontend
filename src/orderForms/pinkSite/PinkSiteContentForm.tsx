@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useOrder } from '../../context/OrderContext'
 import * as api from '../../services/API'
 
@@ -18,9 +18,9 @@ export default function PinkSiteContentForm() {
   const [currentMusicIndex, setCurrentMusicIndex] = useState(0)
   const [letterGenerating, setLetterGenerating] = useState(false)
 
-  useEffect(() => {
-    setCurrentMusicIndex((current) => Math.min(current, visibleMusics.length - 1))
-  }, [visibleMusics.length])
+  if (currentMusicIndex >= visibleMusics.length) {
+    setCurrentMusicIndex(visibleMusics.length - 1)
+  }
 
   if (!config) return <p role="status">주문 설정을 불러오는 중이에요.</p>
   const letterMin = config.limits.letterInputMinLength ?? 10

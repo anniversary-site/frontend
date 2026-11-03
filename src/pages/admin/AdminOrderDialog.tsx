@@ -299,6 +299,20 @@ export default function AdminOrderDialog({
               ))}
               <p style={{ whiteSpace: 'pre-wrap' }}>{content.letter || '편지 없음'}</p>
               <p>{content.linkUrl || '연결 URL 없음'}</p>
+              <p>편지 선택: {content.letterChoice === 'AI' ? 'AI 문장' : content.letterChoice === 'ORIGINAL' ? '원문' : '미선택'}</p>
+              {content.price && (
+                <dl>
+                  {([
+                    ['기본 가격', content.price.basePrice],
+                    ['기간 추가 요금', content.price.periodFee],
+                    ['사진 추가 요금', content.price.photoFee],
+                    ['영상 추가 요금', content.price.videoFee],
+                    ['총 금액', content.price.totalPrice],
+                  ] as const).map(([label, amount]) => (
+                    <div key={label}><dt>{label}</dt><dd>{amount.toLocaleString('ko-KR')}원</dd></div>
+                  ))}
+                </dl>
+              )}
               {content.documents.map((document) => (
                 <section key={document.documentNo}>
                   <h3>document {document.documentNo}</h3>

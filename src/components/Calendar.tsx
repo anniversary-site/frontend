@@ -52,7 +52,7 @@ export default function Calendar({ value, onChange, minDateValue }: CalendarProp
   const monthIndex = month.getMonth()
   const leading = new Date(year, monthIndex, 1).getDay()
   const count = new Date(year, monthIndex + 1, 0).getDate()
-  const today = dateKey(new Date())
+  const [today] = useState(() => dateKey(new Date()))
   const selectDate = (key: string) => {
     if (!choosingEnd || !value.start) {
       onChange({ start: key, end: key })
