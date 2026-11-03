@@ -48,7 +48,7 @@ const INITIAL: OrderData = {
   endDate: addDays(dateKey(minDate()), FREE_PERIOD_DAYS - 1),
   memoryInput: '',
   musics: [],
-  letters: [{ content: '' }, { content: '' }],
+  letters: [{ input: null, content: '' }],
   sitePassword: '',
   sitePasswordSet: false,
   main: '',
@@ -209,7 +209,7 @@ export default function App() {
       endDate: draft.useEndDate ?? '',
       memoryInput: draft.memoryInput ?? '',
       musics: draft.musics ?? [],
-      letters: draft.letters ?? [],
+      letters: draft.letters?.slice(0, 1) ?? [],
       sitePassword: '',
       sitePasswordSet: draft.sitePasswordSet ?? false,
       main: draft.memoryTitle ?? '',
@@ -226,7 +226,7 @@ export default function App() {
     useEndDate: data.endDate || null,
     memoryInput: data.memoryInput || null,
     musics: data.musics,
-    letters: data.letters.filter((letter) => letter.content.trim()),
+    letters: data.letters.slice(0, 1).filter((letter) => letter.content.trim()),
     ...(data.sitePassword ? { sitePassword: data.sitePassword } : {}),
   })
   const needsOrderData = page !== 'main'

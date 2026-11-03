@@ -55,10 +55,10 @@ export default function PinkSiteGuideModal({ target, documentNo, onClose }: Orde
       </header>
       <div className="preview-modal-body order-form-guide">
         {(target === 'story' || target === 'main' || target === 'sub') && (
-          <>
-            <GuideImage label="추억 제목" guide={templateDetail?.guides.memoryTitle} />
-            <GuideImage label="추억 이야기" guide={templateDetail?.guides.memoryStory} />
-          </>
+          <div className="folder-example information-example">
+            <span>INFORMATION</span>
+            <p>{`특별한 날: 2026.01.12\n특별한 장소: 서강대학교 AS관 라운지\n우리의 이야기: 데모데이 개발`}</p>
+          </div>
         )}
         {target === 'letters' && (
           <div className="folder-example letter-example">

@@ -9,6 +9,28 @@ export function formatPhone(value: string) {
   return `${digits.slice(0, 3)}-${digits.slice(3, middleEnd)}-${digits.slice(middleEnd)}`
 }
 
+export type InformationFields = {
+  specialDay: string
+  specialPlace: string
+  story: string
+}
+
+export function parseInformation(value: string): InformationFields {
+  const fields: InformationFields = { specialDay: '', specialPlace: '', story: '' }
+  const matched = value.match(
+    /^특별한 날:\s*(.*)\n특별한 장소:\s*(.*)\n우리의 이야기:\s*([\s\S]*)$/,
+  )
+  if (matched) {
+    fields.specialDay = matched[1]
+    fields.specialPlace = matched[2]
+    fields.story = matched[3]
+  } else if (value) fields.story = value
+  return fields
+}
+
+export const serializeInformation = ({ specialDay, specialPlace, story }: InformationFields) =>
+  `특별한 날: ${specialDay}\n특별한 장소: ${specialPlace}\n우리의 이야기: ${story}`
+
 export function canProceed(page: Page, data: OrderData, earliestDate = '') {
   if (page === 'template')
     return data.template >= 0 && (data.occasion !== '기타' || Boolean(data.other.trim()))
@@ -38,9 +60,11 @@ export function canProceed(page: Page, data: OrderData, earliestDate = '') {
           return false
         }
       })
+    const information = parseInformation(data.memoryInput)
     return Boolean(
-      data.main.trim() &&
-      data.sub.trim() &&
+      information.specialDay.trim() &&
+      information.specialPlace.trim() &&
+      information.story.trim() &&
       validMusics &&
       data.letters.every(
         (letter) => letter.content.length <= 2000 && (letter.input?.length ?? 0) <= 2000,

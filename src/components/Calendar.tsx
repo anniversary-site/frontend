@@ -157,7 +157,7 @@ export default function Calendar({ value, onChange, minDateValue }: CalendarProp
       <p className="calendar-instruction" aria-live="polite">
         {choosingEnd
           ? '종료일을 선택해 주세요.'
-          : '날짜를 누른 채 드래그해 기간을 선택하세요. 시작일·종료일을 끌어 조정할 수 있어요. 키보드는 두 날짜를 차례로 선택하세요.'}
+          : '날짜를 누른 채 드래그해 기간을 선택하세요. 시작일·종료일을 끌어 조정할 수 있어요.'}
       </p>
     </div>
   )
