@@ -717,15 +717,23 @@ export default function App() {
     templateDetail?.documents.map((doc) => (
       <section key={doc.documentNo} className={`content-section uploads ${kind}`}>
         <div className="section-heading">
-          <h2>
-            document {doc.documentNo} {kind === 'photos' ? '사진' : '영상'} 업로드
-          </h2>
+          <div>
+            <h2>
+              {templateDetail.documents.length > 1 && `document ${doc.documentNo} `}
+              {kind === 'photos' ? '사진' : '영상'} 업로드
+            </h2>
+            <p className="description">
+              {kind === 'photos'
+                ? `최소 ${doc.minPhotos}장, 최대 ${doc.photoSlots}장 · 장당 ${config?.limits.photoMaxSizeMb ?? 10}MB`
+                : `최대 ${doc.videoSlots}개 · 개당 ${config?.limits.videoMaxSizeMb ?? 70}MB`}
+            </p>
+          </div>
           <button
             type="button"
             className="link-button"
             onClick={() => open({ type: 'position', target: kind, documentNo: doc.documentNo })}
           >
-            {kind === 'photos' ? '사진' : '영상'} 위치 보러가기 <Icon name="next" small />
+            {kind === 'photos' ? '사진' : '영상'} 위치 보러가기 ›
           </button>
         </div>
         <div className="media-grid">

@@ -16,6 +16,8 @@ export function canProceed(page: Page, data: OrderData, earliestDate = '') {
     return Boolean(
       data.name.trim() &&
       /^01\d-\d{3,4}-\d{4}$/.test(data.phone) &&
+      (data.sitePasswordSet || /^[^\s]{4,20}$/.test(data.sitePassword)) &&
+      (!data.sitePassword || /^[^\s]{4,20}$/.test(data.sitePassword)) &&
       isValidPeriod(data, earliestDate),
     )
   if (page === 'content') {
