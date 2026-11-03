@@ -289,19 +289,16 @@ export default function AdminOrderDialog({
           {tab === 'content' && (
             <section className="admin-detail-content">
               <h3>문구</h3>
-              <p>{content.memoryTitle || '추억 제목 없음'}</p>
-              <p>{content.memoryInput}</p>
+              <p>특별한 날: {content.specialDay || '-'}</p>
+              <p>특별한 장소: {content.specialPlace || '-'}</p>
+              <p>기념일: {content.specialOccasion || '-'}</p>
               {(content.musics ?? []).map((music, index) => (
                 <p key={`music-${index}`}>
                   {music.title} · {music.artist} · {music.youtubeUrl}
                 </p>
               ))}
-              {(content.letters ?? []).map((letter, index) => (
-                <p style={{ whiteSpace: 'pre-wrap' }} key={`letter-${index}`}>
-                  {letter.content}
-                </p>
-              ))}
-              <p>{content.memoryStory || '추억 이야기 없음'}</p>
+              <p style={{ whiteSpace: 'pre-wrap' }}>{content.letter || '편지 없음'}</p>
+              <p>{content.linkUrl || '연결 URL 없음'}</p>
               {content.documents.map((document) => (
                 <section key={document.documentNo}>
                   <h3>document {document.documentNo}</h3>

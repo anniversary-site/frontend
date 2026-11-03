@@ -46,10 +46,15 @@ const INITIAL: OrderData = {
   phone: '',
   date: dateKey(minDate()),
   endDate: addDays(dateKey(minDate()), FREE_PERIOD_DAYS - 1),
-  memoryInput: '',
-  externalUrl: '',
+  specialDay: '',
+  specialPlace: '',
+  specialOccasion: '',
+  letterInput: '',
+  letterAi: '',
+  letterChoice: null,
+  linkUrl: '',
+  price: null,
   musics: [],
-  letters: [{ input: null, content: '' }],
   sitePassword: '',
   sitePasswordHint: '',
   sitePasswordSet: false,
@@ -212,15 +217,20 @@ export default function App() {
       phone: formatPhone(draft.phone ?? ''),
       date: draft.useStartDate ?? '',
       endDate: draft.useEndDate ?? '',
-      memoryInput: draft.memoryInput ?? '',
-      externalUrl: preserveLocalContent ? current.externalUrl : '',
+      specialDay: draft.specialDay ?? '',
+      specialPlace: draft.specialPlace ?? '',
+      specialOccasion: draft.specialOccasion ?? '',
+      letterInput: draft.letterInput ?? '',
+      letterAi: draft.letterAi ?? '',
+      letterChoice: draft.letterChoice ?? null,
+      linkUrl: draft.linkUrl ?? '',
+      price: draft.price ?? null,
       musics: draft.musics ?? [],
-      letters: draft.letters?.slice(0, 1) ?? [],
       sitePassword: '',
       sitePasswordHint: preserveLocalContent ? current.sitePasswordHint : '',
       sitePasswordSet: draft.sitePasswordSet ?? false,
-      main: draft.memoryTitle ?? '',
-      sub: draft.memoryStory ?? '',
+      main: '',
+      sub: '',
     }))
   }
   const fields = (): DraftFields => ({
@@ -231,9 +241,14 @@ export default function App() {
     phone: data.phone || null,
     useStartDate: data.date || null,
     useEndDate: data.endDate || null,
-    memoryInput: data.memoryInput || null,
+    specialDay: data.specialDay || null,
+    specialPlace: data.specialPlace || null,
+    specialOccasion: data.specialOccasion || null,
+    letterInput: data.letterInput || null,
+    letterAi: data.letterAi || null,
+    letterChoice: data.letterChoice,
+    linkUrl: data.linkUrl || null,
     musics: data.musics,
-    letters: data.letters.slice(0, 1).filter((letter) => letter.content.trim()),
     ...(data.sitePassword ? { sitePassword: data.sitePassword } : {}),
   })
   const needsOrderData = page !== 'main'
@@ -594,30 +609,8 @@ export default function App() {
       setSaving(false)
     }
   }
-  const generate = async (_key: PhraseField) => {
-    if (
-      saveLock.current ||
-      generating.main ||
-      !config ||
-      data.memoryInput.trim().length < config.limits.memoryInputMinLength
-    )
-      return
-    setGenerating({ main: true })
-    setAiErrors({})
-    try {
-      const saved = requireSession()
-      const input = data.memoryInput
-      const result = await api.generateAiStory(saved.draftId, input, saved.draftToken)
-      if (sessionRef.current?.draftId !== saved.draftId) return
-      setData((current) => ({ ...current, main: result.memoryTitle, sub: result.memoryStory }))
-      setToast(`추억 이야기를 저장했어요. 남은 생성 횟수 ${result.remainingCount}회`)
-    } catch (cause) {
-      handleError(cause)
-      setAiErrors({ main: true })
-    } finally {
-      setGenerating({})
-    }
-  }
+  // 기존 AI 추억 이야기 API는 제거되었습니다. AI 편지는 주문 양식에서 생성합니다.
+  const generate = (_key: PhraseField) => {}
   const removeMedia = async (kind: MediaKind, index: number) => {
     const item = files[kind][index]
     if (!item || item.status === 'loading') return
