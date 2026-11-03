@@ -687,6 +687,7 @@ export default function App() {
             <h2>
               {templateDetail.documents.length > 1 && `document ${doc.documentNo} `}
               {kind === 'photos' ? '사진' : '영상'} 업로드
+              {kind === 'photos' && <span className="required-mark" aria-label="필수"> *</span>}
             </h2>
             <p className="description">
               {kind === 'photos'

@@ -91,7 +91,7 @@ export default function PinkSiteContentForm() {
 
       <section className="content-section order-copy-section">
         <div className="section-heading">
-          <h2>INFORMATION 작성</h2>
+          <h2>INFORMATION 작성 <span className="required-mark" aria-label="필수">*</span></h2>
           <button
             type="button"
             className="link-button"
@@ -110,6 +110,7 @@ export default function PinkSiteContentForm() {
             value={data.specialDay}
             placeholder="특별한 날을 작성해주세요."
             aria-label="특별한 날"
+            required
             onChange={(event) => update('specialDay', event.target.value)}
           />
           <input
@@ -118,6 +119,7 @@ export default function PinkSiteContentForm() {
             maxLength={100}
             placeholder="특별한 장소를 작성해주세요."
             aria-label="특별한 장소"
+            required
             onChange={(event) => update('specialPlace', event.target.value)}
           />
           <input
@@ -126,6 +128,7 @@ export default function PinkSiteContentForm() {
             maxLength={50}
             placeholder="어떤 일을 기념하는지 작성해주세요."
             aria-label="어떤 기념일인지"
+            required
             onChange={(event) => update('specialOccasion', event.target.value)}
           />
         </div>
@@ -133,7 +136,7 @@ export default function PinkSiteContentForm() {
 
       <section className="content-section letter-section">
         <div className="section-heading">
-          <h2>LETTER 작성</h2>
+          <h2>LETTER 작성 <span className="required-mark" aria-label="필수">*</span></h2>
           <button
             type="button"
             className="link-button"
@@ -150,6 +153,7 @@ export default function PinkSiteContentForm() {
             value={data.letterInput}
             disabled={letterGenerating}
             aria-label="편지"
+            required={data.letterChoice !== 'AI'}
             placeholder="웹사이트를 선물받는 분께 보여줄 편지를 작성해주세요."
             onChange={(event) => {
               setData((current) => ({
@@ -192,7 +196,7 @@ export default function PinkSiteContentForm() {
 
       <section className="content-section url-section">
         <div className="section-heading">
-          <h2>URL 작성</h2>
+          <h2>URL 작성 <span className="required-mark" aria-label="필수">*</span></h2>
           <button
             type="button"
             className="link-button"
@@ -213,6 +217,7 @@ export default function PinkSiteContentForm() {
           value={data.linkUrl}
           placeholder="https://youtube.com/..."
           aria-label="연결할 사이트 URL"
+          required
           onChange={(event) => update('linkUrl', event.target.value)}
         />
       </section>
@@ -278,6 +283,7 @@ export default function PinkSiteContentForm() {
                     <input
                       className="text-input"
                       type={key === 'youtubeUrl' ? 'url' : 'text'}
+                      required={key !== 'youtubeUrl'}
                       value={music[key] ?? ''}
                       placeholder={musicLabels[key][1]}
                       maxLength={key === 'youtubeUrl' ? undefined : 100}
