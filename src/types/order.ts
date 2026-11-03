@@ -12,7 +12,7 @@ export type Page = 'main' | 'start' | 'load' | 'template' | 'info' | 'content' |
 export type Occasion = '연애 기념일' | '생일' | '결혼 기념일' | '기타'
 export type PhraseField = 'main' | 'sub'
 export type MediaKind = 'photos' | 'videos'
-export type PreviewTarget = PhraseField | MediaKind | 'story' | 'letters' | 'music'
+export type PreviewTarget = PhraseField | MediaKind | 'story' | 'letters' | 'music' | 'url'
 
 export interface OrderData {
   template: number
@@ -25,9 +25,11 @@ export interface OrderData {
   main: string
   sub: string
   memoryInput: string
+  externalUrl: string
   musics: import('../services/API').Music[]
   letters: import('../services/API').Letter[]
   sitePassword: string
+  sitePasswordHint: string
   sitePasswordSet: boolean
 }
 

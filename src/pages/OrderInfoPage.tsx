@@ -79,7 +79,7 @@ export default function OrderInfoPage() {
         <small>
           {data.sitePasswordSet
             ? '비밀번호가 설정되어 있어요. 변경할 때만 새 비밀번호를 입력해 주세요.'
-            : '제작 완료된 웹사이트에 접속할 때 사용할 비밀번호예요.'}
+            : '제작 완료된 웹사이트에 접속할 때 사용될 번호예요.'}
         </small>
         <input
           className="text-input"
@@ -96,6 +96,29 @@ export default function OrderInfoPage() {
         {data.sitePassword && !/^[^\s]{4,20}$/.test(data.sitePassword) && (
           <small className="field-error">공백 없이 4~20자로 입력해 주세요.</small>
         )}
+      </label>
+      <label className="password-hint-field field-label">
+        <span>
+          비밀번호 힌트
+          <span className="required-mark" aria-label="필수">
+            {' '}
+            *
+          </span>
+        </span>
+        <small>
+          선물 받는 분이 비밀번호를 떠올릴 수 있는 질문이나 힌트를 적어 주세요.
+        </small>
+        <small>추천 문구: 우리의 시작을 날짜 네 자리로 입력해 주세요. (힌트: MMDD)</small>
+        <input
+          className="text-input"
+          type="text"
+          placeholder="예: 선물 받는 사람 이름(별칭 또는 애칭)"
+          maxLength={100}
+          value={data.sitePasswordHint}
+          onChange={(event) => update('sitePasswordHint', event.target.value)}
+          required
+        />
+        
       </label>
       <section className="calendar-section">
         <h2>
