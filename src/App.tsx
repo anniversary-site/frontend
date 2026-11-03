@@ -57,14 +57,8 @@ const INITIAL: OrderData = {
 const OCCASIONS: Occasion[] = ['연애 기념일', '생일', '결혼 기념일', '기타']
 const emptyFiles = (): MediaFiles => ({ photos: Array(4).fill(null), videos: Array(4).fill(null) })
 const SESSION_KEY = `urluv-session-${import.meta.env.VITE_USE_BACKEND === 'true' ? 'backend' : 'mock'}`
-function readSession(): Session | null {
-  try {
-    const value = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null')
-    return Number.isInteger(value?.draftId) && typeof value?.draftToken === 'string' ? value : null
-  } catch {
-    return null
-  }
-}
+// 브라우저에 남아 있는 주문 세션의 자동 복원은 현재 사용하지 않습니다.
+// 이름과 전화번호를 이용한 주문서 불러오기 화면에서만 기존 주문을 복원합니다.
 const occasionCodes: Record<Occasion, string> = {
   '연애 기념일': 'COUPLE',
   생일: 'BIRTHDAY',
@@ -86,7 +80,7 @@ export default function App() {
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
-  const [session, setSession] = useState<Session | null>(readSession)
+  const [session, setSession] = useState<Session | null>(null)
   const sessionRef = useRef(session)
   const [config, setConfig] = useState<OrderConfig | null>(null)
   const [templates, setTemplates] = useState<Template[]>([])
@@ -249,19 +243,7 @@ export default function App() {
           date: current.date || settings.minUseStartDate,
           endDate: current.endDate || addDays(settings.minUseStartDate, 6),
         }))
-        const saved = sessionRef.current
-        if (saved) {
-          const draft = await api.getDraft(saved.draftId, saved.draftToken)
-          if (!active) return
-          await applyDraft(draft)
-          if (draft.status !== 'DRAFT') {
-            const submitted = await api.getOrder(saved.draftId, saved.draftToken)
-            if (active) {
-              setOrder(submitted)
-              if (!['main', 'start', 'load'].includes(page)) navigateFromEffect('done')
-            }
-          }
-        }
+        // 로컬 스토리지 세션을 이용한 자동 불러오기는 임시 비활성화했습니다.
       })
       .catch((cause) => {
         if (active) reportEffectError(cause)
@@ -346,31 +328,6 @@ export default function App() {
       handleError(cause)
     } finally {
       saveLock.current = false
-      setBusy(false)
-    }
-  }
-  const resumeDraft = async () => {
-    setBusy(true)
-    try {
-      const saved = requireSession()
-      const draft = await api.getDraft(saved.draftId, saved.draftToken)
-      await applyDraft(draft)
-      if (draft.status !== 'DRAFT') {
-        setOrder(await api.getOrder(saved.draftId, saved.draftToken))
-        go('done')
-      } else
-        go(
-          draft.currentStep === 1
-            ? 'template'
-            : draft.currentStep === 2
-              ? 'info'
-              : draft.currentStep === 3
-                ? 'content'
-                : 'review',
-        )
-    } catch (cause) {
-      handleError(cause)
-    } finally {
       setBusy(false)
     }
   }
@@ -895,7 +852,6 @@ export default function App() {
         busy,
         order,
         startDraft,
-        resumeDraft,
         selectDraft,
       }}
     >

@@ -85,7 +85,6 @@ export interface OrderContextValue {
   load: (name: string, phone: string) => Promise<DraftMatch[]>
   selectDraft: (draft: DraftMatch) => Promise<void>
   startDraft: () => Promise<void>
-  resumeDraft: () => Promise<void>
   session: Session | null
   busy: boolean
   config: OrderConfig | null

@@ -35,6 +35,7 @@ test('목업: 새 API로 작성·업로드·제출·조회·요구사항 흐름�
       {
         customerName: '연동 테스트',
         phone: '010-1234-5678',
+        sitePassword: '1225',
         useStartDate: config.minUseStartDate,
         useEndDate: config.minUseStartDate,
         validateStep: 2,
@@ -74,8 +75,7 @@ test('목업: 새 API로 작성·업로드·제출·조회·요구사항 흐름�
     await api.updateDraft(
       draftId,
       {
-        sitePassword: '1225',
-        musics: [{ title: '노래', artist: '가수', album: '앨범' }],
+        musics: [{ title: '노래', artist: '가수' }],
         letters: [{ content: '편지\n내용' }],
         validateStep: 3,
       },
@@ -95,7 +95,7 @@ test('목업: 새 API로 작성·업로드·제출·조회·요구사항 흐름�
         draftId,
         {
           musics: [
-            { title: '노래', artist: '가수', album: '앨범', youtubeUrl: 'https://evil.example' },
+            { title: '노래', artist: '가수', youtubeUrl: 'https://evil.example' },
           ],
         },
         token,

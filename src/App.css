@@ -1196,51 +1196,58 @@ a.logo,
   );
 }
 .load-content {
-  width: 760px;
+  width: 824px;
   max-width: calc(100% - 48px);
-  margin: 152px auto 0;
-  padding: 64px 0 140px;
+  margin: 0 auto;
+  padding: 48px 0 120px;
   text-align: center;
 }
 .load-content > .eyebrow {
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 600;
-  line-height: 24px;
+  line-height: 32px;
 }
 .load-content > h1 {
-  margin-top: var(--space-12);
-  font-size: 32px;
+  margin-top: var(--space-24);
+  font-size: 40px;
   font-weight: 600;
-  line-height: 38px;
+  line-height: 48px;
   letter-spacing: -0.02em;
   word-break: keep-all;
 }
 .load-card {
-  width: 370px;
+  width: 556px;
   max-width: 100%;
-  min-height: 300px;
-  margin: var(--space-40) auto 0;
-  padding: var(--space-32);
+  min-height: 532px;
+  margin: 60px auto 0;
+  padding: 48px;
   border: 1px solid var(--color-grey-200);
   border-radius: var(--radius-20);
   background: var(--color-white);
 }
 .load-card h2 {
-  font: var(--text-subtitle);
+  font-size: 24px;
+  line-height: 32px;
   font-weight: 400;
-  margin: var(--space-40) 0;
+  margin: 64px 0 68px;
 }
 .load-card .text-input {
+  height: 84px;
+  border-radius: 24px;
+  font-size: 24px;
   text-align: center;
 }
 .load-card > .button {
-  margin-top: var(--space-12);
+  height: 84px;
+  margin-top: var(--space-16);
+  border-radius: 24px;
+  font-size: 24px;
 }
 .load-help {
-  font: var(--text-caption);
+  font: var(--text-body);
   color: var(--color-grey-600);
-  margin-top: var(--space-16);
-  line-height: 20px;
+  margin-top: var(--space-24);
+  line-height: 28px;
 }
 .load-error {
   font: var(--text-caption);
@@ -1271,15 +1278,35 @@ a.logo,
 }
 @media (max-width: 767px) {
   .load-content {
-    margin-top: 0;
-    padding: var(--space-40) 0;
+    max-width: calc(100% - 32px);
+    padding: var(--space-32) 0 96px;
+  }
+  .load-content > .eyebrow {
+    font: var(--text-body-strong);
   }
   .load-content > h1 {
-    font: var(--text-title);
+    margin-top: var(--space-12);
+    font: var(--text-subtitle);
     letter-spacing: -0.02em;
   }
   .load-card {
+    min-height: 0;
+    margin-top: var(--space-32);
     padding: var(--space-24);
+  }
+  .load-card h2 {
+    margin: var(--space-24) 0 var(--space-32);
+    font: var(--text-body);
+  }
+  .load-card .text-input,
+  .load-card > .button {
+    height: 60px;
+    border-radius: var(--radius-16);
+    font: var(--text-body);
+  }
+  .load-help {
+    margin-top: var(--space-16);
+    font: var(--text-caption);
   }
 }
 
