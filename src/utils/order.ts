@@ -48,7 +48,7 @@ export function canProceed(page: Page, data: OrderData, earliestDate = '') {
       (data.sitePasswordSet || validPassword) &&
       (!data.sitePassword || validPassword) &&
       validMusics &&
-      data.letters.every((letter) => letter.content.trim() && letter.content.length <= 2000),
+      data.letters.every((letter) => letter.content.length <= 2000),
     )
   }
   return true
