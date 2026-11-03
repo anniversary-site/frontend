@@ -153,6 +153,9 @@ export const getOrderRequests = (orderId, token) =>
 
 export const generateAiStory = (draftId, memoryInput, token) =>
   request(`/drafts/${id(draftId)}/ai-story`, { method: 'POST', body: { memoryInput }, token })
+// 12-1. AI 편지 다듬기. 저장하지 않으니 결과({ input, content })를 letters에 넣어 저장합니다.
+export const generateAiLetter = (draftId, letterInput, token) =>
+  request(`/drafts/${id(draftId)}/ai-letter`, { method: 'POST', body: { letterInput }, token })
 export const unlockSite = (siteKey, password) =>
   request(`/sites/${id(siteKey)}/unlock`, { method: 'POST', body: { password } })
 export const getSite = (siteKey, token) => request(`/sites/${id(siteKey)}`, { token })

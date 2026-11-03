@@ -28,6 +28,7 @@ export const mockOrderConfig = {
   limits: {
     memoryInputMinLength: 20,
     memoryInputMaxLength: 2000,
+    letterInputMinLength: 10,
     letterMaxLength: 2000,
     captionMaxLength: 50,
     videoTitleMaxLength: 30,
@@ -93,12 +94,12 @@ function validate(draft, step, code = 'VALIDATION_FAILED') {
   if (step >= 2) {
     if (!draft.customerName?.trim()) missing('customerName', 2)
     if (!/^01\d{8,9}$/.test(draft.phone ?? '')) missing('phone', 2)
+    if (!draft.sitePasswordSet) missing('sitePassword', 2)
     if (!draft.useStartDate) missing('useStartDate', 2)
     if (!draft.useEndDate) missing('useEndDate', 2)
   }
   if (step >= 3) {
     if (!draft.memoryTitle?.trim() || !draft.memoryStory?.trim()) missing('memoryStory', 3)
-    if (!draft.sitePasswordSet) missing('sitePassword', 3)
     if (!draft.musics?.length) missing('musics', 3)
     if (!draft.documents[0]?.photos.length) missing('documents.1.photos', 3)
   }
@@ -234,7 +235,7 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
       if (body.sitePassword !== undefined) {
         if (!/^[^\s]{4,20}$/.test(body.sitePassword ?? ''))
           fail(400, 'VALIDATION_FAILED', '비밀번호는 공백 없이 4~20자로 입력해 주세요.', [
-            { field: 'sitePassword', reason: 'INVALID_FORMAT', value: 3 },
+            { field: 'sitePassword', reason: 'INVALID_FORMAT', value: 2 },
           ])
         candidate.sitePasswordSet = true
       }
@@ -243,10 +244,8 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
       if ((candidate.memoryInput?.length ?? 0) > 2000)
         fail(400, 'TEXT_TOO_LONG', '추억 원문은 2000자 이내로 적어 주세요.')
       for (const [index, music] of candidate.musics.entries()) {
-        if (
-          ['title', 'artist', 'album'].some((key) => !music[key]?.trim() || music[key].length > 100)
-        )
-          fail(400, 'VALIDATION_FAILED', '곡 이름, 가수, 앨범을 1~100자로 입력해 주세요.', [
+        if (['title', 'artist'].some((key) => !music[key]?.trim() || music[key].length > 100))
+          fail(400, 'VALIDATION_FAILED', '음악 제목과 가수를 1~100자로 입력해 주세요.', [
             { field: `musics[${index}]`, reason: 'INVALID_FORMAT', value: 3 },
           ])
         if (music.youtubeUrl) {
@@ -255,7 +254,13 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
             const url = new URL(music.youtubeUrl)
             valid =
               ['http:', 'https:'].includes(url.protocol) &&
-              ['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'].includes(url.hostname)
+              [
+                'youtube.com',
+                'www.youtube.com',
+                'm.youtube.com',
+                'music.youtube.com',
+                'youtu.be',
+              ].includes(url.hostname)
           } catch {}
           if (!valid)
             fail(400, 'INVALID_YOUTUBE_URL', '유튜브 주소를 확인해 주세요.', [
@@ -294,6 +299,20 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
         memoryInput: draft.memoryInput,
         memoryTitle: draft.memoryTitle,
         memoryStory: draft.memoryStory,
+        remainingCount: 9 - count,
+      }
+    }
+    if (parts[2] === 'ai-letter' && method === 'POST') {
+      const input = body.letterInput?.trim() ?? ''
+      if (input.length < 10)
+        fail(400, 'LETTER_INPUT_TOO_SHORT', '편지에 담을 말을 조금 더 적어 주세요.')
+      if (input.length > 2000) fail(400, 'TEXT_TOO_LONG', '편지는 2000자 이내로 적어 주세요.')
+      const count = aiCounts.get(draft.draftId) ?? 0
+      if (count >= 10) fail(429, 'AI_RATE_LIMITED', 'AI 생성 횟수를 모두 사용했어요.')
+      aiCounts.set(draft.draftId, count + 1)
+      return {
+        input,
+        content: `${input}\n\n늘 곁에 있어 줘서 고마워. 앞으로도 잘 지내자.`,
         remainingCount: 9 - count,
       }
     }

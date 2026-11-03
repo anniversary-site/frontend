@@ -21,22 +21,18 @@ export function canProceed(page: Page, data: OrderData, earliestDate = '') {
       isValidPeriod(data, earliestDate),
     )
   if (page === 'content') {
-    const validPassword = /^[^\s]{4,20}$/.test(data.sitePassword)
+    // 사이트 비밀번호는 2단계(주문자 정보)에서 검사합니다.
     const validMusics =
       data.musics.length > 0 &&
       data.musics.every((music) => {
-        if (
-          ![music.title, music.artist, music.album].every(
-            (value) => value?.trim() && value.length <= 100,
-          )
-        )
+        if (![music.title, music.artist].every((value) => value?.trim() && value.length <= 100))
           return false
         if (!music.youtubeUrl) return true
         try {
           const url = new URL(music.youtubeUrl)
           return (
             ['https:', 'http:'].includes(url.protocol) &&
-            /^(www\.|m\.)?(youtube\.com|youtu\.be)$/.test(url.hostname)
+            /^(www\.|m\.|music\.)?(youtube\.com|youtu\.be)$/.test(url.hostname)
           )
         } catch {
           return false
@@ -45,10 +41,10 @@ export function canProceed(page: Page, data: OrderData, earliestDate = '') {
     return Boolean(
       data.main.trim() &&
       data.sub.trim() &&
-      (data.sitePasswordSet || validPassword) &&
-      (!data.sitePassword || validPassword) &&
       validMusics &&
-      data.letters.every((letter) => letter.content.length <= 2000),
+      data.letters.every(
+        (letter) => letter.content.length <= 2000 && (letter.input?.length ?? 0) <= 2000,
+      ),
     )
   }
   return true

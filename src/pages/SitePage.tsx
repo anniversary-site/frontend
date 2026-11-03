@@ -114,7 +114,7 @@ function SiteView({ siteKey }: { siteKey: string }) {
               <h2>함께 듣는 음악</h2>
               {content.musics.map((music, index) => (
                 <p key={index}>
-                  {music.title} · {music.artist} · {music.album}
+                  {music.title} · {music.artist}
                   {music.youtubeUrl &&
                     /^https?:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//i.test(
                       music.youtubeUrl,

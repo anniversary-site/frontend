@@ -293,7 +293,7 @@ export default function AdminOrderDialog({
               <p>{content.memoryInput}</p>
               {(content.musics ?? []).map((music, index) => (
                 <p key={`music-${index}`}>
-                  {music.title} · {music.artist} · {music.album} · {music.youtubeUrl}
+                  {music.title} · {music.artist} · {music.youtubeUrl}
                 </p>
               ))}
               {(content.letters ?? []).map((letter, index) => (
