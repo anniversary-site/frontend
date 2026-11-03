@@ -55,6 +55,7 @@ const INITIAL: OrderData = {
   linkUrl: '',
   price: null,
   musics: [],
+  recipientName: '',
   sitePassword: '',
   sitePasswordHint: '',
   sitePasswordSet: false,
@@ -92,6 +93,11 @@ export default function App() {
   const [config, setConfig] = useState<OrderConfig | null>(null)
   const [templates, setTemplates] = useState<Template[]>([])
   const [templateDetail, setTemplateDetail] = useState<TemplateDetail | null>(null)
+  // 기본 포함 개수를 넘겨 사용자가 직접 연 사진·영상 칸 수 (document별)
+  const [extraSlots, setExtraSlots] = useState<Record<MediaKind, Record<number, number>>>({
+    photos: {},
+    videos: {},
+  })
   const [order, setOrder] = useState<Order | null>(null)
   const [busy, setBusy] = useState(false)
   const [initialized, setInitialized] = useState(false)
@@ -177,7 +183,7 @@ export default function App() {
         slot: i + 1,
       })),
     )
-  const applyDraft = async (draft: Draft, preserveLocalContent = true) => {
+  const applyDraft = async (draft: Draft) => {
     const detail = draft.template ? await api.getTemplate(draft.template.templateId) : null
     setTemplateDetail(detail)
     const restored: MediaFiles = { photos: [], videos: [] }
@@ -205,7 +211,7 @@ export default function App() {
         : []
     }
     setFiles(restored)
-    setData((current) => ({
+    setData(() => ({
       template: draft.template?.templateId ?? -1,
       occasion:
         (Object.keys(occasionCodes) as Occasion[]).find(
@@ -225,8 +231,9 @@ export default function App() {
       linkUrl: draft.linkUrl ?? '',
       price: draft.price ?? null,
       musics: draft.musics ?? [],
+      recipientName: draft.recipientName ?? '',
       sitePassword: '',
-      sitePasswordHint: preserveLocalContent ? current.sitePasswordHint : '',
+      sitePasswordHint: draft.sitePasswordHint ?? '',
       sitePasswordSet: draft.sitePasswordSet ?? false,
       main: '',
       sub: '',
@@ -248,6 +255,8 @@ export default function App() {
     letterChoice: data.letterChoice,
     linkUrl: data.linkUrl || null,
     musics: data.musics,
+    recipientName: data.recipientName || null,
+    sitePasswordHint: data.sitePasswordHint || null,
     ...(data.sitePassword ? { sitePassword: data.sitePassword } : {}),
   })
   const needsOrderData = page !== 'main'
@@ -547,7 +556,7 @@ export default function App() {
   const selectDraft = async (match: DraftMatch) => {
     rememberSession(match)
     const draft = await api.getDraft(match.draftId, match.draftToken)
-    await applyDraft(draft, false)
+    await applyDraft(draft)
     setSuggestions({})
     setAiErrors({})
     setTouched({})
@@ -679,6 +688,27 @@ export default function App() {
     const previous = previousPages[page]
     if (previous) go(previous)
   }
+  /** 추가 안내 팝업에서 한 번에 여는 칸 수: 사진은 추가 요금 단위(10장), 영상은 1개. */
+  const extraStep = (kind: MediaKind) =>
+    kind === 'photos' ? (config?.pricing.extraPhotoUnit ?? 10) : 1
+  /** 보여 줄 칸 수: 기본 포함 개수 + 직접 연 칸. 이미 채운 칸은 항상 보입니다. */
+  const visibleSlots = (kind: MediaKind, doc: TemplateDetail['documents'][number]) => {
+    const slots = templateDetail ? slotsFor(templateDetail, kind) : []
+    const lastFilled = files[kind].reduce(
+      (last, item, index) =>
+        item && slots[index]?.documentNo === doc.documentNo
+          ? Math.max(last, slots[index].slot)
+          : last,
+      0,
+    )
+    const included =
+      kind === 'photos'
+        ? (config?.pricing.includedPhotos ?? 20)
+        : (config?.pricing.includedVideos ?? 2)
+    const opened = included + (extraSlots[kind][doc.documentNo] ?? 0)
+    const total = kind === 'photos' ? doc.photoSlots : doc.videoSlots
+    return Math.min(total, Math.max(opened, lastFilled))
+  }
   const mediaSection = (kind: MediaKind) =>
     templateDetail?.documents.map((doc) => (
       <section key={doc.documentNo} className={`content-section uploads ${kind}`}>
@@ -691,8 +721,8 @@ export default function App() {
             </h2>
             <p className="description">
               {kind === 'photos'
-                ? `최소 ${doc.minPhotos}장, 최대 ${doc.photoSlots}장 · 장당 ${config?.limits.photoMaxSizeMb ?? 10}MB`
-                : `최대 ${doc.videoSlots}개 · 개당 ${config?.limits.videoMaxSizeMb ?? 70}MB`}
+                ? `사진 기본 ${config?.pricing.includedPhotos ?? 20}장, 최소 ${doc.minPhotos}장`
+                : `영상 기본 ${config?.pricing.includedVideos ?? 2}개 · 개당 ${config?.limits.videoMaxSizeMb ?? 70}MB`}
             </p>
           </div>
           <button
@@ -706,7 +736,8 @@ export default function App() {
         <div className="media-grid">
           {files[kind].map(
             (item, index) =>
-              slotsFor(templateDetail, kind)[index]?.documentNo === doc.documentNo && (
+              slotsFor(templateDetail, kind)[index]?.documentNo === doc.documentNo &&
+              slotsFor(templateDetail, kind)[index].slot <= visibleSlots(kind, doc) && (
                 <div className="media-item" key={index}>
                   <div className={`media-tile ${item ? 'filled' : ''} ${item?.status || ''}`}>
                     {!item ? (
@@ -812,6 +843,24 @@ export default function App() {
               ),
           )}
         </div>
+        <button
+          type="button"
+          className="button form-add-button"
+          onClick={() => {
+            const total = kind === 'photos' ? doc.photoSlots : doc.videoSlots
+            if (visibleSlots(kind, doc) >= total) {
+              setToast(
+                kind === 'photos'
+                  ? `사진은 최대 ${total}장까지 추가할 수 있어요.`
+                  : `영상은 최대 ${total}개까지 추가할 수 있어요.`,
+              )
+              return
+            }
+            open({ type: 'extra-media', kind, documentNo: doc.documentNo })
+          }}
+        >
+          ＋ {kind === 'photos' ? '사진' : '영상'} 추가하기
+        </button>
       </section>
     ))
   // 세션이 없는 직접 접속은 주문 화면을 렌더링하기 전에 시작 화면으로 보냅니다.
@@ -940,7 +989,7 @@ export default function App() {
         )}
         {sheet && (
           <div
-            className={`sheet-overlay ${isPreview ? 'preview-overlay' : sheet.type === 'guide' || sheet.type === 'save-draft' ? 'dialog-overlay' : ''}`}
+            className={`sheet-overlay ${isPreview ? 'preview-overlay' : sheet.type === 'guide' || sheet.type === 'save-draft' || sheet.type === 'extra-media' ? 'dialog-overlay' : ''}`}
             onClick={close}
           >
             <section
@@ -948,7 +997,9 @@ export default function App() {
               className={
                 isPreview
                   ? `preview-sheet${previewExpanded ? ' is-expanded' : ''}`
-                  : sheet.type === 'guide' || sheet.type === 'save-draft'
+                  : sheet.type === 'guide' ||
+                      sheet.type === 'save-draft' ||
+                      sheet.type === 'extra-media'
                     ? 'dialog-panel'
                     : `bottom-sheet${previewExpanded ? ' is-expanded' : ''}`
               }
@@ -1043,6 +1094,46 @@ export default function App() {
                   onSave={persistDraft}
                   onClose={close}
                 />
+              ) : sheet.type === 'extra-media' ? (
+                <>
+                  <h2 id="sheet-heading">{sheet.kind === 'photos' ? '사진' : '영상'} 추가 안내</h2>
+                  {sheet.kind === 'photos' ? (
+                    <p className="sheet-note">
+                      사진은 기본 {config?.pricing.includedPhotos ?? 20}장까지 포함돼요.
+                      <br />그 이상 추가하면 사진 {config?.pricing.extraPhotoUnit ?? 10}장당{' '}
+                      {(config?.pricing.extraPhotoUnitPrice ?? 0).toLocaleString('ko-KR')}원의 추가
+                      요금이 발생해요.
+                    </p>
+                  ) : (
+                    <p className="sheet-note">
+                      영상은 기본 {config?.pricing.includedVideos ?? 2}개까지 포함돼요.
+                      <br />그 이상 추가하면 영상 1개당{' '}
+                      {(config?.pricing.extraVideoPrice ?? 0).toLocaleString('ko-KR')}원의 추가 요금이
+                      발생해요.
+                    </p>
+                  )}
+                  <div className="save-phone-actions">
+                    <button className="button secondary" onClick={close}>
+                      취소
+                    </button>
+                    <button
+                      className="button primary"
+                      onClick={() => {
+                        const { kind, documentNo } = sheet
+                        setExtraSlots((current) => ({
+                          ...current,
+                          [kind]: {
+                            ...current[kind],
+                            [documentNo]: (current[kind][documentNo] ?? 0) + extraStep(kind),
+                          },
+                        }))
+                        close()
+                      }}
+                    >
+                      추가하기
+                    </button>
+                  </div>
+                </>
               ) : sheet.type === 'guide' ? (
                 <>
                   <h2 id="sheet-heading">주문서 작성 방법</h2>

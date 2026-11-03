@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import * as api from '../services/API'
-import type { SiteContent, SiteSession } from '../services/API'
+import type { SiteContent, SiteLock, SiteSession } from '../services/API'
 import './SitePage.css'
 
 export default function SitePage() {
@@ -23,6 +23,22 @@ function SiteView({ siteKey }: { siteKey: string }) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [lock, setLock] = useState<SiteLock | null>(null)
+  useEffect(() => {
+    if (session) return
+    let active = true
+    api
+      .getSiteLock(siteKey)
+      .then((result) => {
+        if (active) setLock(result)
+      })
+      .catch((cause) => {
+        if (active) setError(cause.message)
+      })
+    return () => {
+      active = false
+    }
+  }, [session, siteKey])
   useEffect(() => {
     if (!session) return
     let active = true
@@ -76,8 +92,9 @@ function SiteView({ siteKey }: { siteKey: string }) {
             }
           }}
         >
-          <h1>우리의 추억 열기</h1>
+          <h1>{lock?.recipientName ? `${lock.recipientName}님께 도착한 선물` : '우리의 추억 열기'}</h1>
           <label htmlFor="site-unlock">전달받은 비밀번호를 입력해 주세요.</label>
+          {lock?.passwordHint && <p className="site-hint">힌트: {lock.passwordHint}</p>}
           <input
             id="site-unlock"
             type="password"

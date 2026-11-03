@@ -17,6 +17,8 @@ export default function PinkSiteContentForm() {
   const musicListRef = useRef<HTMLDivElement>(null)
   const [currentMusicIndex, setCurrentMusicIndex] = useState(0)
   const [letterGenerating, setLetterGenerating] = useState(false)
+  const [editingAi, setEditingAi] = useState(false)
+  const [aiDraft, setAiDraft] = useState('')
 
   if (currentMusicIndex >= visibleMusics.length) {
     setCurrentMusicIndex(visibleMusics.length - 1)
@@ -42,6 +44,7 @@ export default function PinkSiteContentForm() {
         specialOccasion: data.specialOccasion || null,
       }, session.draftToken)
       const result = await api.generateAiLetter(session.draftId, raw, session.draftToken)
+      setEditingAi(false)
       setData((current) => ({
         ...current,
         letterInput: result.letterInput,
@@ -153,45 +156,109 @@ export default function PinkSiteContentForm() {
             value={data.letterInput}
             disabled={letterGenerating}
             aria-label="편지"
-            required={data.letterChoice !== 'AI'}
+            required
             placeholder="웹사이트를 선물받는 분께 보여줄 편지를 작성해주세요."
-            onChange={(event) => {
-              setData((current) => ({
-                ...current,
-                letterInput: event.target.value,
-                letterChoice: 'ORIGINAL',
-              }))
-            }}
+            onChange={(event) => update('letterInput', event.target.value)}
           />
         </div>
         <div className="letter-actions">
           <button
             type="button"
-            className="small-button letter-ai-button"
+            className={`small-button letter-choice-button${data.letterChoice === 'ORIGINAL' ? ' is-selected' : ''}`}
+            aria-pressed={data.letterChoice === 'ORIGINAL'}
+            disabled={letterGenerating || !data.letterInput.trim()}
+            onClick={() => {
+              setEditingAi(false)
+              update('letterChoice', 'ORIGINAL')
+            }}
+          >
+            {data.letterChoice === 'ORIGINAL' ? '✓ 원문 사용 중' : '원문 사용'}
+          </button>
+          <button
+            type="button"
+            className="small-button letter-choice-button"
             disabled={letterGenerating || data.letterInput.trim().length < letterMin}
             onClick={() => void generateLetter()}
           >
-            {letterGenerating ? '생성 중…' : 'AI 문장 생성'}
+            {letterGenerating ? '생성 중…' : data.letterAi ? 'AI 문장 다시 생성' : 'AI 문장 생성'}
           </button>
         </div>
         {data.letterAi && (
-          <div className="ai-suggestion" role="status" aria-live="polite">
-            <span className="ai-suggestion-icon" aria-hidden="true">
-              ✦
-            </span>
-            <p>{data.letterAi}</p>
-            <small>{data.letterChoice === 'AI' ? 'AI 문장 선택됨' : data.letterChoice === 'ORIGINAL' ? '원문 선택됨' : '사용할 편지를 선택해 주세요.'}</small>
-            <button type="button" onClick={() => update('letterChoice', 'ORIGINAL')}>
-              원문 사용
-            </button>
-            <button
-              type="button"
-              onClick={() => update('letterChoice', 'AI')}
-            >
-              AI 문장 사용
-            </button>
+          <div
+            className={`ai-suggestion${data.letterChoice === 'AI' ? ' is-selected' : ''}`}
+            aria-live="polite"
+          >
+            <div className="ai-suggestion-head">
+              <span className="ai-suggestion-icon" aria-hidden="true">
+                ✦
+              </span>
+              <strong>AI 문장</strong>
+              {!editingAi && <small>눌러서 직접 고칠 수 있어요</small>}
+            </div>
+            {editingAi ? (
+              <>
+                <textarea
+                  className="text-input ai-suggestion-editor"
+                  rows={7}
+                  maxLength={letterMax}
+                  value={aiDraft}
+                  aria-label="AI 문장 수정"
+                  autoFocus
+                  onChange={(event) => setAiDraft(event.target.value)}
+                />
+                <div className="ai-suggestion-actions">
+                  <button type="button" onClick={() => setEditingAi(false)}>
+                    취소
+                  </button>
+                  <button
+                    type="button"
+                    className="primary"
+                    disabled={!aiDraft.trim()}
+                    onClick={() => {
+                      update('letterAi', aiDraft.trim())
+                      setEditingAi(false)
+                    }}
+                  >
+                    확인
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="ai-suggestion-text"
+                  aria-label="AI 문장 수정하기"
+                  disabled={letterGenerating}
+                  onClick={() => {
+                    setAiDraft(data.letterAi)
+                    setEditingAi(true)
+                  }}
+                >
+                  {data.letterAi}
+                </button>
+                <div className="ai-suggestion-actions">
+                  <button
+                    type="button"
+                    className={data.letterChoice === 'AI' ? 'primary' : undefined}
+                    aria-pressed={data.letterChoice === 'AI'}
+                    disabled={letterGenerating}
+                    onClick={() => update('letterChoice', 'AI')}
+                  >
+                    {data.letterChoice === 'AI' ? '✓ AI 문장 사용 중' : 'AI 문장 사용'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
+        <p className="letter-choice-status" role="status">
+          {data.letterChoice === 'AI'
+            ? 'AI 문장을 편지로 사용해요.'
+            : data.letterChoice === 'ORIGINAL'
+              ? '작성한 원문을 편지로 사용해요.'
+              : '원문 사용 또는 AI 문장 생성 중 하나를 선택해 주세요.'}
+        </p>
       </section>
 
       <section className="content-section url-section">
@@ -236,7 +303,7 @@ export default function PinkSiteContentForm() {
           </button>
         </div>
         <div className="music-description-row">
-          <p className="description">사이트에서 재생할 음악 정보를 입력해 주세요.</p>
+          <p className="description">사이트에서 재생할 음악 정보를 입력해 주세요. (최소 1곡)</p>
           <span className="music-page-indicator" aria-live="polite">
             {currentMusicIndex + 1}/{visibleMusics.length}
           </span>

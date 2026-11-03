@@ -38,6 +38,7 @@ export function canProceed(page: Page, data: OrderData, earliestDate = '') {
     return Boolean(
       data.name.trim() &&
       /^01\d-\d{3,4}-\d{4}$/.test(data.phone) &&
+      Boolean(data.recipientName.trim()) &&
       (data.sitePasswordSet || /^[^\s]{4,20}$/.test(data.sitePassword)) &&
       (!data.sitePassword || /^[^\s]{4,20}$/.test(data.sitePassword)) &&
       Boolean(data.sitePasswordHint.trim()) &&
@@ -69,7 +70,7 @@ export function canProceed(page: Page, data: OrderData, earliestDate = '') {
       data.specialOccasion.length <= 50 &&
       data.letterInput.trim() &&
       data.letterInput.length <= 2000 &&
-      (!data.letterAi || data.letterChoice !== null) &&
+      data.letterChoice !== null &&
       (data.letterChoice !== 'AI' || Boolean(data.letterAi.trim())) &&
       /^https?:\/\//i.test(data.linkUrl) &&
       data.linkUrl.length <= 500 &&

@@ -33,6 +33,7 @@ export interface OrderData {
   linkUrl: string
   price: import('../services/API').Price | null
   musics: import('../services/API').Music[]
+  recipientName: string
   sitePassword: string
   sitePasswordHint: string
   sitePasswordSet: boolean
@@ -54,11 +55,12 @@ export interface MediaItem {
 export type MediaFiles = Record<MediaKind, (MediaItem | null)[]>
 export type PhraseValues = Partial<Record<PhraseField, string>>
 export type PhraseFlags = Partial<Record<PhraseField, boolean>>
-export type TouchedFields = Partial<Record<'name' | 'phone', boolean>>
+export type TouchedFields = Partial<Record<'name' | 'phone' | 'recipientName', boolean>>
 export type Sheet =
   | { type: 'caption'; kind: MediaKind; index: number }
   | { type: 'guide' }
   | { type: 'save-draft' }
+  | { type: 'extra-media'; kind: MediaKind; documentNo: number }
   | { type: 'position'; target: PreviewTarget; documentNo?: number }
   | { type: 'preview'; target?: undefined }
 

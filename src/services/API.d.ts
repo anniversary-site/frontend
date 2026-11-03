@@ -90,6 +90,7 @@ export interface Draft {
   anniversaryEtcText: string | null
   customerName: string | null
   phone: string | null
+  recipientName: string | null
   useStartDate: string | null
   useEndDate: string | null
   specialDay: string | null
@@ -103,6 +104,7 @@ export interface Draft {
   linkUrl: string | null
   price: Price
   sitePasswordSet: boolean
+  sitePasswordHint: string | null
   documents: { documentNo: number; photos: Media[]; videos: Media[] }[]
   updatedAt: string
 }
@@ -122,6 +124,8 @@ export interface DraftFields {
   letterAi?: string | null
   letterChoice?: LetterChoice | null
   linkUrl?: string | null
+  recipientName?: string | null
+  sitePasswordHint?: string | null
   sitePassword?: string
   validateStep?: number
 }
@@ -214,8 +218,14 @@ export interface SiteSession {
   siteAccessToken: string
   expiresAt: string
 }
+/** 잠금 화면에 띄울 정보. 비밀번호 없이 받습니다. */
+export interface SiteLock {
+  recipientName: string | null
+  passwordHint: string | null
+}
 export type SiteContent = Pick<
   Draft,
+  | 'recipientName'
   | 'specialDay'
   | 'specialPlace'
   | 'specialOccasion'
@@ -228,5 +238,6 @@ export type SiteContent = Pick<
   | 'useStartDate'
   | 'useEndDate'
 > & { templateId: number }
+export function getSiteLock(siteKey: string): Promise<SiteLock>
 export function unlockSite(siteKey: string, password: string): Promise<SiteSession>
 export function getSite(siteKey: string, token: string): Promise<SiteContent>

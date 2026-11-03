@@ -113,7 +113,9 @@ function validate(draft, step, code = 'VALIDATION_FAILED') {
   if (step >= 2) {
     if (!draft.customerName?.trim()) missing('customerName', 2)
     if (!/^01\d{8,9}$/.test(draft.phone ?? '')) missing('phone', 2)
+    if (!draft.recipientName?.trim()) missing('recipientName', 2)
     if (!draft.sitePasswordSet) missing('sitePassword', 2)
+    if (!draft.sitePasswordHint?.trim()) missing('sitePasswordHint', 2)
     if (!draft.useStartDate) missing('useStartDate', 2)
     if (!draft.useEndDate) missing('useEndDate', 2)
   }
@@ -137,6 +139,8 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
   if (parts[0] === 'sites') {
     // 독립된 완성 사이트 시연용 주소 /s/demo, 비밀번호 1225.
     if (parts[1] !== 'demo') fail(404, 'SITE_NOT_FOUND', '사이트를 찾을 수 없어요.')
+    if (parts[2] === 'lock' && method === 'GET')
+      return { recipientName: '하나', passwordHint: '우리가 처음 만난 날 (MMDD)' }
     if (parts[2] === 'unlock' && method === 'POST') {
       if (!body.password) fail(400, 'VALIDATION_FAILED', '비밀번호를 입력해 주세요.')
       if (body.password !== '1225') fail(401, 'WRONG_SITE_PASSWORD', '비밀번호를 확인해 주세요.')
@@ -150,6 +154,7 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
       fail(401, 'INVALID_SITE_TOKEN', '비밀번호를 다시 입력해 주세요.')
     return {
       templateId: 1,
+      recipientName: '하나',
       anniversaryType: 'COUPLE',
       anniversaryEtcText: null,
       specialDay: dateAfter(0),
@@ -185,6 +190,7 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
       anniversaryEtcText: null,
       customerName: null,
       phone: null,
+      recipientName: null,
       useStartDate: null,
       useEndDate: null,
       specialDay: null,
@@ -197,6 +203,7 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
       letter: null,
       linkUrl: null,
       sitePasswordSet: false,
+      sitePasswordHint: null,
       documents: [{ documentNo: 1, photos: [], videos: [] }],
       updatedAt: now(),
     })
@@ -243,6 +250,8 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
         'anniversaryEtcText',
         'customerName',
         'phone',
+        'recipientName',
+        'sitePasswordHint',
         'useStartDate',
         'useEndDate',
         'specialDay',
