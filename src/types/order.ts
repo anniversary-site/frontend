@@ -12,7 +12,7 @@ export type Page = 'main' | 'start' | 'load' | 'template' | 'info' | 'content' |
 export type Occasion = '연애 기념일' | '생일' | '결혼 기념일' | '기타'
 export type PhraseField = 'main' | 'sub'
 export type MediaKind = 'photos' | 'videos'
-export type PreviewTarget = PhraseField | MediaKind | 'story'
+export type PreviewTarget = PhraseField | MediaKind | 'story' | 'letters' | 'music'
 
 export interface OrderData {
   template: number

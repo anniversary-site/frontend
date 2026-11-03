@@ -68,6 +68,35 @@ export default function OrderInfoPage() {
           </small>
         )}
       </label>
+      <label className="password-field field-label">
+        <span>
+          웹사이트 조회 비밀번호
+          <span className="required-mark" aria-label="필수">
+            {' '}
+            *
+          </span>
+        </span>
+        <small>
+          {data.sitePasswordSet
+            ? '비밀번호가 설정되어 있어요. 변경할 때만 새 비밀번호를 입력해 주세요.'
+            : '제작 완료된 웹사이트에 접속할 때 사용할 비밀번호예요.'}
+        </small>
+        <input
+          className="text-input"
+          type="password"
+          autoComplete="new-password"
+          placeholder={data.sitePasswordSet ? '변경할 때만 입력해 주세요' : '공백 없이 4~20자'}
+          minLength={4}
+          maxLength={20}
+          value={data.sitePassword}
+          onChange={(event) => update('sitePassword', event.target.value)}
+          aria-invalid={Boolean(data.sitePassword && !/^[^\s]{4,20}$/.test(data.sitePassword))}
+          required={!data.sitePasswordSet}
+        />
+        {data.sitePassword && !/^[^\s]{4,20}$/.test(data.sitePassword) && (
+          <small className="field-error">공백 없이 4~20자로 입력해 주세요.</small>
+        )}
+      </label>
       <section className="calendar-section">
         <h2>
           희망 수령 기간 선택
