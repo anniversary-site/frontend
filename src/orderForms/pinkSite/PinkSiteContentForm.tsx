@@ -21,6 +21,7 @@ export default function PinkSiteContentForm() {
   const musicListRef = useRef<HTMLDivElement>(null)
   const [currentMusicIndex, setCurrentMusicIndex] = useState(0)
   const [letterGenerating, setLetterGenerating] = useState(false)
+  const [letterSuggestion, setLetterSuggestion] = useState<Letter | null>(null)
 
   useEffect(() => {
     setCurrentMusicIndex((current) => Math.min(current, visibleMusics.length - 1))
@@ -47,9 +48,9 @@ export default function PinkSiteContentForm() {
       letters: [next],
     }))
 
-  /** 한 줄 칸에 적은 말을 AI가 편지로 다듬습니다. 원문은 input에, 다듬은 편지는 content에 둡니다. */
+  /** 입력 필드의 편지를 AI로 다듬되, 사용하기 전까지 최종 주문 데이터에는 반영하지 않습니다. */
   const generateLetter = async () => {
-    const raw = (letter.input ?? letter.content).trim()
+    const raw = letter.content.trim()
     if (letterGenerating || !session) return
     if (raw.length < letterMin) {
       setToast(`편지에 담을 말을 ${letterMin}자 이상 적어 주세요.`)
@@ -58,8 +59,8 @@ export default function PinkSiteContentForm() {
     setLetterGenerating(true)
     try {
       const result = await api.generateAiLetter(session.draftId, raw, session.draftToken)
-      setLetter({ input: result.input, content: result.content })
-      setToast(`편지를 다듬었어요. 남은 생성 횟수 ${result.remainingCount}회`)
+      setLetterSuggestion({ input: result.input, content: result.content })
+      setToast(`AI 문장을 생성했어요. 남은 생성 횟수 ${result.remainingCount}회`)
     } catch (cause) {
       reportError(cause)
     } finally {
@@ -162,7 +163,10 @@ export default function PinkSiteContentForm() {
             disabled={letterGenerating}
             aria-label="편지"
             placeholder="웹사이트를 선물받는 분께 보여줄 편지를 작성해주세요."
-            onChange={(event) => setLetter({ input: letter.input, content: event.target.value })}
+            onChange={(event) => {
+              setLetter({ input: null, content: event.target.value })
+              setLetterSuggestion(null)
+            }}
           />
           <button
             type="button"
@@ -170,9 +174,26 @@ export default function PinkSiteContentForm() {
             disabled={letterGenerating || letter.content.trim().length < letterMin}
             onClick={() => void generateLetter()}
           >
-            {letterGenerating ? '생성 중…' : letter.input ? 'AI 다시 생성' : 'AI 문장 생성'}
+            {letterGenerating ? '생성 중…' : 'AI 문장 생성'}
           </button>
         </div>
+        {letterSuggestion && (
+          <div className="ai-suggestion" role="status" aria-live="polite">
+            <span className="ai-suggestion-icon" aria-hidden="true">
+              ✦
+            </span>
+            <p>{letterSuggestion.content}</p>
+            <button
+              type="button"
+              onClick={() => {
+                setLetter(letterSuggestion)
+                setLetterSuggestion(null)
+              }}
+            >
+              사용하기
+            </button>
+          </div>
+        )}
       </section>
 
       <section className="content-section music-section">
