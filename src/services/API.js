@@ -84,7 +84,8 @@ export const getDraft = (draftId, token) => request(`/drafts/${id(draftId)}`, { 
 /**
  * 6. 주문서 부분 저장. null은 비우기, 생략한 필드는 유지합니다.
  * fields: templateId, anniversaryType, anniversaryEtcText, customerName,
- * phone, useStartDate, useEndDate, memoryInput, musics, letters, sitePassword, validateStep.
+ * phone, useStartDate, useEndDate, specialDay, specialPlace, specialOccasion,
+ * letterInput, letterAi, letterChoice, linkUrl, musics, sitePassword, validateStep.
  * '다음'일 때만 validateStep(1~3)을 전달합니다.
  */
 export function updateDraft(draftId, fields, token) {
@@ -151,9 +152,7 @@ export const createOrderRequest = (orderId, { content, requestType }, token) =>
 export const getOrderRequests = (orderId, token) =>
   request(`/orders/${id(orderId)}/requests`, { token })
 
-export const generateAiStory = (draftId, memoryInput, token) =>
-  request(`/drafts/${id(draftId)}/ai-story`, { method: 'POST', body: { memoryInput }, token })
-// 12-1. AI 편지 다듬기. 저장하지 않으니 결과({ input, content })를 letters에 넣어 저장합니다.
+// AI 편지 다듬기. 서버가 원문과 AI 결과를 저장하고 선택 상태를 초기화합니다.
 export const generateAiLetter = (draftId, letterInput, token) =>
   request(`/drafts/${id(draftId)}/ai-letter`, { method: 'POST', body: { letterInput }, token })
 export const unlockSite = (siteKey, password) =>

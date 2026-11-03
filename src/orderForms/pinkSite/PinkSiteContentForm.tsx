@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useOrder } from '../../context/OrderContext'
 import * as api from '../../services/API'
-import type { Letter } from '../../services/API'
-import { parseInformation, serializeInformation } from '../../utils/order'
 
 const musicLabels = {
   title: ['음악 제목', '음악 제목을 입력해 주세요'],
@@ -13,15 +11,12 @@ const musicLabels = {
 export default function PinkSiteContentForm() {
   const { config, data, setData, update, mediaSection, open, setToast, session, reportError } =
     useOrder()
-  const information = parseInformation(data.memoryInput)
-  const letter = data.letters[0] ?? { input: null, content: '' }
   const visibleMusics = data.musics.length
     ? data.musics
     : [{ title: '', artist: '', youtubeUrl: '' }]
   const musicListRef = useRef<HTMLDivElement>(null)
   const [currentMusicIndex, setCurrentMusicIndex] = useState(0)
   const [letterGenerating, setLetterGenerating] = useState(false)
-  const [letterSuggestion, setLetterSuggestion] = useState<Letter | null>(null)
 
   useEffect(() => {
     setCurrentMusicIndex((current) => Math.min(current, visibleMusics.length - 1))
@@ -30,27 +25,10 @@ export default function PinkSiteContentForm() {
   if (!config) return <p role="status">주문 설정을 불러오는 중이에요.</p>
   const letterMin = config.limits.letterInputMinLength ?? 10
   const letterMax = config.limits.letterMaxLength ?? 2000
-  const memoryMax = config.limits.memoryInputMaxLength ?? 2000
-
-  const updateInformation = (key: keyof typeof information, value: string) => {
-    const next = { ...information, [key]: value }
-    setData((current) => ({
-      ...current,
-      memoryInput: serializeInformation(next),
-      main: 'INFORMATION',
-      sub: serializeInformation(next),
-    }))
-  }
-
-  const setLetter = (next: Letter) =>
-    setData((current) => ({
-      ...current,
-      letters: [next],
-    }))
 
   /** 입력 필드의 편지를 AI로 다듬되, 사용하기 전까지 최종 주문 데이터에는 반영하지 않습니다. */
   const generateLetter = async () => {
-    const raw = letter.content.trim()
+    const raw = data.letterInput.trim()
     if (letterGenerating || !session) return
     if (raw.length < letterMin) {
       setToast(`편지에 담을 말을 ${letterMin}자 이상 적어 주세요.`)
@@ -58,8 +36,18 @@ export default function PinkSiteContentForm() {
     }
     setLetterGenerating(true)
     try {
+      await api.updateDraft(session.draftId, {
+        specialDay: data.specialDay || null,
+        specialPlace: data.specialPlace || null,
+        specialOccasion: data.specialOccasion || null,
+      }, session.draftToken)
       const result = await api.generateAiLetter(session.draftId, raw, session.draftToken)
-      setLetterSuggestion({ input: result.input, content: result.content })
+      setData((current) => ({
+        ...current,
+        letterInput: result.letterInput,
+        letterAi: result.letterAi,
+        letterChoice: result.letterChoice,
+      }))
       setToast(`AI 문장을 생성했어요. 남은 생성 횟수 ${result.remainingCount}회`)
     } catch (cause) {
       reportError(cause)
@@ -118,27 +106,27 @@ export default function PinkSiteContentForm() {
         <div className="information-fields">
           <input
             className="text-input"
-            value={information.specialDay}
-            maxLength={100}
+            type="date"
+            value={data.specialDay}
             placeholder="특별한 날을 작성해주세요."
             aria-label="특별한 날"
-            onChange={(event) => updateInformation('specialDay', event.target.value)}
+            onChange={(event) => update('specialDay', event.target.value)}
           />
           <input
             className="text-input"
-            value={information.specialPlace}
+            value={data.specialPlace}
             maxLength={100}
             placeholder="특별한 장소를 작성해주세요."
             aria-label="특별한 장소"
-            onChange={(event) => updateInformation('specialPlace', event.target.value)}
+            onChange={(event) => update('specialPlace', event.target.value)}
           />
           <input
             className="text-input"
-            value={information.story}
-            maxLength={memoryMax - 40}
+            value={data.specialOccasion}
+            maxLength={50}
             placeholder="어떤 일을 기념하는지 작성해주세요."
-            aria-label="우리의 이야기"
-            onChange={(event) => updateInformation('story', event.target.value)}
+            aria-label="어떤 기념일인지"
+            onChange={(event) => update('specialOccasion', event.target.value)}
           />
         </div>
       </section>
@@ -159,13 +147,16 @@ export default function PinkSiteContentForm() {
             className="text-input"
             rows={7}
             maxLength={letterMax}
-            value={letter.content}
+            value={data.letterInput}
             disabled={letterGenerating}
             aria-label="편지"
             placeholder="웹사이트를 선물받는 분께 보여줄 편지를 작성해주세요."
             onChange={(event) => {
-              setLetter({ input: null, content: event.target.value })
-              setLetterSuggestion(null)
+              setData((current) => ({
+                ...current,
+                letterInput: event.target.value,
+                letterChoice: 'ORIGINAL',
+              }))
             }}
           />
         </div>
@@ -173,26 +164,27 @@ export default function PinkSiteContentForm() {
           <button
             type="button"
             className="small-button letter-ai-button"
-            disabled={letterGenerating || letter.content.trim().length < letterMin}
+            disabled={letterGenerating || data.letterInput.trim().length < letterMin}
             onClick={() => void generateLetter()}
           >
             {letterGenerating ? '생성 중…' : 'AI 문장 생성'}
           </button>
         </div>
-        {letterSuggestion && (
+        {data.letterAi && (
           <div className="ai-suggestion" role="status" aria-live="polite">
             <span className="ai-suggestion-icon" aria-hidden="true">
               ✦
             </span>
-            <p>{letterSuggestion.content}</p>
+            <p>{data.letterAi}</p>
+            <small>{data.letterChoice === 'AI' ? 'AI 문장 선택됨' : data.letterChoice === 'ORIGINAL' ? '원문 선택됨' : '사용할 편지를 선택해 주세요.'}</small>
+            <button type="button" onClick={() => update('letterChoice', 'ORIGINAL')}>
+              원문 사용
+            </button>
             <button
               type="button"
-              onClick={() => {
-                setLetter(letterSuggestion)
-                setLetterSuggestion(null)
-              }}
+              onClick={() => update('letterChoice', 'AI')}
             >
-              사용하기
+              AI 문장 사용
             </button>
           </div>
         )}
@@ -218,10 +210,10 @@ export default function PinkSiteContentForm() {
           inputMode="url"
           autoComplete="url"
           maxLength={500}
-          value={data.externalUrl}
+          value={data.linkUrl}
           placeholder="https://youtube.com/..."
           aria-label="연결할 사이트 URL"
-          onChange={(event) => update('externalUrl', event.target.value)}
+          onChange={(event) => update('linkUrl', event.target.value)}
         />
       </section>
 

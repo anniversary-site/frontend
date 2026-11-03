@@ -24,10 +24,15 @@ export interface OrderData {
   endDate: string
   main: string
   sub: string
-  memoryInput: string
-  externalUrl: string
+  specialDay: string
+  specialPlace: string
+  specialOccasion: string
+  letterInput: string
+  letterAi: string
+  letterChoice: import('../services/API').LetterChoice | null
+  linkUrl: string
+  price: import('../services/API').Price | null
   musics: import('../services/API').Music[]
-  letters: import('../services/API').Letter[]
   sitePassword: string
   sitePasswordHint: string
   sitePasswordSet: boolean

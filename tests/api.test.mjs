@@ -23,7 +23,7 @@ test('목업: 새 API로 작성·업로드·제출·조회·요구사항 흐름�
     const config = await api.getOrderConfig()
     const templates = await api.getTemplates('COUPLE')
     const template = await api.getTemplate(templates[0].templateId)
-    assert.equal(template.documents[0].minPhotos, 1)
+    assert.equal(template.documents[0].minPhotos, 5)
     const { draftId, draftToken: token } = await api.createDraft()
     await api.updateDraft(
       draftId,
@@ -47,7 +47,7 @@ test('목업: 새 API로 작성·업로드·제출·조회·요구사항 흐름�
       api.updateDraft(draftId, { memoryInput: '저장되면 안 되는 문구', validateStep: 3 }, token),
       (error) => error.code === 'VALIDATION_FAILED',
     )
-    assert.equal((await api.getDraft(draftId, token)).memoryInput, null)
+    assert.equal((await api.getDraft(draftId, token)).specialDay, null)
     const file = new File(['photo'], 'test.png', { type: 'image/png' })
     const media = await api.uploadMedia(
       draftId,
@@ -65,18 +65,23 @@ test('목업: 새 API로 작성·업로드·제출·조회·요구사항 흐름�
     )
     assert.equal(await api.deleteMedia(draftId, media.mediaId, token), undefined)
     assert.equal((await api.getDraft(draftId, token)).documents[0].photos[0].slot, 2)
-    const story = await api.generateAiStory(
+    for (const slot of [1, 3, 4, 5]) await api.uploadMedia(draftId, { file, type: 'PHOTO', documentNo: 1, slot }, token)
+    const story = await api.generateAiLetter(
       draftId,
       '우리는 봄에 처음 만났고 함께 산책하며 소중한 추억을 쌓았습니다.',
       token,
     )
     assert.equal(story.remainingCount, 9)
-    assert.equal((await api.getDraft(draftId, token)).memoryStory, story.memoryStory)
+    assert.equal((await api.getDraft(draftId, token)).letterAi, story.letterAi)
     await api.updateDraft(
       draftId,
       {
         musics: [{ title: '노래', artist: '가수' }],
-        letters: [{ content: '편지\n내용' }],
+        specialDay: '2026-01-12',
+        specialPlace: '서강대학교',
+        specialOccasion: '데모데이',
+        letterChoice: 'AI',
+        linkUrl: 'https://example.com',
         validateStep: 3,
       },
       token,
@@ -89,7 +94,7 @@ test('목업: 새 API로 작성·업로드·제출·조회·요구사항 흐름�
       { memoryInput: '원문만 수정해도 생성된 이야기는 유지됩니다.' },
       token,
     )
-    assert.equal((await api.getDraft(draftId, token)).memoryStory, story.memoryStory)
+    assert.equal((await api.getDraft(draftId, token)).letterAi, story.letterAi)
     await assert.rejects(
       api.updateDraft(
         draftId,
@@ -145,9 +150,9 @@ test('실제 요청: URL, Bearer 토큰, JSON, multipart, 204, 서버 오류 정
     assert.equal(request.url, 'https://backend.example/api/v1/drafts/7')
     assert.equal(request.headers.Authorization, 'Bearer token')
     assert.deepEqual(JSON.parse(request.body), { phone: '01012345678', memoryInput: null })
-    await api.generateAiStory(7, '함께한 추억', 'draft-token')
-    assert.equal(request.url, 'https://backend.example/api/v1/drafts/7/ai-story')
-    assert.deepEqual(JSON.parse(request.body), { memoryInput: '함께한 추억' })
+    await api.generateAiLetter(7, '함께한 추억', 'draft-token')
+    assert.equal(request.url, 'https://backend.example/api/v1/drafts/7/ai-letter')
+    assert.deepEqual(JSON.parse(request.body), { letterInput: '함께한 추억' })
     await api.unlockSite('a/b', 'secret')
     assert.equal(request.url, 'https://backend.example/api/v1/sites/a%2Fb/unlock')
     assert.equal(request.headers.Authorization, undefined)
@@ -205,7 +210,7 @@ test('완성 사이트는 비밀번호와 별도 사이트 토큰으로 접근�
   )
   const session = await api.unlockSite('demo', '1225')
   const site = await api.getSite('demo', session.siteAccessToken)
-  assert.ok(site.memoryTitle)
+  assert.ok(site.specialOccasion)
   assert.equal(site.customerName, undefined)
   assert.equal(site.memoryInput, undefined)
   await assert.rejects(

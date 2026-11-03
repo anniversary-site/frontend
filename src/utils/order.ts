@@ -61,15 +61,20 @@ export function canProceed(page: Page, data: OrderData, earliestDate = '') {
           return false
         }
       })
-    const information = parseInformation(data.memoryInput)
     return Boolean(
-      information.specialDay.trim() &&
-      information.specialPlace.trim() &&
-      information.story.trim() &&
+      /^\d{4}-\d{2}-\d{2}$/.test(data.specialDay) &&
+      data.specialPlace.trim() &&
+      data.specialPlace.length <= 100 &&
+      data.specialOccasion.trim() &&
+      data.specialOccasion.length <= 50 &&
+      data.letterInput.trim() &&
+      data.letterInput.length <= 2000 &&
+      (!data.letterAi || data.letterChoice !== null) &&
+      (data.letterChoice !== 'AI' || Boolean(data.letterAi.trim())) &&
+      /^https?:\/\//i.test(data.linkUrl) &&
+      data.linkUrl.length <= 500 &&
       validMusics &&
-      data.letters.every(
-        (letter) => letter.content.length <= 2000 && (letter.input?.length ?? 0) <= 2000,
-      ),
+      true,
     )
   }
   return true

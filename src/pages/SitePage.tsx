@@ -91,8 +91,10 @@ function SiteView({ siteKey }: { siteKey: string }) {
         </form>
       ) : (
         <>
-          <h1>{content.memoryTitle}</h1>
-          <p className="site-story">{content.memoryStory}</p>
+          <h1>{content.specialOccasion}</h1>
+          <p className="site-story">
+            {content.specialDay} · {content.specialPlace}
+          </p>
           {content.documents.map((document) => (
             <section key={document.documentNo} aria-label={`추억 ${document.documentNo}`}>
               {document.photos.map((photo) => (
@@ -130,12 +132,17 @@ function SiteView({ siteKey }: { siteKey: string }) {
               ))}
             </section>
           )}
-          {content.letters.map((letter, index) => (
-            <section className="site-story" key={index}>
-              <h2>편지 {index + 1}</h2>
-              <p>{letter.content}</p>
+          {content.letter && (
+            <section className="site-story">
+              <h2>편지</h2>
+              <p>{content.letter}</p>
             </section>
-          ))}
+          )}
+          {content.linkUrl && (
+            <a href={content.linkUrl} target="_blank" rel="noreferrer">
+              연결된 사이트 열기
+            </a>
+          )}
         </>
       )}
     </main>
