@@ -30,7 +30,7 @@ export default function PinkSiteContentForm() {
 
   /** 입력 필드의 편지를 AI로 다듬되, 사용하기 전까지 최종 주문 데이터에는 반영하지 않습니다. */
   const generateLetter = async () => {
-    const raw = data.letterInput.trim()
+    const raw = (data.letterChoice === 'AI' ? data.letterAi : data.letterInput).trim()
     if (letterGenerating || !session) return
     if (raw.length < letterMin) {
       setToast(`편지에 담을 말을 ${letterMin}자 이상 적어 주세요.`)
@@ -153,12 +153,14 @@ export default function PinkSiteContentForm() {
             className="text-input"
             rows={7}
             maxLength={letterMax}
-            value={data.letterInput}
+            value={data.letterChoice === 'AI' ? data.letterAi : data.letterInput}
             disabled={letterGenerating}
             aria-label="편지"
             required
             placeholder="웹사이트를 선물받는 분께 보여줄 편지를 작성해주세요."
-            onChange={(event) => update('letterInput', event.target.value)}
+            onChange={(event) =>
+              update(data.letterChoice === 'AI' ? 'letterAi' : 'letterInput', event.target.value)
+            }
           />
         </div>
         <div className="letter-actions">
@@ -287,12 +289,13 @@ export default function PinkSiteContentForm() {
           required
           onChange={(event) => update('linkUrl', event.target.value)}
         />
+        <p className="description">http:// 또는 https://로 시작하는 주소를 입력해 주세요.</p>
       </section>
 
       <section className="content-section music-section">
         <div className="section-heading">
           <h2>
-            MUSIC 작성 <span className="required-mark">*</span>
+            MUSIC 작성 <span className="required-mark">*</span> (최소 1곡)
           </h2>
           <button
             type="button"
@@ -303,7 +306,7 @@ export default function PinkSiteContentForm() {
           </button>
         </div>
         <div className="music-description-row">
-          <p className="description">사이트에서 재생할 음악 정보를 입력해 주세요. (최소 1곡)</p>
+          <p className="description">사이트에서 재생할 음악 정보를 입력해 주세요.</p>
           <span className="music-page-indicator" aria-live="polite">
             {currentMusicIndex + 1}/{visibleMusics.length}
           </span>

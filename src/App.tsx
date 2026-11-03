@@ -718,11 +718,12 @@ export default function App() {
               {templateDetail.documents.length > 1 && `document ${doc.documentNo} `}
               {kind === 'photos' ? '사진' : '영상'} 업로드
               {kind === 'photos' && <span className="required-mark" aria-label="필수"> *</span>}
+              {kind === 'photos' && ` (최소 ${doc.minPhotos}장)`}
             </h2>
             <p className="description">
               {kind === 'photos'
-                ? `사진 기본 ${config?.pricing.includedPhotos ?? 20}장, 최소 ${doc.minPhotos}장`
-                : `영상 기본 ${config?.pricing.includedVideos ?? 2}개 · 개당 ${config?.limits.videoMaxSizeMb ?? 70}MB`}
+                ? `기본 슬롯 ${config?.pricing.includedPhotos ?? 20}칸 제공`
+                : `영상 기본 ${config?.pricing.includedVideos ?? 2}개 · 개당 용량 ${config?.limits.videoMaxSizeMb ?? 70}MB 이내`}
             </p>
           </div>
           <button
