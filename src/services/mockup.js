@@ -16,7 +16,6 @@ const dateAfter = (days) => {
 }
 const bankAccount = { bankName: '국민', accountNumber: '000000000000', accountHolder: 'URLUV' }
 export const mockOrderConfig = {
-  price: 30000,
   bankAccount,
   minLeadDays: 7,
   anniversaryTypes: [
@@ -26,8 +25,6 @@ export const mockOrderConfig = {
     { code: 'ETC', label: '기타' },
   ],
   limits: {
-    memoryInputMinLength: 20,
-    memoryInputMaxLength: 2000,
     letterInputMinLength: 10,
     letterMaxLength: 2000,
     captionMaxLength: 50,
@@ -37,6 +34,15 @@ export const mockOrderConfig = {
     videoMaxDurationSec: 60,
     photoTypes: ['image/jpeg', 'image/png', 'image/heic'],
     videoTypes: ['video/mp4', 'video/quicktime'],
+  },
+  pricing: {
+    freePeriodDays: 7,
+    extraPeriodPrice: 1000,
+    includedPhotos: 20,
+    extraPhotoUnit: 10,
+    extraPhotoUnitPrice: 100,
+    includedVideos: 2,
+    extraVideoPrice: 100,
   },
 }
 
@@ -49,6 +55,7 @@ export const mockTemplates = ['크리스마스', '우리의 순간', '마음의 
   description: '소중한 순간을 담는 기념일 페이지',
   thumbnailUrl: image,
   sampleSiteUrl: null,
+  basePrice: index === 0 ? 6900 : 30000,
 }))
 const fail = (status, code, message, details = []) => {
   throw Object.assign(new Error(message), { status, code, details })
@@ -62,9 +69,10 @@ function templateDetail(templateId) {
     documents: [
       {
         documentNo: 1,
-        photoSlots: 4,
-        videoSlots: 4,
-        minPhotos: 1,
+        photoSlots: 50,
+        videoSlots: 5,
+        minPhotos: 5,
+        minVideos: 0,
         photoGuide: guide,
         videoGuide: guide,
       },
@@ -81,6 +89,17 @@ function authorized(draftId, token) {
 function editable(draft) {
   if (draft.status !== 'DRAFT') fail(409, 'ALREADY_SUBMITTED', '이미 제출한 주문서예요.')
 }
+function draftView(draft) {
+  const pricing = mockOrderConfig.pricing
+  const usageDays = draft.useStartDate && draft.useEndDate ? Math.max(0, (Date.parse(draft.useEndDate) - Date.parse(draft.useStartDate)) / 86400000) : 0
+  const photoCount = draft.documents.reduce((sum, doc) => sum + doc.photos.length, 0)
+  const videoCount = draft.documents.reduce((sum, doc) => sum + doc.videos.length, 0)
+  const basePrice = mockTemplates.find(item => item.templateId === draft.template?.templateId)?.basePrice ?? 0
+  const periodFee = Math.ceil(Math.max(0, usageDays - pricing.freePeriodDays) / pricing.freePeriodDays) * pricing.extraPeriodPrice
+  const photoFee = Math.ceil(Math.max(0, photoCount - pricing.includedPhotos) / pricing.extraPhotoUnit) * pricing.extraPhotoUnitPrice
+  const videoFee = Math.max(0, videoCount - pricing.includedVideos) * pricing.extraVideoPrice
+  return copy({ ...draft, letter: draft.letterChoice === 'AI' ? draft.letterAi : draft.letterInput, price: { basePrice, usageDays, periodFee, photoCount, photoFee, videoCount, videoFee, totalPrice: basePrice + periodFee + photoFee + videoFee } })
+}
 function validate(draft, step, code = 'VALIDATION_FAILED') {
   const details = []
   const missing = (field, value) => details.push({ field, reason: 'REQUIRED', value })
@@ -94,14 +113,21 @@ function validate(draft, step, code = 'VALIDATION_FAILED') {
   if (step >= 2) {
     if (!draft.customerName?.trim()) missing('customerName', 2)
     if (!/^01\d{8,9}$/.test(draft.phone ?? '')) missing('phone', 2)
+    if (!draft.recipientName?.trim()) missing('recipientName', 2)
     if (!draft.sitePasswordSet) missing('sitePassword', 2)
+    if (!draft.sitePasswordHint?.trim()) missing('sitePasswordHint', 2)
     if (!draft.useStartDate) missing('useStartDate', 2)
     if (!draft.useEndDate) missing('useEndDate', 2)
   }
   if (step >= 3) {
-    if (!draft.memoryTitle?.trim() || !draft.memoryStory?.trim()) missing('memoryStory', 3)
+    for (const field of ['specialDay', 'specialPlace', 'specialOccasion', 'linkUrl'])
+      if (!draft[field]?.trim()) missing(field, 3)
+    if (draft.letterChoice === 'AI' && !draft.letterAi?.trim()) missing('letterAi', 3)
+    if (draft.letterChoice !== 'AI' && !draft.letterInput?.trim()) missing('letterInput', 3)
+    if (draft.letterAi?.trim() && !draft.letterChoice) missing('letterChoice', 3)
     if (!draft.musics?.length) missing('musics', 3)
-    if (!draft.documents[0]?.photos.length) missing('documents.1.photos', 3)
+    if ((draft.documents[0]?.photos.length ?? 0) < 5)
+      details.push({ field: 'documents[0].photos', reason: 'MIN_PHOTOS', value: 3 })
   }
   if (details.length) fail(400, code, '필수 입력 항목을 확인해 주세요.', details)
 }
@@ -113,6 +139,8 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
   if (parts[0] === 'sites') {
     // 독립된 완성 사이트 시연용 주소 /s/demo, 비밀번호 1225.
     if (parts[1] !== 'demo') fail(404, 'SITE_NOT_FOUND', '사이트를 찾을 수 없어요.')
+    if (parts[2] === 'lock' && method === 'GET')
+      return { recipientName: '하나', passwordHint: '우리가 처음 만난 날 (MMDD)' }
     if (parts[2] === 'unlock' && method === 'POST') {
       if (!body.password) fail(400, 'VALIDATION_FAILED', '비밀번호를 입력해 주세요.')
       if (body.password !== '1225') fail(401, 'WRONG_SITE_PASSWORD', '비밀번호를 확인해 주세요.')
@@ -126,12 +154,15 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
       fail(401, 'INVALID_SITE_TOKEN', '비밀번호를 다시 입력해 주세요.')
     return {
       templateId: 1,
+      recipientName: '하나',
       anniversaryType: 'COUPLE',
       anniversaryEtcText: null,
-      memoryTitle: '함께 간직하는 추억',
-      memoryStory: '기념 사이트의 샘플 이야기입니다.',
+      specialDay: dateAfter(0),
+      specialPlace: '서강대학교 AS관 라운지',
+      specialOccasion: '데모데이',
       musics: [],
-      letters: [{ content: '소중한 하루를 오래 기억해요.' }],
+      letter: '소중한 하루를 오래 기억해요.',
+      linkUrl: 'https://example.com',
       documents: [],
       useStartDate: dateAfter(0),
       useEndDate: dateAfter(6),
@@ -159,14 +190,20 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
       anniversaryEtcText: null,
       customerName: null,
       phone: null,
+      recipientName: null,
       useStartDate: null,
       useEndDate: null,
-      memoryInput: null,
+      specialDay: null,
+      specialPlace: null,
+      specialOccasion: null,
       musics: [],
-      letters: [],
+      letterInput: null,
+      letterAi: null,
+      letterChoice: null,
+      letter: null,
+      linkUrl: null,
       sitePasswordSet: false,
-      memoryTitle: null,
-      memoryStory: null,
+      sitePasswordHint: null,
       documents: [{ documentNo: 1, photos: [], videos: [] }],
       updatedAt: now(),
     })
@@ -198,7 +235,7 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
   }
   if (parts[0] === 'drafts' && parts[1]) {
     const draft = authorized(parts[1], token)
-    if (parts.length === 2 && method === 'GET') return copy(draft)
+    if (parts.length === 2 && method === 'GET') return draftView(draft)
     editable(draft)
     if (parts.length === 2 && method === 'PATCH') {
       const candidate = copy(draft)
@@ -213,11 +250,18 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
         'anniversaryEtcText',
         'customerName',
         'phone',
+        'recipientName',
+        'sitePasswordHint',
         'useStartDate',
         'useEndDate',
-        'memoryInput',
+        'specialDay',
+        'specialPlace',
+        'specialOccasion',
+        'letterInput',
+        'letterAi',
+        'letterChoice',
+        'linkUrl',
         'musics',
-        'letters',
       ])
         if (body[key] !== undefined) candidate[key] = body[key]
       if (candidate.useStartDate && candidate.useStartDate < dateAfter(7))
@@ -240,9 +284,14 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
         candidate.sitePasswordSet = true
       }
       candidate.musics ??= []
-      candidate.letters ??= []
-      if ((candidate.memoryInput?.length ?? 0) > 2000)
-        fail(400, 'TEXT_TOO_LONG', '추억 원문은 2000자 이내로 적어 주세요.')
+      for (const [field, max] of [['specialPlace', 100], ['specialOccasion', 50], ['letterInput', 2000], ['letterAi', 2000], ['linkUrl', 500]])
+        if ((candidate[field]?.length ?? 0) > max) fail(400, 'TEXT_TOO_LONG', '글자 수를 확인해 주세요.')
+      if (candidate.linkUrl) {
+        let valid = false
+        try { valid = ['http:', 'https:'].includes(new URL(candidate.linkUrl).protocol) } catch {}
+        if (!valid) fail(400, 'INVALID_LINK_URL', 'http(s) 주소를 입력해 주세요.')
+      }
+      if (candidate.letterChoice === 'AI' && !candidate.letterAi?.trim()) fail(400, 'LETTER_AI_EMPTY', 'AI 편지가 비어 있어요.')
       for (const [index, music] of candidate.musics.entries()) {
         if (['title', 'artist'].some((key) => !music[key]?.trim() || music[key].length > 100))
           fail(400, 'VALIDATION_FAILED', '음악 제목과 가수를 1~100자로 입력해 주세요.', [
@@ -268,10 +317,6 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
             ])
         }
       }
-      if (
-        candidate.letters.some((letter) => !letter.content?.trim() || letter.content.length > 2000)
-      )
-        fail(400, 'VALIDATION_FAILED', '편지는 1~2000자로 입력해 주세요.')
       if (body.validateStep !== undefined) {
         if (![1, 2, 3].includes(body.validateStep))
           fail(400, 'VALIDATION_FAILED', '단계 번호를 확인해 주세요.')
@@ -281,7 +326,7 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
       candidate.updatedAt = now()
       if (body.sitePassword !== undefined) passwords.set(candidate.draftId, body.sitePassword)
       drafts.set(candidate.draftId, candidate)
-      return copy(candidate)
+      return draftView(candidate)
     }
     if (parts[2] === 'ai-story' && method === 'POST') {
       if (!body.memoryInput || body.memoryInput.trim().length < 20)
@@ -310,9 +355,13 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
       const count = aiCounts.get(draft.draftId) ?? 0
       if (count >= 10) fail(429, 'AI_RATE_LIMITED', 'AI 생성 횟수를 모두 사용했어요.')
       aiCounts.set(draft.draftId, count + 1)
+      draft.letterInput = input
+      draft.letterAi = `${input}\n\n늘 곁에 있어 줘서 고마워. 앞으로도 잘 지내자.`
+      draft.letterChoice = null
       return {
-        input,
-        content: `${input}\n\n늘 곁에 있어 줘서 고마워. 앞으로도 잘 지내자.`,
+        letterInput: draft.letterInput,
+        letterAi: draft.letterAi,
+        letterChoice: null,
         remainingCount: 9 - count,
       }
     }
@@ -321,7 +370,7 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
         const type = body.get('type')
         const documentNo = Number(body.get('documentNo'))
         const slot = Number(body.get('slot'))
-        if (!draft.template || documentNo !== 1 || !Number.isInteger(slot) || slot < 1 || slot > 4)
+        if (!draft.template || documentNo !== 1 || !Number.isInteger(slot) || slot < 1 || slot > (type === 'PHOTO' ? 50 : 5))
           fail(400, 'INVALID_SLOT', '템플릿과 파일 위치를 확인해 주세요.')
         if (!['PHOTO', 'VIDEO'].includes(type))
           fail(400, 'UNSUPPORTED_FILE_TYPE', '파일 종류를 확인해 주세요.')
@@ -400,7 +449,7 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
         orderNo: draft.orderNo,
         status: draft.status,
         payStatus: 'PENDING',
-        totalPrice: mockOrderConfig.price,
+        totalPrice: draftView(draft).price.totalPrice,
         depositorName: body.depositorName ?? draft.customerName,
         bankAccount: copy(bankAccount),
         depositDeadline: `${dateAfter(2)}T23:59:59+09:00`,

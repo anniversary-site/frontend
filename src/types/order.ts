@@ -12,7 +12,7 @@ export type Page = 'main' | 'start' | 'load' | 'template' | 'info' | 'content' |
 export type Occasion = '연애 기념일' | '생일' | '결혼 기념일' | '기타'
 export type PhraseField = 'main' | 'sub'
 export type MediaKind = 'photos' | 'videos'
-export type PreviewTarget = PhraseField | MediaKind | 'story' | 'letters' | 'music'
+export type PreviewTarget = PhraseField | MediaKind | 'story' | 'letters' | 'music' | 'url'
 
 export interface OrderData {
   template: number
@@ -24,10 +24,18 @@ export interface OrderData {
   endDate: string
   main: string
   sub: string
-  memoryInput: string
+  specialDay: string
+  specialPlace: string
+  specialOccasion: string
+  letterInput: string
+  letterAi: string
+  letterChoice: import('../services/API').LetterChoice | null
+  linkUrl: string
+  price: import('../services/API').Price | null
   musics: import('../services/API').Music[]
-  letters: import('../services/API').Letter[]
+  recipientName: string
   sitePassword: string
+  sitePasswordHint: string
   sitePasswordSet: boolean
 }
 
@@ -47,11 +55,12 @@ export interface MediaItem {
 export type MediaFiles = Record<MediaKind, (MediaItem | null)[]>
 export type PhraseValues = Partial<Record<PhraseField, string>>
 export type PhraseFlags = Partial<Record<PhraseField, boolean>>
-export type TouchedFields = Partial<Record<'name' | 'phone', boolean>>
+export type TouchedFields = Partial<Record<'name' | 'phone' | 'recipientName', boolean>>
 export type Sheet =
   | { type: 'caption'; kind: MediaKind; index: number }
   | { type: 'guide' }
   | { type: 'save-draft' }
+  | { type: 'extra-media'; kind: MediaKind; documentNo: number }
   | { type: 'position'; target: PreviewTarget; documentNo?: number }
   | { type: 'preview'; target?: undefined }
 

@@ -65,9 +65,10 @@ export default function App() {
   }
   useEffect(() => {
     const created = urls.current
+    const activeTimers = timers.current
     return () => {
       created.forEach((u) => URL.revokeObjectURL(u))
-      timers.current.forEach(clearTimeout)
+      activeTimers.forEach(clearTimeout)
     }
   }, [])
   useEffect(() => {

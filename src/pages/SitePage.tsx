@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import * as api from '../services/API'
-import type { SiteContent, SiteSession } from '../services/API'
+import type { SiteContent, SiteLock, SiteSession } from '../services/API'
 import './SitePage.css'
 
 export default function SitePage() {
@@ -23,10 +23,25 @@ function SiteView({ siteKey }: { siteKey: string }) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [lock, setLock] = useState<SiteLock | null>(null)
+  useEffect(() => {
+    if (session) return
+    let active = true
+    api
+      .getSiteLock(siteKey)
+      .then((result) => {
+        if (active) setLock(result)
+      })
+      .catch((cause) => {
+        if (active) setError(cause.message)
+      })
+    return () => {
+      active = false
+    }
+  }, [session, siteKey])
   useEffect(() => {
     if (!session) return
     let active = true
-    setBusy(true)
     api
       .getSite(siteKey, session.siteAccessToken)
       .then((result) => {
@@ -77,8 +92,9 @@ function SiteView({ siteKey }: { siteKey: string }) {
             }
           }}
         >
-          <h1>우리의 추억 열기</h1>
+          <h1>{lock?.recipientName ? `${lock.recipientName}님께 도착한 선물` : '우리의 추억 열기'}</h1>
           <label htmlFor="site-unlock">전달받은 비밀번호를 입력해 주세요.</label>
+          {lock?.passwordHint && <p className="site-hint">힌트: {lock.passwordHint}</p>}
           <input
             id="site-unlock"
             type="password"
@@ -91,8 +107,10 @@ function SiteView({ siteKey }: { siteKey: string }) {
         </form>
       ) : (
         <>
-          <h1>{content.memoryTitle}</h1>
-          <p className="site-story">{content.memoryStory}</p>
+          <h1>{content.specialOccasion}</h1>
+          <p className="site-story">
+            {content.specialDay} · {content.specialPlace}
+          </p>
           {content.documents.map((document) => (
             <section key={document.documentNo} aria-label={`추억 ${document.documentNo}`}>
               {document.photos.map((photo) => (
@@ -130,12 +148,17 @@ function SiteView({ siteKey }: { siteKey: string }) {
               ))}
             </section>
           )}
-          {content.letters.map((letter, index) => (
-            <section className="site-story" key={index}>
-              <h2>편지 {index + 1}</h2>
-              <p>{letter.content}</p>
+          {content.letter && (
+            <section className="site-story">
+              <h2>편지</h2>
+              <p>{content.letter}</p>
             </section>
-          ))}
+          )}
+          {content.linkUrl && (
+            <a href={content.linkUrl} target="_blank" rel="noreferrer">
+              연결된 사이트 열기
+            </a>
+          )}
         </>
       )}
     </main>

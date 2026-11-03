@@ -52,7 +52,7 @@ export default function Calendar({ value, onChange, minDateValue }: CalendarProp
   const monthIndex = month.getMonth()
   const leading = new Date(year, monthIndex, 1).getDay()
   const count = new Date(year, monthIndex + 1, 0).getDate()
-  const today = dateKey(new Date())
+  const [today] = useState(() => dateKey(new Date()))
   const selectDate = (key: string) => {
     if (!choosingEnd || !value.start) {
       onChange({ start: key, end: key })
@@ -157,7 +157,7 @@ export default function Calendar({ value, onChange, minDateValue }: CalendarProp
       <p className="calendar-instruction" aria-live="polite">
         {choosingEnd
           ? '종료일을 선택해 주세요.'
-          : '날짜를 누른 채 드래그해 기간을 선택하세요. 시작일·종료일을 끌어 조정할 수 있어요. 키보드는 두 날짜를 차례로 선택하세요.'}
+          : '날짜를 누른 채 드래그해 기간을 선택하세요. 시작일·종료일을 끌어 조정할 수 있어요.'}
       </p>
     </div>
   )

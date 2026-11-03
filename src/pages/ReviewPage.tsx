@@ -1,10 +1,8 @@
 import { useOrder } from '../context/OrderContext'
 import Icon from '../components/Icon'
-import { periodPrice } from '../utils/period'
 
 export default function ReviewPage() {
   const { data, setToast, config, templates } = useOrder()
-  const pricing = periodPrice(data.date, data.endDate)
   if (!config) return <p role="status">가격 정보를 불러오는 중이에요.</p>
   const account = config.bankAccount
   return (
@@ -14,21 +12,19 @@ export default function ReviewPage() {
       <dl className="summary">
         {[
           [
-            '템플릿 번호',
+            '템플릿',
             templates.find((item) => item.templateId === data.template)?.name ??
               `템플릿 ${data.template}`,
           ],
           ['기념일 종류', data.occasion === '기타' ? data.other : data.occasion],
           ['이름', data.name],
           ['전화번호', data.phone],
-          ['추억 제목', data.main],
-          ['추천 음악', `${data.musics.length}곡`],
-          ['편지', `${data.letters.length}개`],
+          ['받는 분 이름', data.recipientName],
           ['사이트 비밀번호', data.sitePasswordSet ? '설정 완료' : '미설정'],
           [
             '희망 수령 기간',
             data.date && data.endDate
-              ? `${data.date.replaceAll('-', '.')} ~ ${data.endDate.replaceAll('-', '.')} (${pricing.days}일)`
+              ? `${data.date.replaceAll('-', '.')} ~ ${data.endDate.replaceAll('-', '.')} (${data.price?.usageDays ?? 0}일)`
               : '선택 안 함',
           ],
         ].map(([label, value]) => (
@@ -41,17 +37,23 @@ export default function ReviewPage() {
       <div className="payment">
         <div>
           <span>기본 가격</span>
-          <strong>{config.price.toLocaleString('ko-KR')}원</strong>
+          <strong>{(data.price?.basePrice ?? 0).toLocaleString('ko-KR')}원</strong>
         </div>
-        {pricing.extraFee > 0 && (
+        {(data.price?.periodFee ?? 0) > 0 && (
           <div>
             <span>기간 추가 요금</span>
-            <strong>{pricing.extraFee.toLocaleString('ko-KR')}원</strong>
+            <strong>{data.price!.periodFee.toLocaleString('ko-KR')}원</strong>
           </div>
         )}
+        {(['photoFee', 'videoFee'] as const).map((key) => (data.price?.[key] ?? 0) > 0 && (
+          <div key={key}>
+            <span>{key === 'photoFee' ? '사진 추가 요금' : '영상 추가 요금'}</span>
+            <strong>{data.price![key].toLocaleString('ko-KR')}원</strong>
+          </div>
+        ))}
         <div className="payment-total">
           <span>예상 결제 금액</span>
-          <strong>{(config.price + pricing.extraFee).toLocaleString('ko-KR')}원</strong>
+          <strong>{(data.price?.totalPrice ?? 0).toLocaleString('ko-KR')}원</strong>
         </div>
         <div>
           <span>입금 계좌</span>

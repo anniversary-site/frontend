@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useOrder } from '../../context/OrderContext'
 import * as api from '../../services/API'
-import type { Letter } from '../../services/API'
 
 const musicLabels = {
   title: ['음악 제목', '음악 제목을 입력해 주세요'],
@@ -9,62 +8,54 @@ const musicLabels = {
   youtubeUrl: ['유튜브 링크', 'https://youtube.com/...'],
 } as const
 
-/** 한 줄 칸에 보이는 글: AI로 다듬었으면 원문(input), 아니면 편지 그대로(content). */
-const letterDraft = (letter: Letter) => letter.input ?? letter.content
-
 export default function PinkSiteContentForm() {
-  const {
-    config,
-    data,
-    setData,
-    update,
-    generate,
-    generating,
-    aiErrors,
-    mediaSection,
-    open,
-    setToast,
-    session,
-    reportError,
-  } = useOrder()
-  const visibleLetters = data.letters
+  const { config, data, setData, update, mediaSection, open, setToast, session, reportError } =
+    useOrder()
   const visibleMusics = data.musics.length
     ? data.musics
     : [{ title: '', artist: '', youtubeUrl: '' }]
   const musicListRef = useRef<HTMLDivElement>(null)
   const [currentMusicIndex, setCurrentMusicIndex] = useState(0)
-  const [letterGenerating, setLetterGenerating] = useState<number | null>(null)
+  const [letterGenerating, setLetterGenerating] = useState(false)
+  const [editingAi, setEditingAi] = useState(false)
+  const [aiDraft, setAiDraft] = useState('')
 
-  useEffect(() => {
-    setCurrentMusicIndex((current) => Math.min(current, visibleMusics.length - 1))
-  }, [visibleMusics.length])
+  if (currentMusicIndex >= visibleMusics.length) {
+    setCurrentMusicIndex(visibleMusics.length - 1)
+  }
 
   if (!config) return <p role="status">주문 설정을 불러오는 중이에요.</p>
   const letterMin = config.limits.letterInputMinLength ?? 10
+  const letterMax = config.limits.letterMaxLength ?? 2000
 
-  const setLetter = (index: number, next: Letter) =>
-    setData((current) => ({
-      ...current,
-      letters: current.letters.map((item, itemIndex) => (itemIndex === index ? next : item)),
-    }))
-
-  /** 한 줄 칸에 적은 말을 AI가 편지로 다듬습니다. 원문은 input에, 다듬은 편지는 content에 둡니다. */
-  const generateLetter = async (index: number) => {
-    const raw = letterDraft(visibleLetters[index]).trim()
-    if (letterGenerating !== null || !session) return
+  /** 입력 필드의 편지를 AI로 다듬되, 사용하기 전까지 최종 주문 데이터에는 반영하지 않습니다. */
+  const generateLetter = async () => {
+    const raw = (data.letterChoice === 'AI' ? data.letterAi : data.letterInput).trim()
+    if (letterGenerating || !session) return
     if (raw.length < letterMin) {
       setToast(`편지에 담을 말을 ${letterMin}자 이상 적어 주세요.`)
       return
     }
-    setLetterGenerating(index)
+    setLetterGenerating(true)
     try {
+      await api.updateDraft(session.draftId, {
+        specialDay: data.specialDay || null,
+        specialPlace: data.specialPlace || null,
+        specialOccasion: data.specialOccasion || null,
+      }, session.draftToken)
       const result = await api.generateAiLetter(session.draftId, raw, session.draftToken)
-      setLetter(index, { input: result.input, content: result.content })
-      setToast(`편지를 다듬었어요. 남은 생성 횟수 ${result.remainingCount}회`)
+      setEditingAi(false)
+      setData((current) => ({
+        ...current,
+        letterInput: result.letterInput,
+        letterAi: result.letterAi,
+        letterChoice: result.letterChoice,
+      }))
+      setToast(`AI 문장을 생성했어요. 남은 생성 횟수 ${result.remainingCount}회`)
     } catch (cause) {
       reportError(cause)
     } finally {
-      setLetterGenerating(null)
+      setLetterGenerating(false)
     }
   }
 
@@ -103,64 +94,52 @@ export default function PinkSiteContentForm() {
 
       <section className="content-section order-copy-section">
         <div className="section-heading">
-          <h2>
-            OUR STORY 작성 <span className="required-mark">*</span>
-          </h2>
+          <h2>INFORMATION 작성 <span className="required-mark" aria-label="필수">*</span></h2>
           <button
             type="button"
             className="link-button"
             onClick={() => open({ type: 'position', target: 'story' })}
           >
-            폴더 위치 및 예시 보러가기 ›
+            INFORMATION 위치 및 예시 보러가기 ›
           </button>
         </div>
-        <div className="story-compose">
-          <textarea
+        <p className="description information-description">
+          선물 받는 분과의 특별한 날, 특별한 장소, 어떤 기념일인지 간단하게 작성해주세요.
+        </p>
+        <div className="information-fields">
+          <input
             className="text-input"
-            rows={4}
-            value={data.memoryInput}
-            maxLength={config.limits.memoryInputMaxLength}
-            disabled={generating.main}
-            placeholder="만난 날짜, 함께 보낸 기간 등 우리의 이야기를 작성해 주세요."
-            aria-label="추억 이야기 원문"
-            onChange={(event) => update('memoryInput', event.target.value)}
+            type="date"
+            value={data.specialDay}
+            placeholder="특별한 날을 작성해주세요."
+            aria-label="특별한 날"
+            required
+            onChange={(event) => update('specialDay', event.target.value)}
+          />
+          <input
+            className="text-input"
+            value={data.specialPlace}
+            maxLength={100}
+            placeholder="특별한 장소를 작성해주세요."
+            aria-label="특별한 장소"
+            required
+            onChange={(event) => update('specialPlace', event.target.value)}
+          />
+          <input
+            className="text-input"
+            value={data.specialOccasion}
+            maxLength={50}
+            placeholder="어떤 일을 기념하는지 작성해주세요."
+            aria-label="어떤 기념일인지"
+            required
+            onChange={(event) => update('specialOccasion', event.target.value)}
           />
         </div>
-        <div className="field-meta">
-          <span>최소 {config.limits.memoryInputMinLength}자</span>
-          <div className="story-actions">
-            <span>
-              {data.memoryInput.length}/{config.limits.memoryInputMaxLength}
-            </span>
-            <button
-              type="button"
-              className="small-button ai-compose-button"
-              disabled={
-                generating.main ||
-                data.memoryInput.trim().length < config.limits.memoryInputMinLength
-              }
-              onClick={() => generate('main')}
-            >
-              {generating.main ? '생성 중…' : data.main ? 'AI 다시 생성' : 'AI 문장 생성'}
-            </button>
-          </div>
-        </div>
-        {aiErrors.main && (
-          <p className="field-error" role="alert">
-            이야기를 만들지 못했어요. 입력 내용을 확인하고 다시 시도해 주세요.
-          </p>
-        )}
-        {data.main && (
-          <div className="story-result">
-            <h3>{data.main}</h3>
-            <p>{data.sub}</p>
-          </div>
-        )}
       </section>
 
       <section className="content-section letter-section">
         <div className="section-heading">
-          <h2>LETTER 작성</h2>
+          <h2>LETTER 작성 <span className="required-mark" aria-label="필수">*</span></h2>
           <button
             type="button"
             className="link-button"
@@ -169,99 +148,154 @@ export default function PinkSiteContentForm() {
             폴더 위치 및 예시 보러가기 ›
           </button>
         </div>
-        <div className="letter-list">
-          {visibleLetters.map((letter, index) => {
-            const busy = letterGenerating === index
-            const polished = letter.input != null
-            return (
-              <div className="letter-item" key={index}>
-                <div className="letter-row">
-                  <input
-                    className="text-input"
-                    maxLength={config.limits.letterMaxLength}
-                    value={letterDraft(letter)}
-                    disabled={busy}
-                    aria-label={`편지 ${index + 1}`}
-                    placeholder="전하고 싶은 말을 적어 주세요. AI가 편지로 다듬어 드려요."
-                    onChange={(event) =>
-                      setLetter(
-                        index,
-                        polished
-                          ? { ...letter, input: event.target.value }
-                          : { input: null, content: event.target.value },
-                      )
-                    }
-                  />
-                  <button
-                    type="button"
-                    className="small-button letter-ai-button"
-                    disabled={letterGenerating !== null}
-                    onClick={() => void generateLetter(index)}
-                  >
-                    {busy ? '생성 중…' : polished ? 'AI 다시 생성' : 'AI 문장 생성'}
+        <div className="letter-compose">
+          <textarea
+            className="text-input"
+            rows={7}
+            maxLength={letterMax}
+            value={data.letterChoice === 'AI' ? data.letterAi : data.letterInput}
+            disabled={letterGenerating}
+            aria-label="편지"
+            required
+            placeholder="웹사이트를 선물받는 분께 보여줄 편지를 작성해주세요."
+            onChange={(event) =>
+              update(data.letterChoice === 'AI' ? 'letterAi' : 'letterInput', event.target.value)
+            }
+          />
+        </div>
+        <div className="letter-actions">
+          <button
+            type="button"
+            className={`small-button letter-choice-button${data.letterChoice === 'ORIGINAL' ? ' is-selected' : ''}`}
+            aria-pressed={data.letterChoice === 'ORIGINAL'}
+            disabled={letterGenerating || !data.letterInput.trim()}
+            onClick={() => {
+              setEditingAi(false)
+              update('letterChoice', 'ORIGINAL')
+            }}
+          >
+            {data.letterChoice === 'ORIGINAL' ? '✓ 원문 사용 중' : '원문 사용'}
+          </button>
+          <button
+            type="button"
+            className="small-button letter-choice-button"
+            disabled={letterGenerating || data.letterInput.trim().length < letterMin}
+            onClick={() => void generateLetter()}
+          >
+            {letterGenerating ? '생성 중…' : data.letterAi ? 'AI 문장 다시 생성' : 'AI 문장 생성'}
+          </button>
+        </div>
+        {data.letterAi && (
+          <div
+            className={`ai-suggestion${data.letterChoice === 'AI' ? ' is-selected' : ''}`}
+            aria-live="polite"
+          >
+            <div className="ai-suggestion-head">
+              <span className="ai-suggestion-icon" aria-hidden="true">
+                ✦
+              </span>
+              <strong>AI 문장</strong>
+              {!editingAi && <small>눌러서 직접 고칠 수 있어요</small>}
+            </div>
+            {editingAi ? (
+              <>
+                <textarea
+                  className="text-input ai-suggestion-editor"
+                  rows={7}
+                  maxLength={letterMax}
+                  value={aiDraft}
+                  aria-label="AI 문장 수정"
+                  autoFocus
+                  onChange={(event) => setAiDraft(event.target.value)}
+                />
+                <div className="ai-suggestion-actions">
+                  <button type="button" onClick={() => setEditingAi(false)}>
+                    취소
                   </button>
                   <button
                     type="button"
-                    className="letter-delete-button"
-                    aria-label={`편지 ${index + 1} 삭제`}
-                    disabled={letterGenerating !== null}
-                    onClick={() =>
-                      update(
-                        'letters',
-                        visibleLetters.filter((_, itemIndex) => itemIndex !== index),
-                      )
-                    }
+                    className="primary"
+                    disabled={!aiDraft.trim()}
+                    onClick={() => {
+                      update('letterAi', aiDraft.trim())
+                      setEditingAi(false)
+                    }}
                   >
-                    ×
+                    확인
                   </button>
                 </div>
-                {polished && (
-                  <div className="letter-ai-result">
-                    <textarea
-                      className="text-input"
-                      rows={6}
-                      maxLength={config.limits.letterMaxLength}
-                      value={letter.content}
-                      disabled={busy}
-                      aria-label={`AI가 다듬은 편지 ${index + 1}`}
-                      onChange={(event) =>
-                        setLetter(index, { ...letter, content: event.target.value })
-                      }
-                    />
-                    <div className="field-meta">
-                      <span>
-                        AI가 다듬은 편지예요. 사이트에는 이 글이 들어가요. 고쳐 써도 돼요.
-                      </span>
-                      <button
-                        type="button"
-                        className="link-button"
-                        disabled={busy}
-                        onClick={() =>
-                          setLetter(index, { input: null, content: letter.input ?? '' })
-                        }
-                      >
-                        원문 그대로 쓰기
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )
-          })}
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="ai-suggestion-text"
+                  aria-label="AI 문장 수정하기"
+                  disabled={letterGenerating}
+                  onClick={() => {
+                    setAiDraft(data.letterAi)
+                    setEditingAi(true)
+                  }}
+                >
+                  {data.letterAi}
+                </button>
+                <div className="ai-suggestion-actions">
+                  <button
+                    type="button"
+                    className={data.letterChoice === 'AI' ? 'primary' : undefined}
+                    aria-pressed={data.letterChoice === 'AI'}
+                    disabled={letterGenerating}
+                    onClick={() => update('letterChoice', 'AI')}
+                  >
+                    {data.letterChoice === 'AI' ? '✓ AI 문장 사용 중' : 'AI 문장 사용'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+        <p className="letter-choice-status" role="status">
+          {data.letterChoice === 'AI'
+            ? 'AI 문장을 편지로 사용해요.'
+            : data.letterChoice === 'ORIGINAL'
+              ? '작성한 원문을 편지로 사용해요.'
+              : '원문 사용 또는 AI 문장 생성 중 하나를 선택해 주세요.'}
+        </p>
+      </section>
+
+      <section className="content-section url-section">
+        <div className="section-heading">
+          <h2>URL 작성 <span className="required-mark" aria-label="필수">*</span></h2>
+          <button
+            type="button"
+            className="link-button"
+            onClick={() => open({ type: 'position', target: 'url' })}
+          >
+            폴더 위치 및 예시 보러가기 ›
+          </button>
         </div>
-        <button
-          type="button"
-          className="button form-add-button"
-          onClick={() => update('letters', [...visibleLetters, { input: null, content: '' }])}
-        >
-          ＋ 편지 개수 추가하기
-        </button>
+        <p className="description">
+          웹사이트 하단의 INTERNET 아이콘을 누르면 연결될 사이트 링크를 넣어주세요.
+        </p>
+        <input
+          className="text-input url-input"
+          type="url"
+          inputMode="url"
+          autoComplete="url"
+          maxLength={500}
+          value={data.linkUrl}
+          placeholder="https://youtube.com/..."
+          aria-label="연결할 사이트 URL"
+          required
+          onChange={(event) => update('linkUrl', event.target.value)}
+        />
+        <p className="description">http:// 또는 https://로 시작하는 주소를 입력해 주세요.</p>
       </section>
 
       <section className="content-section music-section">
         <div className="section-heading">
           <h2>
-            MUSIC 작성 <span className="required-mark">*</span>
+            MUSIC 작성 <span className="required-mark">*</span> (최소 1곡)
           </h2>
           <button
             type="button"
@@ -319,6 +353,7 @@ export default function PinkSiteContentForm() {
                     <input
                       className="text-input"
                       type={key === 'youtubeUrl' ? 'url' : 'text'}
+                      required={key !== 'youtubeUrl'}
                       value={music[key] ?? ''}
                       placeholder={musicLabels[key][1]}
                       maxLength={key === 'youtubeUrl' ? undefined : 100}

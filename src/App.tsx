@@ -46,10 +46,18 @@ const INITIAL: OrderData = {
   phone: '',
   date: dateKey(minDate()),
   endDate: addDays(dateKey(minDate()), FREE_PERIOD_DAYS - 1),
-  memoryInput: '',
+  specialDay: '',
+  specialPlace: '',
+  specialOccasion: '',
+  letterInput: '',
+  letterAi: '',
+  letterChoice: null,
+  linkUrl: '',
+  price: null,
   musics: [],
-  letters: [{ content: '' }, { content: '' }],
+  recipientName: '',
   sitePassword: '',
+  sitePasswordHint: '',
   sitePasswordSet: false,
   main: '',
   sub: '',
@@ -85,6 +93,11 @@ export default function App() {
   const [config, setConfig] = useState<OrderConfig | null>(null)
   const [templates, setTemplates] = useState<Template[]>([])
   const [templateDetail, setTemplateDetail] = useState<TemplateDetail | null>(null)
+  // 기본 포함 개수를 넘겨 사용자가 직접 연 사진·영상 칸 수 (document별)
+  const [extraSlots, setExtraSlots] = useState<Record<MediaKind, Record<number, number>>>({
+    photos: {},
+    videos: {},
+  })
   const [order, setOrder] = useState<Order | null>(null)
   const [busy, setBusy] = useState(false)
   const [initialized, setInitialized] = useState(false)
@@ -93,8 +106,10 @@ export default function App() {
   const [generating, setGenerating] = useState<PhraseFlags>({})
   const [aiErrors, setAiErrors] = useState<PhraseFlags>({})
   const [touched, setTouched] = useState<TouchedFields>({})
+  const [previewExpanded, setPreviewExpanded] = useState(false)
   const isPreview = sheet?.type === 'position' || sheet?.type === 'preview'
-  const swipeStart = useRef<number | null>(null)
+  const previewSwipeStart = useRef<number | null>(null)
+  const previewWasDragged = useRef(false)
   const timers = useRef(new Set<ReturnType<typeof setTimeout>>())
   const ready = Boolean(
     config &&
@@ -196,7 +211,7 @@ export default function App() {
         : []
     }
     setFiles(restored)
-    setData({
+    setData(() => ({
       template: draft.template?.templateId ?? -1,
       occasion:
         (Object.keys(occasionCodes) as Occasion[]).find(
@@ -207,14 +222,22 @@ export default function App() {
       phone: formatPhone(draft.phone ?? ''),
       date: draft.useStartDate ?? '',
       endDate: draft.useEndDate ?? '',
-      memoryInput: draft.memoryInput ?? '',
+      specialDay: draft.specialDay ?? '',
+      specialPlace: draft.specialPlace ?? '',
+      specialOccasion: draft.specialOccasion ?? '',
+      letterInput: draft.letterInput ?? '',
+      letterAi: draft.letterAi ?? '',
+      letterChoice: draft.letterChoice ?? null,
+      linkUrl: draft.linkUrl ?? '',
+      price: draft.price ?? null,
       musics: draft.musics ?? [],
-      letters: draft.letters ?? [],
+      recipientName: draft.recipientName ?? '',
       sitePassword: '',
+      sitePasswordHint: draft.sitePasswordHint ?? '',
       sitePasswordSet: draft.sitePasswordSet ?? false,
-      main: draft.memoryTitle ?? '',
-      sub: draft.memoryStory ?? '',
-    })
+      main: '',
+      sub: '',
+    }))
   }
   const fields = (): DraftFields => ({
     templateId: data.template >= 0 ? data.template : null,
@@ -224,9 +247,16 @@ export default function App() {
     phone: data.phone || null,
     useStartDate: data.date || null,
     useEndDate: data.endDate || null,
-    memoryInput: data.memoryInput || null,
+    specialDay: data.specialDay || null,
+    specialPlace: data.specialPlace || null,
+    specialOccasion: data.specialOccasion || null,
+    letterInput: data.letterInput || null,
+    letterAi: data.letterAi || null,
+    letterChoice: data.letterChoice,
+    linkUrl: data.linkUrl || null,
     musics: data.musics,
-    letters: data.letters.filter((letter) => letter.content.trim()),
+    recipientName: data.recipientName || null,
+    sitePasswordHint: data.sitePasswordHint || null,
     ...(data.sitePassword ? { sitePassword: data.sitePassword } : {}),
   })
   const needsOrderData = page !== 'main'
@@ -303,7 +333,7 @@ export default function App() {
     return () => {
       active = false
     }
-  }, [data.template])
+  }, [data.template, templateDetail?.templateId])
   const startDraft = async () => {
     if (saveLock.current) return
     saveLock.current = true
@@ -333,17 +363,20 @@ export default function App() {
   }
   const open = (value: Sheet) => {
     opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    setPreviewExpanded(false)
     setSheet(value)
   }
   const close = () => {
     setSheet(null)
+    setPreviewExpanded(false)
     opener.current?.focus()
   }
   useEffect(() => {
     const created = urls.current
+    const activeTimers = timers.current
     return () => {
       created.forEach((u) => URL.revokeObjectURL(u))
-      timers.current.forEach(clearTimeout)
+      activeTimers.forEach(clearTimeout)
     }
   }, [])
   useEffect(() => {
@@ -585,30 +618,8 @@ export default function App() {
       setSaving(false)
     }
   }
-  const generate = async (_key: PhraseField) => {
-    if (
-      saveLock.current ||
-      generating.main ||
-      !config ||
-      data.memoryInput.trim().length < config.limits.memoryInputMinLength
-    )
-      return
-    setGenerating({ main: true })
-    setAiErrors({})
-    try {
-      const saved = requireSession()
-      const input = data.memoryInput
-      const result = await api.generateAiStory(saved.draftId, input, saved.draftToken)
-      if (sessionRef.current?.draftId !== saved.draftId) return
-      setData((current) => ({ ...current, main: result.memoryTitle, sub: result.memoryStory }))
-      setToast(`추억 이야기를 저장했어요. 남은 생성 횟수 ${result.remainingCount}회`)
-    } catch (cause) {
-      handleError(cause)
-      setAiErrors({ main: true })
-    } finally {
-      setGenerating({})
-    }
-  }
+  // 기존 AI 추억 이야기 API는 제거되었습니다. AI 편지는 주문 양식에서 생성합니다.
+  const generate = (_key: PhraseField) => {}
   const removeMedia = async (kind: MediaKind, index: number) => {
     const item = files[kind][index]
     if (!item || item.status === 'loading') return
@@ -677,6 +688,27 @@ export default function App() {
     const previous = previousPages[page]
     if (previous) go(previous)
   }
+  /** 추가 안내 팝업에서 한 번에 여는 칸 수: 사진은 추가 요금 단위(10장), 영상은 1개. */
+  const extraStep = (kind: MediaKind) =>
+    kind === 'photos' ? (config?.pricing.extraPhotoUnit ?? 10) : 1
+  /** 보여 줄 칸 수: 기본 포함 개수 + 직접 연 칸. 이미 채운 칸은 항상 보입니다. */
+  const visibleSlots = (kind: MediaKind, doc: TemplateDetail['documents'][number]) => {
+    const slots = templateDetail ? slotsFor(templateDetail, kind) : []
+    const lastFilled = files[kind].reduce(
+      (last, item, index) =>
+        item && slots[index]?.documentNo === doc.documentNo
+          ? Math.max(last, slots[index].slot)
+          : last,
+      0,
+    )
+    const included =
+      kind === 'photos'
+        ? (config?.pricing.includedPhotos ?? 20)
+        : (config?.pricing.includedVideos ?? 2)
+    const opened = included + (extraSlots[kind][doc.documentNo] ?? 0)
+    const total = kind === 'photos' ? doc.photoSlots : doc.videoSlots
+    return Math.min(total, Math.max(opened, lastFilled))
+  }
   const mediaSection = (kind: MediaKind) =>
     templateDetail?.documents.map((doc) => (
       <section key={doc.documentNo} className={`content-section uploads ${kind}`}>
@@ -685,11 +717,13 @@ export default function App() {
             <h2>
               {templateDetail.documents.length > 1 && `document ${doc.documentNo} `}
               {kind === 'photos' ? '사진' : '영상'} 업로드
+              {kind === 'photos' && <span className="required-mark" aria-label="필수"> *</span>}
+              {kind === 'photos' && ` (최소 ${doc.minPhotos}장)`}
             </h2>
             <p className="description">
               {kind === 'photos'
-                ? `최소 ${doc.minPhotos}장, 최대 ${doc.photoSlots}장 · 장당 ${config?.limits.photoMaxSizeMb ?? 10}MB`
-                : `최대 ${doc.videoSlots}개 · 개당 ${config?.limits.videoMaxSizeMb ?? 70}MB`}
+                ? `기본 슬롯 ${config?.pricing.includedPhotos ?? 20}칸 제공`
+                : `영상 기본 ${config?.pricing.includedVideos ?? 2}개 · 개당 용량 ${config?.limits.videoMaxSizeMb ?? 70}MB 이내`}
             </p>
           </div>
           <button
@@ -703,7 +737,8 @@ export default function App() {
         <div className="media-grid">
           {files[kind].map(
             (item, index) =>
-              slotsFor(templateDetail, kind)[index]?.documentNo === doc.documentNo && (
+              slotsFor(templateDetail, kind)[index]?.documentNo === doc.documentNo &&
+              slotsFor(templateDetail, kind)[index].slot <= visibleSlots(kind, doc) && (
                 <div className="media-item" key={index}>
                   <div className={`media-tile ${item ? 'filled' : ''} ${item?.status || ''}`}>
                     {!item ? (
@@ -809,6 +844,24 @@ export default function App() {
               ),
           )}
         </div>
+        <button
+          type="button"
+          className="button form-add-button"
+          onClick={() => {
+            const total = kind === 'photos' ? doc.photoSlots : doc.videoSlots
+            if (visibleSlots(kind, doc) >= total) {
+              setToast(
+                kind === 'photos'
+                  ? `사진은 최대 ${total}장까지 추가할 수 있어요.`
+                  : `영상은 최대 ${total}개까지 추가할 수 있어요.`,
+              )
+              return
+            }
+            open({ type: 'extra-media', kind, documentNo: doc.documentNo })
+          }}
+        >
+          ＋ {kind === 'photos' ? '사진' : '영상'} 추가하기
+        </button>
       </section>
     ))
   // 세션이 없는 직접 접속은 주문 화면을 렌더링하기 전에 시작 화면으로 보냅니다.
@@ -937,34 +990,58 @@ export default function App() {
         )}
         {sheet && (
           <div
-            className={`sheet-overlay ${isPreview ? 'preview-overlay' : sheet.type === 'guide' || sheet.type === 'save-draft' ? 'dialog-overlay' : ''}`}
+            className={`sheet-overlay ${isPreview ? 'preview-overlay' : sheet.type === 'guide' || sheet.type === 'save-draft' || sheet.type === 'extra-media' ? 'dialog-overlay' : ''}`}
             onClick={close}
           >
             <section
               ref={dialog}
               className={
                 isPreview
-                  ? 'preview-modal'
-                  : sheet.type === 'guide' || sheet.type === 'save-draft'
+                  ? `preview-sheet${previewExpanded ? ' is-expanded' : ''}`
+                  : sheet.type === 'guide' ||
+                      sheet.type === 'save-draft' ||
+                      sheet.type === 'extra-media'
                     ? 'dialog-panel'
-                    : 'bottom-sheet'
+                    : `bottom-sheet${previewExpanded ? ' is-expanded' : ''}`
               }
               role="dialog"
               aria-modal="true"
               aria-labelledby="sheet-heading"
               onClick={(e) => e.stopPropagation()}
             >
-              {sheet.type === 'caption' && (
+              {(isPreview || sheet.type === 'caption') && (
                 <div
-                  className="sheet-drag-area"
+                  className="preview-drag-area"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={previewExpanded ? '하단 모드로 축소' : '전체 화면으로 확장'}
+                  aria-expanded={previewExpanded}
+                  onClick={() => {
+                    if (previewWasDragged.current) {
+                      previewWasDragged.current = false
+                      return
+                    }
+                    setPreviewExpanded((expanded) => !expanded)
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      setPreviewExpanded((expanded) => !expanded)
+                    }
+                  }}
                   onPointerDown={(event) => {
-                    swipeStart.current = event.clientY
+                    previewSwipeStart.current = event.clientY
+                    previewWasDragged.current = false
                     event.currentTarget.setPointerCapture(event.pointerId)
                   }}
                   onPointerUp={(event) => {
-                    if (swipeStart.current !== null && event.clientY - swipeStart.current > 64)
-                      close()
-                    swipeStart.current = null
+                    if (previewSwipeStart.current !== null) {
+                      const distance = event.clientY - previewSwipeStart.current
+                      if (Math.abs(distance) > 40) previewWasDragged.current = true
+                      if (distance < -40) setPreviewExpanded(true)
+                      if (distance > 40) setPreviewExpanded(false)
+                    }
+                    previewSwipeStart.current = null
                   }}
                 >
                   <div className="sheet-handle" />
@@ -1018,6 +1095,46 @@ export default function App() {
                   onSave={persistDraft}
                   onClose={close}
                 />
+              ) : sheet.type === 'extra-media' ? (
+                <>
+                  <h2 id="sheet-heading">{sheet.kind === 'photos' ? '사진' : '영상'} 추가 안내</h2>
+                  {sheet.kind === 'photos' ? (
+                    <p className="sheet-note">
+                      사진은 기본 {config?.pricing.includedPhotos ?? 20}장까지 포함돼요.
+                      <br />그 이상 추가하면 사진 {config?.pricing.extraPhotoUnit ?? 10}장당{' '}
+                      {(config?.pricing.extraPhotoUnitPrice ?? 0).toLocaleString('ko-KR')}원의 추가
+                      요금이 발생해요.
+                    </p>
+                  ) : (
+                    <p className="sheet-note">
+                      영상은 기본 {config?.pricing.includedVideos ?? 2}개까지 포함돼요.
+                      <br />그 이상 추가하면 영상 1개당{' '}
+                      {(config?.pricing.extraVideoPrice ?? 0).toLocaleString('ko-KR')}원의 추가 요금이
+                      발생해요.
+                    </p>
+                  )}
+                  <div className="save-phone-actions">
+                    <button className="button secondary" onClick={close}>
+                      취소
+                    </button>
+                    <button
+                      className="button primary"
+                      onClick={() => {
+                        const { kind, documentNo } = sheet
+                        setExtraSlots((current) => ({
+                          ...current,
+                          [kind]: {
+                            ...current[kind],
+                            [documentNo]: (current[kind][documentNo] ?? 0) + extraStep(kind),
+                          },
+                        }))
+                        close()
+                      }}
+                    >
+                      추가하기
+                    </button>
+                  </div>
+                </>
               ) : sheet.type === 'guide' ? (
                 <>
                   <h2 id="sheet-heading">주문서 작성 방법</h2>

@@ -41,45 +41,47 @@ export default function OrderLoadPage() {
       <h1>주문서를 이어서 작성해보세요</h1>
       <form className="load-card" onSubmit={submit} noValidate aria-busy={loading}>
         <h2>이름과 전화번호로 조회해주세요</h2>
-        <label className="sr-only" htmlFor="lookup-name">
-          주문자 이름
-        </label>
-        <input
-          id="lookup-name"
-          className="text-input"
-          autoComplete="name"
-          placeholder="이름"
-          value={name}
-          maxLength={50}
-          disabled={loading}
-          onChange={(event) => {
-            setName(event.target.value)
-            setMatches([])
-            setError('')
-          }}
-        />
-        <label className="sr-only" htmlFor="lookup-phone">
-          저장된 주문서의 전화번호
-        </label>
-        <input
-          id="lookup-phone"
-          className="text-input"
-          type="tel"
-          inputMode="numeric"
-          autoComplete="tel"
-          placeholder="전화번호"
-          value={phone}
-          maxLength={13}
-          disabled={loading}
-          aria-invalid={Boolean(displayedError)}
-          aria-describedby={displayedError ? 'lookup-error' : 'lookup-help'}
-          onChange={(event) => {
-            setPhone(formatPhone(event.target.value))
-            setMatches([])
-            setError('')
-          }}
-          onBlur={() => setTouched(true)}
-        />
+        <div className="load-fields">
+          <label className="sr-only" htmlFor="lookup-name">
+            주문자 이름
+          </label>
+          <input
+            id="lookup-name"
+            className="text-input"
+            autoComplete="name"
+            placeholder="이름"
+            value={name}
+            maxLength={50}
+            disabled={loading}
+            onChange={(event) => {
+              setName(event.target.value)
+              setMatches([])
+              setError('')
+            }}
+          />
+          <label className="sr-only" htmlFor="lookup-phone">
+            저장된 주문서의 전화번호
+          </label>
+          <input
+            id="lookup-phone"
+            className="text-input"
+            type="tel"
+            inputMode="numeric"
+            autoComplete="tel"
+            placeholder="전화번호"
+            value={phone}
+            maxLength={13}
+            disabled={loading}
+            aria-invalid={Boolean(displayedError)}
+            aria-describedby={displayedError ? 'lookup-error' : 'lookup-help'}
+            onChange={(event) => {
+              setPhone(formatPhone(event.target.value))
+              setMatches([])
+              setError('')
+            }}
+            onBlur={() => setTouched(true)}
+          />
+        </div>
         {displayedError && (
           <p id="lookup-error" className="load-error" role="alert">
             {displayedError}

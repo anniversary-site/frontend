@@ -29,6 +29,13 @@ export default function AdminPage({ onLogout }: { onLogout: () => void }) {
   const [revision, setRevision] = useState(0),
     [loading, setLoading] = useState(true),
     [error, setError] = useState('')
+  const requestKey = `${month}:${revision}`
+  const [previousRequest, setPreviousRequest] = useState(requestKey)
+  if (previousRequest !== requestKey) {
+    setPreviousRequest(requestKey)
+    setLoading(true)
+    setError('')
+  }
   useEffect(() => {
     let active = true
     api
@@ -46,8 +53,6 @@ export default function AdminPage({ onLogout }: { onLogout: () => void }) {
   }, [])
   useEffect(() => {
     let active = true
-    setLoading(true)
-    setError('')
     const [year, monthNumber] = month.split('-').map(Number)
     const weekStart = new Date(`${today}T00:00:00Z`)
     weekStart.setUTCDate(weekStart.getUTCDate() - weekStart.getUTCDay())

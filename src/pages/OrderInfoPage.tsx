@@ -68,6 +68,29 @@ export default function OrderInfoPage() {
           </small>
         )}
       </label>
+      <label className="recipient-field field-label">
+        <span>
+          받는 분 이름
+          <span className="required-mark" aria-label="필수">
+            {' '}
+            *
+          </span>
+        </span>
+        <small>완성된 웹사이트 접속 시 user name으로 사용될 예정이에요.</small>
+        <input
+          className="text-input"
+          placeholder="예: 이름 또는 별명"
+          value={data.recipientName}
+          onChange={(e) => update('recipientName', e.target.value)}
+          onBlur={() => setTouched((state) => ({ ...state, recipientName: true }))}
+          aria-invalid={(touched.recipientName && !data.recipientName.trim()) || undefined}
+          required
+          maxLength={50}
+        />
+        {touched.recipientName && !data.recipientName.trim() && (
+          <small className="field-error">받는 분 이름을 입력해 주세요.</small>
+        )}
+      </label>
       <label className="password-field field-label">
         <span>
           웹사이트 조회 비밀번호
@@ -79,7 +102,7 @@ export default function OrderInfoPage() {
         <small>
           {data.sitePasswordSet
             ? '비밀번호가 설정되어 있어요. 변경할 때만 새 비밀번호를 입력해 주세요.'
-            : '제작 완료된 웹사이트에 접속할 때 사용할 비밀번호예요.'}
+            : '완성된 웹사이트 접속 시 password로 사용될 예정이에요.'}
         </small>
         <input
           className="text-input"
@@ -96,6 +119,28 @@ export default function OrderInfoPage() {
         {data.sitePassword && !/^[^\s]{4,20}$/.test(data.sitePassword) && (
           <small className="field-error">공백 없이 4~20자로 입력해 주세요.</small>
         )}
+      </label>
+      <label className="password-hint-field field-label">
+        <span>
+          비밀번호 힌트
+          <span className="required-mark" aria-label="필수">
+            {' '}
+            *
+          </span>
+        </span>
+        <small>
+          선물 받는 분이 비밀번호를 떠올릴 수 있는 질문이나 힌트를 적어 주세요.
+        </small>
+        <input
+          className="text-input"
+          type="text"
+          placeholder="예: 우리가 처음 만난 날 (MMDD)"
+          maxLength={100}
+          value={data.sitePasswordHint}
+          onChange={(event) => update('sitePasswordHint', event.target.value)}
+          required
+        />
+        
       </label>
       <section className="calendar-section">
         <h2>

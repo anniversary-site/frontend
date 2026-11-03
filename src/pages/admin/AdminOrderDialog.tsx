@@ -155,6 +155,8 @@ export default function AdminOrderDialog({
               ['결제 금액', `${order.totalPrice.toLocaleString('ko-KR')}원`],
               ['입금자명', order.depositorName],
               ['전화번호', formatPhone(content.phone ?? '')],
+              ['받는 분 이름', content.recipientName ?? '-'],
+              ['비밀번호 힌트', content.sitePasswordHint ?? '-'],
               [
                 '사용 기간',
                 `${content.useStartDate ?? '미정'} ~ ${content.useEndDate ?? '종료일 미정'}`,
@@ -289,19 +291,30 @@ export default function AdminOrderDialog({
           {tab === 'content' && (
             <section className="admin-detail-content">
               <h3>문구</h3>
-              <p>{content.memoryTitle || '추억 제목 없음'}</p>
-              <p>{content.memoryInput}</p>
+              <p>특별한 날: {content.specialDay || '-'}</p>
+              <p>특별한 장소: {content.specialPlace || '-'}</p>
+              <p>기념일: {content.specialOccasion || '-'}</p>
               {(content.musics ?? []).map((music, index) => (
                 <p key={`music-${index}`}>
                   {music.title} · {music.artist} · {music.youtubeUrl}
                 </p>
               ))}
-              {(content.letters ?? []).map((letter, index) => (
-                <p style={{ whiteSpace: 'pre-wrap' }} key={`letter-${index}`}>
-                  {letter.content}
-                </p>
-              ))}
-              <p>{content.memoryStory || '추억 이야기 없음'}</p>
+              <p style={{ whiteSpace: 'pre-wrap' }}>{content.letter || '편지 없음'}</p>
+              <p>{content.linkUrl || '연결 URL 없음'}</p>
+              <p>편지 선택: {content.letterChoice === 'AI' ? 'AI 문장' : content.letterChoice === 'ORIGINAL' ? '원문' : '미선택'}</p>
+              {content.price && (
+                <dl>
+                  {([
+                    ['기본 가격', content.price.basePrice],
+                    ['기간 추가 요금', content.price.periodFee],
+                    ['사진 추가 요금', content.price.photoFee],
+                    ['영상 추가 요금', content.price.videoFee],
+                    ['총 금액', content.price.totalPrice],
+                  ] as const).map(([label, amount]) => (
+                    <div key={label}><dt>{label}</dt><dd>{amount.toLocaleString('ko-KR')}원</dd></div>
+                  ))}
+                </dl>
+              )}
               {content.documents.map((document) => (
                 <section key={document.documentNo}>
                   <h3>document {document.documentNo}</h3>

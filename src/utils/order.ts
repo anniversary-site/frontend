@@ -9,6 +9,28 @@ export function formatPhone(value: string) {
   return `${digits.slice(0, 3)}-${digits.slice(3, middleEnd)}-${digits.slice(middleEnd)}`
 }
 
+export type InformationFields = {
+  specialDay: string
+  specialPlace: string
+  story: string
+}
+
+export function parseInformation(value: string): InformationFields {
+  const fields: InformationFields = { specialDay: '', specialPlace: '', story: '' }
+  const matched = value.match(
+    /^특별한 날:\s*(.*)\n특별한 장소:\s*(.*)\n우리의 이야기:\s*([\s\S]*)$/,
+  )
+  if (matched) {
+    fields.specialDay = matched[1]
+    fields.specialPlace = matched[2]
+    fields.story = matched[3]
+  } else if (value) fields.story = value
+  return fields
+}
+
+export const serializeInformation = ({ specialDay, specialPlace, story }: InformationFields) =>
+  `특별한 날: ${specialDay}\n특별한 장소: ${specialPlace}\n우리의 이야기: ${story}`
+
 export function canProceed(page: Page, data: OrderData, earliestDate = '') {
   if (page === 'template')
     return data.template >= 0 && (data.occasion !== '기타' || Boolean(data.other.trim()))
@@ -16,8 +38,10 @@ export function canProceed(page: Page, data: OrderData, earliestDate = '') {
     return Boolean(
       data.name.trim() &&
       /^01\d-\d{3,4}-\d{4}$/.test(data.phone) &&
+      Boolean(data.recipientName.trim()) &&
       (data.sitePasswordSet || /^[^\s]{4,20}$/.test(data.sitePassword)) &&
       (!data.sitePassword || /^[^\s]{4,20}$/.test(data.sitePassword)) &&
+      Boolean(data.sitePasswordHint.trim()) &&
       isValidPeriod(data, earliestDate),
     )
   if (page === 'content') {
@@ -39,12 +63,19 @@ export function canProceed(page: Page, data: OrderData, earliestDate = '') {
         }
       })
     return Boolean(
-      data.main.trim() &&
-      data.sub.trim() &&
+      /^\d{4}-\d{2}-\d{2}$/.test(data.specialDay) &&
+      data.specialPlace.trim() &&
+      data.specialPlace.length <= 100 &&
+      data.specialOccasion.trim() &&
+      data.specialOccasion.length <= 50 &&
+      data.letterInput.trim() &&
+      data.letterInput.length <= 2000 &&
+      data.letterChoice !== null &&
+      (data.letterChoice !== 'AI' || Boolean(data.letterAi.trim())) &&
+      /^https?:\/\//i.test(data.linkUrl) &&
+      data.linkUrl.length <= 500 &&
       validMusics &&
-      data.letters.every(
-        (letter) => letter.content.length <= 2000 && (letter.input?.length ?? 0) <= 2000,
-      ),
+      true,
     )
   }
   return true

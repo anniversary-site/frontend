@@ -16,10 +16,14 @@ export default function AdminOrders({
   const [result, setResult] = useState<AdminPageResult<AdminOrder> | null>(null)
   const [loading, setLoading] = useState(true),
     [error, setError] = useState('')
-  useEffect(() => {
-    let active = true
+  const [previousRequest, setPreviousRequest] = useState({ filters, revision })
+  if (previousRequest.filters !== filters || previousRequest.revision !== revision) {
+    setPreviousRequest({ filters, revision })
     setLoading(true)
     setError('')
+  }
+  useEffect(() => {
+    let active = true
     api
       .getAdminOrders(filters)
       .then((data) => {

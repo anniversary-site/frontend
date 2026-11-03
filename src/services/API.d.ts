@@ -8,6 +8,7 @@ export interface Template {
   description: string
   thumbnailUrl: string
   sampleSiteUrl: string | null
+  basePrice: number
 }
 export interface TemplateDetail extends Template {
   guides: { memoryTitle?: Guide; memoryStory?: Guide }
@@ -16,19 +17,17 @@ export interface TemplateDetail extends Template {
     photoSlots: number
     videoSlots: number
     minPhotos: number
+    minVideos: number
     photoGuide?: Guide
     videoGuide?: Guide
   }[]
 }
 export interface OrderConfig {
-  price: number
   bankAccount: { bankName: string; accountNumber: string; accountHolder: string }
   minLeadDays: number
   minUseStartDate: string
   anniversaryTypes: { code: string; label: string }[]
   limits: {
-    memoryInputMinLength: number
-    memoryInputMaxLength: number
     letterInputMinLength?: number
     letterMaxLength: number
     captionMaxLength: number
@@ -39,6 +38,25 @@ export interface OrderConfig {
     photoTypes: string[]
     videoTypes: string[]
   }
+  pricing: {
+    freePeriodDays: number
+    extraPeriodPrice: number
+    includedPhotos: number
+    extraPhotoUnit: number
+    extraPhotoUnitPrice: number
+    includedVideos: number
+    extraVideoPrice: number
+  }
+}
+export interface Price {
+  basePrice: number
+  usageDays: number
+  periodFee: number
+  photoCount: number
+  photoFee: number
+  videoCount: number
+  videoFee: number
+  totalPrice: number
 }
 export interface Session {
   draftId: number
@@ -72,14 +90,21 @@ export interface Draft {
   anniversaryEtcText: string | null
   customerName: string | null
   phone: string | null
+  recipientName: string | null
   useStartDate: string | null
   useEndDate: string | null
-  memoryInput: string | null
+  specialDay: string | null
+  specialPlace: string | null
+  specialOccasion: string | null
   musics: Music[]
-  letters: Letter[]
+  letterInput: string | null
+  letterAi: string | null
+  letterChoice: LetterChoice | null
+  letter: string | null
+  linkUrl: string | null
+  price: Price
   sitePasswordSet: boolean
-  memoryTitle: string | null
-  memoryStory: string | null
+  sitePasswordHint: string | null
   documents: { documentNo: number; photos: Media[]; videos: Media[] }[]
   updatedAt: string
 }
@@ -91,9 +116,16 @@ export interface DraftFields {
   phone?: string | null
   useStartDate?: string | null
   useEndDate?: string | null
-  memoryInput?: string | null
+  specialDay?: string | null
+  specialPlace?: string | null
+  specialOccasion?: string | null
   musics?: Music[] | null
-  letters?: Letter[] | null
+  letterInput?: string | null
+  letterAi?: string | null
+  letterChoice?: LetterChoice | null
+  linkUrl?: string | null
+  recipientName?: string | null
+  sitePasswordHint?: string | null
   sitePassword?: string
   validateStep?: number
 }
@@ -169,45 +201,43 @@ export interface Music {
   artist: string
   youtubeUrl?: string | null
 }
-export interface Letter {
-  /** AI로 다듬기 전 원문. 직접 쓴 편지면 null. 완성 사이트 응답에는 없습니다. */
-  input?: string | null
-  /** 사이트에 띄울 최종 편지 */
-  content: string
-}
+export type LetterChoice = 'ORIGINAL' | 'AI'
 export interface LetterDraft {
-  input: string
-  content: string
+  letterInput: string
+  letterAi: string
+  letterChoice: LetterChoice | null
   remainingCount: number
 }
-/** 12-1. AI 편지 다듬기. 저장하지 않으니 결과를 letters에 넣어 updateDraft로 저장합니다. */
+/** AI 편지 다듬기. 서버가 원문과 AI 결과를 저장하고 선택 상태를 초기화합니다. */
 export function generateAiLetter(
   draftId: number,
   letterInput: string,
   token: string,
 ): Promise<LetterDraft>
-export interface Story {
-  memoryInput: string
-  memoryTitle: string
-  memoryStory: string
-  remainingCount: number
-}
-export function generateAiStory(draftId: number, memoryInput: string, token: string): Promise<Story>
 export interface SiteSession {
   siteAccessToken: string
   expiresAt: string
 }
+/** 잠금 화면에 띄울 정보. 비밀번호 없이 받습니다. */
+export interface SiteLock {
+  recipientName: string | null
+  passwordHint: string | null
+}
 export type SiteContent = Pick<
   Draft,
-  | 'memoryTitle'
-  | 'memoryStory'
+  | 'recipientName'
+  | 'specialDay'
+  | 'specialPlace'
+  | 'specialOccasion'
   | 'musics'
-  | 'letters'
+  | 'letter'
+  | 'linkUrl'
   | 'documents'
   | 'anniversaryType'
   | 'anniversaryEtcText'
   | 'useStartDate'
   | 'useEndDate'
 > & { templateId: number }
+export function getSiteLock(siteKey: string): Promise<SiteLock>
 export function unlockSite(siteKey: string, password: string): Promise<SiteSession>
 export function getSite(siteKey: string, token: string): Promise<SiteContent>

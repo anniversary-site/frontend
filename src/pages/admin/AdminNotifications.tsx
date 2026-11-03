@@ -103,10 +103,15 @@ export default function AdminNotifications({
   const [result, setResult] = useState<AdminPageResult<AdminNotification> | null>(null)
   const [error, setError] = useState(''),
     [loading, setLoading] = useState(true)
-  useEffect(() => {
-    let active = true
+  const requestKey = `${state}:${page}:${revision}`
+  const [previousRequest, setPreviousRequest] = useState(requestKey)
+  if (previousRequest !== requestKey) {
+    setPreviousRequest(requestKey)
     setLoading(true)
     setError('')
+  }
+  useEffect(() => {
+    let active = true
     api
       .getAdminNotifications({ sendStatus: state, page, size: 20 })
       .then((data) => {

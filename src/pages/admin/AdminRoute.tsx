@@ -53,7 +53,6 @@ export default function AdminRoute() {
   useEffect(() => {
     if (!session) return
     let active = true
-    setChecking(true)
     api
       .getAdminMe()
       .then(() => {
