@@ -1190,64 +1190,65 @@ a.logo,
 
 /* Ready for dev: 전화번호로 주문서 불러오기 */
 .page-load {
+  display: flex;
+  flex-direction: column;
   background: linear-gradient(
     var(--color-white),
     color-mix(in srgb, var(--color-primary-weak) 35%, var(--color-white))
   );
 }
 .load-content {
-  width: 824px;
+  width: 760px;
   max-width: calc(100% - 48px);
-  margin: 0 auto;
-  padding: 48px 0 120px;
+  margin: auto;
+  padding: var(--space-40) 0;
   text-align: center;
 }
 .load-content > .eyebrow {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 600;
-  line-height: 32px;
+  line-height: 24px;
 }
 .load-content > h1 {
-  margin-top: var(--space-24);
-  font-size: 40px;
+  margin-top: var(--space-12);
+  font-size: 32px;
   font-weight: 600;
-  line-height: 48px;
+  line-height: 38px;
   letter-spacing: -0.02em;
   word-break: keep-all;
 }
 .load-card {
-  width: 556px;
+  width: 370px;
   max-width: 100%;
-  min-height: 532px;
-  margin: 60px auto 0;
-  padding: 48px;
+  min-height: 300px;
+  margin: var(--space-40) auto 0;
+  padding: var(--space-32);
   border: 1px solid var(--color-grey-200);
   border-radius: var(--radius-20);
   background: var(--color-white);
 }
 .load-card h2 {
-  font-size: 24px;
-  line-height: 32px;
+  font: var(--text-subtitle);
   font-weight: 400;
-  margin: 64px 0 68px;
+  margin: 0 0 30px;
+}
+.load-fields {
+  display: grid;
+  gap: var(--space-16);
+  padding: 10px;
 }
 .load-card .text-input {
-  height: 84px;
-  border-radius: 24px;
-  font-size: 24px;
+  height: 50px;
   text-align: center;
 }
 .load-card > .button {
-  height: 84px;
-  margin-top: var(--space-16);
-  border-radius: 24px;
-  font-size: 24px;
+  margin-top: var(--space-12);
 }
 .load-help {
-  font: var(--text-body);
+  font: var(--text-caption);
   color: var(--color-grey-600);
-  margin-top: var(--space-24);
-  line-height: 28px;
+  margin-top: var(--space-16);
+  line-height: 20px;
 }
 .load-error {
   font: var(--text-caption);
@@ -1278,35 +1279,18 @@ a.logo,
 }
 @media (max-width: 767px) {
   .load-content {
-    max-width: calc(100% - 32px);
-    padding: var(--space-32) 0 96px;
-  }
-  .load-content > .eyebrow {
-    font: var(--text-body-strong);
+    margin: auto;
+    padding: var(--space-40) 0;
   }
   .load-content > h1 {
-    margin-top: var(--space-12);
-    font: var(--text-subtitle);
+    font: var(--text-title);
     letter-spacing: -0.02em;
   }
   .load-card {
-    min-height: 0;
-    margin-top: var(--space-32);
     padding: var(--space-24);
   }
-  .load-card h2 {
-    margin: var(--space-24) 0 var(--space-32);
-    font: var(--text-body);
-  }
-  .load-card .text-input,
-  .load-card > .button {
-    height: 60px;
-    border-radius: var(--radius-16);
-    font: var(--text-body);
-  }
-  .load-help {
-    margin-top: var(--space-16);
-    font: var(--text-caption);
+  .load-fields {
+    gap: var(--space-12);
   }
 }
 
