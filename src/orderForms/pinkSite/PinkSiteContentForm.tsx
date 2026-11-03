@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { useOrder } from '../../context/OrderContext'
 
 const musicLabels = {
@@ -8,8 +9,45 @@ const musicLabels = {
 } as const
 
 export default function PinkSiteContentForm() {
-  const { config, data, update, generate, generating, aiErrors, mediaSection, open } = useOrder()
+  const { config, data, update, generate, generating, aiErrors, mediaSection, open, setToast } =
+    useOrder()
   if (!config) return <p role="status">주문 설정을 불러오는 중이에요.</p>
+  const visibleLetters = data.letters
+  const visibleMusics = data.musics.length
+    ? data.musics
+    : [{ title: '', artist: '', album: '', youtubeUrl: '' }]
+  const musicListRef = useRef<HTMLDivElement>(null)
+  const [currentMusicIndex, setCurrentMusicIndex] = useState(0)
+
+  useEffect(() => {
+    setCurrentMusicIndex((current) => Math.min(current, visibleMusics.length - 1))
+  }, [visibleMusics.length])
+
+  const moveMusicCard = (nextIndex: number) => {
+    const index = Math.max(0, Math.min(nextIndex, visibleMusics.length - 1))
+    const list = musicListRef.current
+    const card = musicListRef.current?.children[index] as HTMLElement | undefined
+    if (card && list) {
+      const left = card.offsetLeft - (list.clientWidth - card.offsetWidth) / 2
+      list.scrollTo({ left, behavior: 'smooth' })
+    }
+    setCurrentMusicIndex(index)
+  }
+
+  const syncMusicIndex = () => {
+    const list = musicListRef.current
+    if (!list) return
+    const cards = Array.from(list.children) as HTMLElement[]
+    const listCenter = list.scrollLeft + list.clientWidth / 2
+    const closestIndex = cards.reduce((closest, card, index) => {
+      const currentDistance = Math.abs(card.offsetLeft + card.offsetWidth / 2 - listCenter)
+      const closestDistance = Math.abs(
+        cards[closest].offsetLeft + cards[closest].offsetWidth / 2 - listCenter,
+      )
+      return currentDistance < closestDistance ? index : closest
+    }, 0)
+    setCurrentMusicIndex(closestIndex)
+  }
 
   return (
     <div className="pink-order-form">
@@ -20,7 +58,9 @@ export default function PinkSiteContentForm() {
 
       <section className="content-section order-copy-section">
         <div className="section-heading">
-          <h2>OUR STORY 작성</h2>
+          <h2>
+            OUR STORY 작성 <span className="required-mark">*</span>
+          </h2>
           <button
             type="button"
             className="link-button"
@@ -40,22 +80,25 @@ export default function PinkSiteContentForm() {
             aria-label="추억 이야기 원문"
             onChange={(event) => update('memoryInput', event.target.value)}
           />
-          <button
-            type="button"
-            className="small-button ai-compose-button"
-            disabled={
-              generating.main || data.memoryInput.trim().length < config.limits.memoryInputMinLength
-            }
-            onClick={() => generate('main')}
-          >
-            {generating.main ? '생성 중…' : data.main ? 'AI 다시 생성' : 'AI 문장 생성'}
-          </button>
         </div>
         <div className="field-meta">
           <span>최소 {config.limits.memoryInputMinLength}자</span>
-          <span>
-            {data.memoryInput.length}/{config.limits.memoryInputMaxLength}
-          </span>
+          <div className="story-actions">
+            <span>
+              {data.memoryInput.length}/{config.limits.memoryInputMaxLength}
+            </span>
+            <button
+              type="button"
+              className="small-button ai-compose-button"
+              disabled={
+                generating.main ||
+                data.memoryInput.trim().length < config.limits.memoryInputMinLength
+              }
+              onClick={() => generate('main')}
+            >
+              {generating.main ? '생성 중…' : data.main ? 'AI 다시 생성' : 'AI 문장 생성'}
+            </button>
+          </div>
         </div>
         {aiErrors.main && (
           <p className="field-error" role="alert">
@@ -81,13 +124,11 @@ export default function PinkSiteContentForm() {
             폴더 위치 및 예시 보러가기 ›
           </button>
         </div>
-        <p className="description">기억에 남는 마음을 편지로 남겨주세요. 편지는 선택 사항이에요.</p>
         <div className="letter-list">
-          {data.letters.map((letter, index) => (
+          {visibleLetters.map((letter, index) => (
             <div className="letter-row" key={index}>
-              <textarea
+              <input
                 className="text-input"
-                rows={2}
                 maxLength={config.limits.letterMaxLength}
                 value={letter.content}
                 aria-label={`편지 ${index + 1}`}
@@ -95,7 +136,7 @@ export default function PinkSiteContentForm() {
                 onChange={(event) =>
                   update(
                     'letters',
-                    data.letters.map((item, itemIndex) =>
+                    visibleLetters.map((item, itemIndex) =>
                       itemIndex === index ? { content: event.target.value } : item,
                     ),
                   )
@@ -103,12 +144,19 @@ export default function PinkSiteContentForm() {
               />
               <button
                 type="button"
-                className="remove-entry"
+                className="small-button letter-ai-button"
+                onClick={() => setToast('편지 AI 문장 생성은 준비 중이에요.')}
+              >
+                AI 문장 생성
+              </button>
+              <button
+                type="button"
+                className="letter-delete-button"
                 aria-label={`편지 ${index + 1} 삭제`}
                 onClick={() =>
                   update(
                     'letters',
-                    data.letters.filter((_, itemIndex) => itemIndex !== index),
+                    visibleLetters.filter((_, itemIndex) => itemIndex !== index),
                   )
                 }
               >
@@ -120,7 +168,7 @@ export default function PinkSiteContentForm() {
         <button
           type="button"
           className="button form-add-button"
-          onClick={() => update('letters', [...data.letters, { content: '' }])}
+          onClick={() => update('letters', [...visibleLetters, { content: '' }])}
         >
           ＋ 편지 개수 추가하기
         </button>
@@ -139,56 +187,91 @@ export default function PinkSiteContentForm() {
             폴더 위치 및 예시 보러가기 ›
           </button>
         </div>
-        <p className="description">사이트에서 재생할 음악 정보를 입력해 주세요.</p>
-        <div className="music-list">
-          {data.musics.map((music, index) => (
-            <fieldset className="music-card" key={index}>
-              <legend>음악 {index + 1}</legend>
-              <button
-                type="button"
-                className="remove-entry"
-                aria-label={`음악 ${index + 1} 삭제`}
-                onClick={() =>
-                  update(
-                    'musics',
-                    data.musics.filter((_, itemIndex) => itemIndex !== index),
-                  )
-                }
+        <div className="music-description-row">
+          <p className="description">사이트에서 재생할 음악 정보를 입력해 주세요.</p>
+          <span className="music-page-indicator" aria-live="polite">
+            {currentMusicIndex + 1}/{visibleMusics.length}
+          </span>
+        </div>
+        <div className={`music-carousel${visibleMusics.length > 1 ? ' has-multiple' : ''}`}>
+          <button
+            type="button"
+            className="music-carousel-button previous"
+            aria-label="이전 음악"
+            disabled={currentMusicIndex === 0}
+            onClick={() => moveMusicCard(currentMusicIndex - 1)}
+          >
+            ‹
+          </button>
+          <div className="music-list" ref={musicListRef} onScroll={syncMusicIndex}>
+            {visibleMusics.map((music, index) => (
+              <div
+                className={`music-card${index === currentMusicIndex ? ' is-active' : ''}`}
+                key={index}
               >
-                ×
-              </button>
-              {(Object.keys(musicLabels) as (keyof typeof musicLabels)[]).map((key) => (
-                <label className="music-field" key={key}>
-                  <span>
-                    {musicLabels[key][0]}
-                    {key !== 'youtubeUrl' && <span className="required-mark"> *</span>}
-                  </span>
-                  <input
-                    className="text-input"
-                    type={key === 'youtubeUrl' ? 'url' : 'text'}
-                    value={music[key] ?? ''}
-                    placeholder={musicLabels[key][1]}
-                    maxLength={key === 'youtubeUrl' ? undefined : 100}
-                    onChange={(event) =>
-                      update(
-                        'musics',
-                        data.musics.map((item, itemIndex) =>
-                          itemIndex === index ? { ...item, [key]: event.target.value } : item,
-                        ),
-                      )
-                    }
-                  />
-                </label>
-              ))}
-            </fieldset>
-          ))}
+                <div className="music-card-header">
+                  <strong>음악 {index + 1}</strong>
+                  {visibleMusics.length > 1 && (
+                    <button
+                      type="button"
+                      className="music-delete-button"
+                      onClick={() =>
+                        update(
+                          'musics',
+                          visibleMusics.filter((_, itemIndex) => itemIndex !== index),
+                        )
+                      }
+                    >
+                      음악 삭제
+                    </button>
+                  )}
+                </div>
+                {(Object.keys(musicLabels) as (keyof typeof musicLabels)[]).map((key) => (
+                  <label className="music-field" key={key}>
+                    <span>
+                      {musicLabels[key][0]}
+                      {key !== 'youtubeUrl' && <span className="required-mark"> *</span>}
+                    </span>
+                    <input
+                      className="text-input"
+                      type={key === 'youtubeUrl' ? 'url' : 'text'}
+                      value={music[key] ?? ''}
+                      placeholder={musicLabels[key][1]}
+                      maxLength={key === 'youtubeUrl' ? undefined : 100}
+                      onChange={(event) =>
+                        update(
+                          'musics',
+                          visibleMusics.map((item, itemIndex) =>
+                            itemIndex === index ? { ...item, [key]: event.target.value } : item,
+                          ),
+                        )
+                      }
+                    />
+                  </label>
+                ))}
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="music-carousel-button next"
+            aria-label="다음 음악"
+            disabled={currentMusicIndex === visibleMusics.length - 1}
+            onClick={() => moveMusicCard(currentMusicIndex + 1)}
+          >
+            ›
+          </button>
         </div>
         <button
           type="button"
           className="button form-add-button"
-          onClick={() =>
-            update('musics', [...data.musics, { title: '', artist: '', album: '', youtubeUrl: '' }])
-          }
+          onClick={() => {
+            update('musics', [
+              ...visibleMusics,
+              { title: '', artist: '', album: '', youtubeUrl: '' },
+            ])
+            requestAnimationFrame(() => moveMusicCard(visibleMusics.length))
+          }}
         >
           ＋ 음악 추가하기
         </button>
