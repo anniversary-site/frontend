@@ -1515,22 +1515,21 @@ a.logo,
 .pink-order-form .description {
   margin-top: var(--space-4);
 }
-.story-compose {
-  position: relative;
-  margin-top: var(--space-12);
+.information-description {
+  max-width: 440px;
+  line-height: 28px;
 }
-.story-compose .text-input {
-  height: 110px;
-  padding: var(--space-16);
-  resize: vertical;
+.information-fields {
+  display: grid;
+  gap: 9px;
+  margin-top: 13px;
+}
+.information-fields .text-input {
+  height: 56px;
+  padding: 0 18px;
   border: 1px solid var(--color-grey-200);
+  border-radius: var(--radius-16);
   background: var(--color-white);
-}
-.ai-compose-button {
-  width: 104px;
-  flex-shrink: 0;
-  background: var(--color-primary-weak);
-  color: var(--color-primary-pressed);
 }
 .field-meta {
   display: flex;
@@ -1539,60 +1538,30 @@ a.logo,
   color: var(--color-grey-500);
   font: var(--text-caption);
 }
-.story-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-12);
-}
-.letter-list {
-  display: grid;
-  gap: 0;
-}
-.letter-row {
+.letter-compose {
   position: relative;
-  height: 68px;
-  padding-top: var(--space-12);
-  padding-right: 28px;
+  margin-top: var(--space-12);
 }
-.letter-row .text-input {
-  height: 56px;
-  padding: 0 122px 0 18px;
+.letter-compose .text-input {
+  display: block;
+  min-height: 160px;
+  height: 160px;
+  padding: 18px 122px 18px 18px;
   border: 1px solid var(--color-grey-200);
+  border-radius: var(--radius-16);
   background: var(--color-white);
+  line-height: 1.6;
+  resize: vertical;
 }
-.letter-ai-button {
+.letter-compose .letter-ai-button {
   position: absolute;
-  top: 20px;
-  right: 36px;
+  top: var(--space-16);
+  right: 10px;
   width: 88px;
   height: 40px;
   border-radius: 12px;
   background: var(--color-primary-weak);
   color: var(--color-primary);
-}
-.letter-delete-button {
-  position: absolute;
-  top: 28px;
-  right: 0;
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-full);
-  color: var(--color-grey-600);
-  font-size: 18px;
-  line-height: 1;
-}
-.letter-ai-result {
-  display: grid;
-  gap: var(--space-8, 8px);
-  margin: var(--space-8, 8px) 28px var(--space-4, 4px) 0;
-}
-.letter-ai-result .text-input {
-  min-height: 140px;
-  padding: 14px 18px;
-  border: 1px solid var(--color-grey-200);
-  background: var(--color-white);
-  line-height: 1.6;
-  resize: vertical;
 }
 .form-add-button {
   width: 100%;
@@ -1837,9 +1806,11 @@ a.logo,
     max-width: 48%;
     text-align: right;
   }
-  .story-compose .text-input {
-    min-height: 144px;
-    padding-right: var(--space-16);
+  .information-description {
+    max-width: 100%;
+  }
+  .letter-compose .text-input {
+    padding-right: 112px;
   }
   .music-field {
     grid-template-columns: 1fr;

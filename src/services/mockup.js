@@ -243,6 +243,12 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
       candidate.letters ??= []
       if ((candidate.memoryInput?.length ?? 0) > 2000)
         fail(400, 'TEXT_TOO_LONG', '추억 원문은 2000자 이내로 적어 주세요.')
+      if (
+        body.memoryInput?.match(/^특별한 날:\s*.+\n특별한 장소:\s*.+\n우리의 이야기:\s*[\s\S]+$/)
+      ) {
+        candidate.memoryTitle = 'INFORMATION'
+        candidate.memoryStory = body.memoryInput
+      }
       for (const [index, music] of candidate.musics.entries()) {
         if (['title', 'artist'].some((key) => !music[key]?.trim() || music[key].length > 100))
           fail(400, 'VALIDATION_FAILED', '음악 제목과 가수를 1~100자로 입력해 주세요.', [
