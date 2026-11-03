@@ -82,7 +82,7 @@ export default function DonePage() {
       <p>
         입금 확인 후 제작을 시작해요.
         <br />
-        진행 상황과 완성된 링크는 입력하신 번호로 알려드릴게요.
+        진행 상황과 완성된 링크는 입력하신 전화번호로 알려드릴게요.
       </p>
       <section className="content-section">
         <h2>요구사항 및 문의</h2>

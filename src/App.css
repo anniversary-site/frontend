@@ -1573,14 +1573,27 @@ a.logo,
 .letter-actions {
   display: flex;
   justify-content: flex-end;
+  gap: var(--space-8);
   margin-top: var(--space-8);
 }
-.letter-actions .letter-ai-button {
-  width: 88px;
+.letter-actions .letter-choice-button {
   height: 40px;
+  padding: 0 14px;
   border-radius: 12px;
   background: var(--color-primary-weak);
   color: var(--color-primary);
+}
+.letter-actions .letter-choice-button.is-selected {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+.letter-actions .letter-choice-button:disabled {
+  opacity: 0.5;
+}
+.letter-choice-status {
+  margin: var(--space-8) 0 0;
+  color: var(--color-grey-600);
+  font: var(--text-caption);
 }
 .url-section .description {
   max-width: 100%;
@@ -1596,14 +1609,32 @@ a.logo,
 }
 .ai-suggestion {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 10px;
   width: 100%;
-  min-height: 64px;
   margin-top: 10px;
-  padding: 12px 12px 12px 16px;
+  padding: 14px 16px;
+  border: 1px solid transparent;
   border-radius: var(--radius-16);
   background: var(--color-primary-weak);
+}
+.ai-suggestion.is-selected {
+  border-color: var(--color-primary);
+}
+.ai-suggestion-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-primary);
+  font: var(--text-caption);
+}
+.ai-suggestion-head strong {
+  font-weight: 700;
+}
+.ai-suggestion-head small {
+  margin-left: auto;
+  color: var(--color-grey-500);
+  font: var(--text-caption);
 }
 .ai-suggestion-icon {
   flex: 0 0 auto;
@@ -1611,17 +1642,39 @@ a.logo,
   font-size: 16px;
   line-height: 24px;
 }
-.ai-suggestion p {
-  flex: 1 1 auto;
-  min-width: 0;
+.ai-suggestion .ai-suggestion-text {
+  display: block;
+  width: 100%;
   margin: 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--color-white);
   color: #245eaa;
   font-size: 14px;
   line-height: 21px;
+  text-align: left;
+  white-space: pre-wrap;
   overflow-wrap: anywhere;
+  cursor: text;
 }
-.ai-suggestion button {
-  flex: 0 0 auto;
+.ai-suggestion .ai-suggestion-editor {
+  display: block;
+  width: 100%;
+  min-height: 160px;
+  padding: 12px;
+  border: 1px solid var(--color-primary);
+  border-radius: 12px;
+  background: var(--color-white);
+  font-size: 14px;
+  line-height: 21px;
+  resize: vertical;
+}
+.ai-suggestion-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-8);
+}
+.ai-suggestion-actions button {
   min-width: 72px;
   height: 40px;
   padding: 0 14px;
@@ -1631,7 +1684,14 @@ a.logo,
   font: var(--text-caption);
   font-weight: 600;
 }
-.ai-suggestion button:active {
+.ai-suggestion-actions button.primary {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+.ai-suggestion-actions button:disabled {
+  opacity: 0.5;
+}
+.ai-suggestion-actions button:active:not(:disabled) {
   transform: scale(0.98);
 }
 .form-add-button {
@@ -1881,11 +1941,7 @@ a.logo,
     max-width: 100%;
   }
   .ai-suggestion {
-    align-items: flex-start;
-    padding-left: 12px;
-  }
-  .ai-suggestion button {
-    align-self: center;
+    padding: 12px;
   }
   .music-field {
     grid-template-columns: 1fr;

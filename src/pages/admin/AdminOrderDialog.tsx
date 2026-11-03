@@ -155,6 +155,8 @@ export default function AdminOrderDialog({
               ['결제 금액', `${order.totalPrice.toLocaleString('ko-KR')}원`],
               ['입금자명', order.depositorName],
               ['전화번호', formatPhone(content.phone ?? '')],
+              ['받는 분 이름', content.recipientName ?? '-'],
+              ['비밀번호 힌트', content.sitePasswordHint ?? '-'],
               [
                 '사용 기간',
                 `${content.useStartDate ?? '미정'} ~ ${content.useEndDate ?? '종료일 미정'}`,

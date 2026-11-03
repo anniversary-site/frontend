@@ -35,7 +35,9 @@ test('목업: 새 API로 작성·업로드·제출·조회·요구사항 흐름�
       {
         customerName: '연동 테스트',
         phone: '010-1234-5678',
+        recipientName: '하나',
         sitePassword: '1225',
+        sitePasswordHint: '우리가 처음 만난 날',
         useStartDate: config.minUseStartDate,
         useEndDate: config.minUseStartDate,
         validateStep: 2,

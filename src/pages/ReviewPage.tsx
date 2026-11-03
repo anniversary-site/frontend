@@ -12,18 +12,14 @@ export default function ReviewPage() {
       <dl className="summary">
         {[
           [
-            '템플릿 번호',
+            '템플릿',
             templates.find((item) => item.templateId === data.template)?.name ??
               `템플릿 ${data.template}`,
           ],
           ['기념일 종류', data.occasion === '기타' ? data.other : data.occasion],
           ['이름', data.name],
           ['전화번호', data.phone],
-          ['특별한 날', data.specialDay],
-          ['특별한 장소', data.specialPlace],
-          ['기념일', data.specialOccasion],
-          ['추천 음악', `${data.musics.length}곡`],
-          ['편지', data.letterChoice === 'AI' ? 'AI 문장 선택' : '원문 선택'],
+          ['받는 분 이름', data.recipientName],
           ['사이트 비밀번호', data.sitePasswordSet ? '설정 완료' : '미설정'],
           [
             '희망 수령 기간',
