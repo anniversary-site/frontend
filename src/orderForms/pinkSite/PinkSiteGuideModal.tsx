@@ -70,7 +70,7 @@ export default function PinkSiteGuideModal({ target, documentNo, onClose }: Orde
           <div className="folder-example music-example">
             <span>MUSIC</span>
             <strong>음악 제목</strong>
-            <p>가수 · 앨범</p>
+            <p>가수</p>
             <small>YouTube 링크가 있으면 음악을 바로 열 수 있어요.</small>
           </div>
         )}
