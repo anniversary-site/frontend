@@ -145,7 +145,7 @@ const details = new Map<number, AdminDetail>(
         useStartDate: sample.useStartDate,
         useEndDate: sample.useEndDate,
         memoryInput: '함께한 소중한 추억을 기록합니다.',
-        musics: [{ title: '샘플 곡', artist: '샘플 가수', album: '샘플 앨범' }],
+        musics: [{ title: '샘플 곡', artist: '샘플 가수' }],
         letters: [],
         sitePasswordSet: true,
         memoryTitle: '함께라서 더 빛나는 오늘',

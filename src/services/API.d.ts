@@ -29,6 +29,7 @@ export interface OrderConfig {
   limits: {
     memoryInputMinLength: number
     memoryInputMaxLength: number
+    letterInputMinLength?: number
     letterMaxLength: number
     captionMaxLength: number
     videoTitleMaxLength: number
@@ -166,12 +167,25 @@ export function getOrderRequests(orderId: number, token: string): Promise<OrderR
 export interface Music {
   title: string
   artist: string
-  album: string
   youtubeUrl?: string | null
 }
 export interface Letter {
+  /** AI로 다듬기 전 원문. 직접 쓴 편지면 null. 완성 사이트 응답에는 없습니다. */
+  input?: string | null
+  /** 사이트에 띄울 최종 편지 */
   content: string
 }
+export interface LetterDraft {
+  input: string
+  content: string
+  remainingCount: number
+}
+/** 12-1. AI 편지 다듬기. 저장하지 않으니 결과를 letters에 넣어 updateDraft로 저장합니다. */
+export function generateAiLetter(
+  draftId: number,
+  letterInput: string,
+  token: string,
+): Promise<LetterDraft>
 export interface Story {
   memoryInput: string
   memoryTitle: string
