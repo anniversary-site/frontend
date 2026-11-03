@@ -48,7 +48,7 @@ const INITIAL: OrderData = {
   endDate: addDays(dateKey(minDate()), FREE_PERIOD_DAYS - 1),
   memoryInput: '',
   musics: [],
-  letters: [],
+  letters: [{ content: '' }, { content: '' }],
   sitePassword: '',
   sitePasswordSet: false,
   main: '',
