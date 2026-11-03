@@ -232,7 +232,7 @@ export default function App() {
     useEndDate: data.endDate || null,
     memoryInput: data.memoryInput || null,
     musics: data.musics,
-    letters: data.letters,
+    letters: data.letters.filter((letter) => letter.content.trim()),
     ...(data.sitePassword ? { sitePassword: data.sitePassword } : {}),
   })
   const needsOrderData = page !== 'main'

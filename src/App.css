@@ -1516,35 +1516,33 @@ a.logo,
 }
 .letter-list {
   display: grid;
-  gap: var(--space-8);
-  margin-top: var(--space-12);
+  gap: 0;
 }
 .letter-row {
   position: relative;
+  height: 68px;
+  padding-top: var(--space-12);
 }
 .letter-row .text-input {
-  height: 64px;
-  padding: var(--space-16) 48px var(--space-16) var(--space-16);
-  resize: vertical;
+  height: 56px;
+  padding: 0 122px 0 18px;
   border: 1px solid var(--color-grey-200);
   background: var(--color-white);
 }
-.remove-entry {
-  width: 32px;
-  height: 32px;
-  display: grid;
-  place-items: center;
-  border-radius: var(--radius-full);
-  color: var(--color-grey-600);
-}
-.letter-row .remove-entry {
+.letter-ai-button {
   position: absolute;
-  top: var(--space-16);
+  top: 20px;
   right: var(--space-8);
+  width: 88px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--color-primary-weak);
+  color: var(--color-primary);
 }
 .form-add-button {
   width: 100%;
   margin-top: var(--space-12);
+  border-radius: var(--radius-16);
   background: var(--color-primary);
   color: var(--color-white);
 }
@@ -1558,37 +1556,44 @@ a.logo,
   min-width: 0;
   margin: 0;
   padding: 20px;
-  border: 0;
+  border: 1px solid var(--color-grey-200);
   border-radius: var(--radius-20);
   background: var(--color-grey-100);
 }
-.music-card legend {
-  width: 100%;
-  padding: 0 0 var(--space-12);
-  border-bottom: 1px solid var(--color-grey-200);
+.music-card-header {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.music-card-header strong {
   font: var(--text-body-strong);
 }
-.music-card > .remove-entry {
-  position: absolute;
-  top: var(--space-12);
-  right: var(--space-12);
+.music-delete-button {
+  min-height: 32px;
+  padding: 0 var(--space-8);
+  color: var(--color-grey-600);
+  font: var(--text-caption);
 }
 .music-field {
   display: grid;
   grid-template-columns: 92px minmax(0, 1fr);
   align-items: center;
   min-height: 64px;
-  border-bottom: 1px solid var(--color-grey-200);
+  border-top: 1px solid var(--color-grey-200);
   color: var(--color-grey-700);
   font: var(--text-sub);
+  font-weight: 600;
 }
-.music-field:last-child {
-  border-bottom: 0;
+.music-field:first-of-type {
+  margin-top: var(--space-16);
 }
 .music-field .text-input {
   height: 48px;
   border: 1px solid var(--color-grey-200);
+  border-radius: 14px;
   background: var(--color-white);
+  font: var(--text-sub);
 }
 .pink-order-form .uploads .section-heading {
   align-items: flex-start;
