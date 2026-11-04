@@ -1083,7 +1083,7 @@ export default function App() {
                     />
                     <span
                       className={
-                        caption.length >=
+                        caption.length >
                         (sheet.kind === 'photos'
                           ? captionLimit
                           : (config?.limits.videoTitleMaxLength ?? 30))
