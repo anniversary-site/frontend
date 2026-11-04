@@ -2,7 +2,8 @@ import { useOrder } from '../context/OrderContext'
 import Icon from '../components/Icon'
 
 export default function ReviewPage() {
-  const { data, setToast, config, templates } = useOrder()
+  const { data, setToast, config, templates, templateDetail } = useOrder()
+  const pepero = (templateDetail ?? templates.find((item) => item.templateId === data.template))?.formType === 'PEPERO'
   if (!config) return <p role="status">가격 정보를 불러오는 중이에요.</p>
   const account = config.bankAccount
   return (
@@ -16,10 +17,10 @@ export default function ReviewPage() {
             templates.find((item) => item.templateId === data.template)?.name ??
               `템플릿 ${data.template}`,
           ],
-          ['기념일 종류', data.occasion === '기타' ? data.other : data.occasion],
+          ...(!pepero ? [['기념일 종류', data.occasion === '기타' ? data.other : data.occasion]] : []),
           ['이름', data.name],
           ['전화번호', data.phone],
-          ['받는 분 이름', data.recipientName],
+          ...(!pepero ? [['받는 분 이름', data.recipientName]] : []),
           ['사이트 비밀번호', data.sitePasswordSet ? '설정 완료' : '미설정'],
           [
             '희망 수령 기간',
