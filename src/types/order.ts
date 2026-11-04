@@ -15,6 +15,7 @@ export type MediaKind = 'photos' | 'videos'
 export type PreviewTarget = PhraseField | MediaKind | 'story' | 'letters' | 'music' | 'url'
 
 export interface OrderData {
+  mainText: string
   template: number
   occasion: Occasion
   other: string

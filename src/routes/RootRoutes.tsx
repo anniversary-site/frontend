@@ -17,6 +17,7 @@ export default function RootRoutes() {
       }
     >
       <Routes>
+        <Route path="/pepero/*" element={<OrderApp />} />
         <Route path="/s/:siteKey" element={<SitePage />} />
         <Route path="/admin" element={<AdminRoute />} />
         <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
