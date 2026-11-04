@@ -1,4 +1,4 @@
-import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
+import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { useOrder } from '../context/OrderContext'
 import HomePage from '../pages/HomePage'
 import OrderStartPage from '../pages/OrderStartPage'
@@ -32,10 +32,12 @@ function OrderFormLayout() {
 }
 
 export default function AppRoutes() {
+  const location = useLocation()
   return (
-    <Routes>
+    <Routes location={{ ...location, pathname: location.pathname.replace(/^\/pepero(?=\/order)/, '') }}>
       <Route path={PAGE_PATHS.main} element={<HomePage />} />
       <Route path={PAGE_PATHS.start} element={<OrderStartPage />} />
+      <Route path="/pepero/order" element={<OrderStartPage />} />
       <Route path={PAGE_PATHS.load} element={<OrderLoadPage />} />
       <Route element={<OrderFormLayout />}>
         <Route path={PAGE_PATHS.template} element={<TemplatePage />} />

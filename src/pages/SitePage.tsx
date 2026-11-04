@@ -107,7 +107,7 @@ function SiteView({ siteKey }: { siteKey: string }) {
         </form>
       ) : (
         <>
-          <h1>{content.specialOccasion}</h1>
+          <h1>{content.mainText || content.specialOccasion}</h1>
           <p className="site-story">
             {content.specialDay} · {content.specialPlace}
           </p>

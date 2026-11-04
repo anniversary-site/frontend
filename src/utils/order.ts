@@ -31,20 +31,22 @@ export function parseInformation(value: string): InformationFields {
 export const serializeInformation = ({ specialDay, specialPlace, story }: InformationFields) =>
   `특별한 날: ${specialDay}\n특별한 장소: ${specialPlace}\n우리의 이야기: ${story}`
 
-export function canProceed(page: Page, data: OrderData, earliestDate = '') {
+export function canProceed(page: Page, data: OrderData, earliestDate = '', formType = 'STANDARD') {
+  const pepero = formType === 'PEPERO'
   if (page === 'template')
-    return data.template >= 0 && (data.occasion !== '기타' || Boolean(data.other.trim()))
+    return data.template >= 0 && (pepero || data.occasion !== '기타' || Boolean(data.other.trim()))
   if (page === 'info')
     return Boolean(
       data.name.trim() &&
       /^01\d-\d{3,4}-\d{4}$/.test(data.phone) &&
-      Boolean(data.recipientName.trim()) &&
+      (pepero || Boolean(data.recipientName.trim())) &&
       (data.sitePasswordSet || /^[^\s]{4,20}$/.test(data.sitePassword)) &&
       (!data.sitePassword || /^[^\s]{4,20}$/.test(data.sitePassword)) &&
       Boolean(data.sitePasswordHint.trim()) &&
       isValidPeriod(data, earliestDate),
     )
   if (page === 'content') {
+    if (pepero) return Boolean(data.mainText.trim() && data.mainText.length <= 50)
     // 사이트 비밀번호는 2단계(주문자 정보)에서 검사합니다.
     const validMusics =
       data.musics.length > 0 &&

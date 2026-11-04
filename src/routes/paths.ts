@@ -13,6 +13,6 @@ export const PAGE_PATHS: Record<Page, string> = {
 }
 
 export function pageFromPath(pathname: string): Page {
-  const path = pathname.replace(/\/+$/, '') || '/'
+  const path = pathname.replace(/^\/pepero(?=\/order)/, '').replace(/\/+$/, '') || '/'
   return (Object.keys(PAGE_PATHS) as Page[]).find((page) => PAGE_PATHS[page] === path) || 'main'
 }

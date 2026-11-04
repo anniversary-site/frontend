@@ -39,6 +39,7 @@ import { videoMetadata } from './utils/video'
 
 // 화면 시연에 사용하는 초기 데이터와 날짜 유틸리티
 const INITIAL: OrderData = {
+  mainText: '',
   template: -1,
   occasion: '연애 기념일',
   other: '',
@@ -93,6 +94,9 @@ export default function App() {
   const [config, setConfig] = useState<OrderConfig | null>(null)
   const [templates, setTemplates] = useState<Template[]>([])
   const [templateDetail, setTemplateDetail] = useState<TemplateDetail | null>(null)
+  const captionLimit = templateDetail?.formType === 'PEPERO'
+    ? 10
+    : (templateDetail?.captionMaxLength ?? config?.limits.captionMaxLength ?? 50)
   // 기본 포함 개수를 넘겨 사용자가 직접 연 사진·영상 칸 수 (document별)
   const [extraSlots, setExtraSlots] = useState<Record<MediaKind, Record<number, number>>>({
     photos: {},
@@ -116,7 +120,7 @@ export default function App() {
     !generating.main &&
     templateDetail &&
     templateDetail.templateId === data.template &&
-    canProceed(page, data, config.minUseStartDate) &&
+    canProceed(page, data, addDays(dateKey(minDate()), (templateDetail.minLeadDays ?? 7) - 7), templateDetail.formType) &&
     Object.values(files)
       .flat()
       .every((item) => !item || item.status === 'ready') &&
@@ -139,7 +143,8 @@ export default function App() {
     const pages: Page[] = ['main', 'start', 'load', 'template', 'info', 'content', 'review', 'done']
     setDirection(pages.indexOf(p) < pages.indexOf(page) ? 'backward' : 'forward')
     setError('')
-    navigate(PAGE_PATHS[p] || PAGE_PATHS.main)
+    const path = PAGE_PATHS[p] || PAGE_PATHS.main
+    navigate(location.pathname.startsWith('/pepero/') && path.startsWith('/order') ? `/pepero${path}` : path)
   }
   const rememberSession = (value: Session | null) => {
     sessionRef.current = value
@@ -213,6 +218,7 @@ export default function App() {
     setFiles(restored)
     setData(() => ({
       template: draft.template?.templateId ?? -1,
+      mainText: draft.mainText ?? '',
       occasion:
         (Object.keys(occasionCodes) as Occasion[]).find(
           (key) => occasionCodes[key] === draft.anniversaryType,
@@ -240,6 +246,7 @@ export default function App() {
     }))
   }
   const fields = (): DraftFields => ({
+    mainText: data.mainText || null,
     templateId: data.template >= 0 ? data.template : null,
     anniversaryType: occasionCodes[data.occasion],
     anniversaryEtcText: data.occasion === '기타' ? data.other : null,
@@ -340,6 +347,8 @@ export default function App() {
     setBusy(true)
     try {
       const created = await api.createDraft()
+      const peperoTemplate = location.pathname.startsWith('/pepero/') ? templates.find((item) => item.formType === 'PEPERO') : undefined
+      if (location.pathname.startsWith('/pepero/') && !peperoTemplate) throw new Error('빼빼로 템플릿을 불러오지 못했어요.')
       rememberSession(created)
       setOrder(null)
       setTouched({})
@@ -347,13 +356,16 @@ export default function App() {
       setSuggestions({})
       setData({
         ...INITIAL,
-        template: templates[0]?.templateId ?? -1,
+        template: peperoTemplate?.templateId ?? templates[0]?.templateId ?? -1,
         date: config?.minUseStartDate ?? '',
         endDate: addDays(config?.minUseStartDate ?? '', 6),
       })
       setTemplateDetail(null)
       setFiles(emptyFiles())
-      go('template')
+      if (peperoTemplate) {
+        await applyDraft(await api.updateDraft(created.draftId, { templateId: peperoTemplate.templateId, validateStep: 1 }, created.draftToken))
+        go('info')
+      } else go('template')
     } catch (cause) {
       handleError(cause)
     } finally {
@@ -705,7 +717,7 @@ export default function App() {
       kind === 'photos'
         ? (config?.pricing.includedPhotos ?? 20)
         : (config?.pricing.includedVideos ?? 2)
-    const opened = included + (extraSlots[kind][doc.documentNo] ?? 0)
+    const opened = templateDetail?.extraMediaFees === false ? (kind === 'photos' ? doc.photoSlots : doc.videoSlots) : included + (extraSlots[kind][doc.documentNo] ?? 0)
     const total = kind === 'photos' ? doc.photoSlots : doc.videoSlots
     return Math.min(total, Math.max(opened, lastFilled))
   }
@@ -722,7 +734,9 @@ export default function App() {
             </h2>
             <p className="description">
               {kind === 'photos'
-                ? `기본 슬롯 ${config?.pricing.includedPhotos ?? 20}칸 제공`
+                ? templateDetail.formType === 'PEPERO'
+                  ? `최대 ${doc.photoSlots}장까지 업로드가 가능해요. 캡션으로는 날짜를 적을 수 있어요.`
+                  : `기본 슬롯 ${config?.pricing.includedPhotos ?? 20}칸 제공`
                 : `영상 기본 ${config?.pricing.includedVideos ?? 2}개 · 개당 용량 ${config?.limits.videoMaxSizeMb ?? 70}MB 이내`}
             </p>
           </div>
@@ -844,7 +858,7 @@ export default function App() {
               ),
           )}
         </div>
-        <button
+        {templateDetail.extraMediaFees !== false && <button
           type="button"
           className="button form-add-button"
           onClick={() => {
@@ -861,7 +875,7 @@ export default function App() {
           }}
         >
           ＋ {kind === 'photos' ? '사진' : '영상'} 추가하기
-        </button>
+        </button>}
       </section>
     ))
   // 세션이 없는 직접 접속은 주문 화면을 렌더링하기 전에 시작 화면으로 보냅니다.
@@ -1058,7 +1072,7 @@ export default function App() {
                       onChange={(e) => setCaption(e.target.value)}
                       maxLength={
                         sheet.kind === 'photos'
-                          ? config?.limits.captionMaxLength
+                          ? captionLimit
                           : config?.limits.videoTitleMaxLength
                       }
                       placeholder={
@@ -1069,9 +1083,9 @@ export default function App() {
                     />
                     <span
                       className={
-                        caption.length >=
+                        caption.length >
                         (sheet.kind === 'photos'
-                          ? (config?.limits.captionMaxLength ?? 50)
+                          ? captionLimit
                           : (config?.limits.videoTitleMaxLength ?? 30))
                           ? 'counter-limit'
                           : undefined
@@ -1079,7 +1093,7 @@ export default function App() {
                     >
                       {caption.length}/
                       {sheet.kind === 'photos'
-                        ? config?.limits.captionMaxLength
+                        ? captionLimit
                         : config?.limits.videoTitleMaxLength}
                     </span>
                   </div>

@@ -1,10 +1,13 @@
 import { useOrder } from '../context/OrderContext'
 import Calendar from '../components/Calendar'
-import { formatPhone } from '../utils/order'
+import { formatPhone, dateKey, minDate } from '../utils/order'
+import { addDays } from '../utils/period'
 import { periodPrice } from '../utils/period'
 
 export default function OrderInfoPage() {
-  const { data, setData, update, touched, setTouched, setError, config } = useOrder()
+  const { data, setData, update, touched, setTouched, setError, config, templateDetail } = useOrder()
+  const leadDays = templateDetail?.minLeadDays ?? 7
+  const earliestDate = addDays(dateKey(minDate()), leadDays - 7)
   const pricing = periodPrice(data.date, data.endDate)
   if (!config) return <p role="status">주문 설정을 불러오는 중이에요.</p>
   return (
@@ -68,7 +71,7 @@ export default function OrderInfoPage() {
           </small>
         )}
       </label>
-      <label className="recipient-field field-label">
+      {templateDetail?.formType !== 'PEPERO' && <label className="recipient-field field-label">
         <span>
           받는 분 이름
           <span className="required-mark" aria-label="필수">
@@ -91,6 +94,7 @@ export default function OrderInfoPage() {
           <small className="field-error">받는 분 이름을 입력해 주세요.</small>
         )}
       </label>
+      }
       <label className="password-field field-label">
         <span>
           웹사이트 조회 비밀번호
@@ -150,9 +154,9 @@ export default function OrderInfoPage() {
             *
           </span>
         </h2>
-        <p className="description">주문일 기준 {config.minLeadDays}일 이후부터 시작할 수 있어요.</p>
+        <p className="description">주문일 기준 {leadDays}일 이후부터 시작할 수 있어요.</p>
         <Calendar
-          minDateValue={config.minUseStartDate}
+          minDateValue={earliestDate}
           value={{ start: data.date, end: data.endDate }}
           onChange={(v) => {
             setData((current) => ({ ...current, date: v.start, endDate: v.end }))

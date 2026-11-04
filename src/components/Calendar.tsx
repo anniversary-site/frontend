@@ -53,6 +53,15 @@ export default function Calendar({ value, onChange, minDateValue }: CalendarProp
   const leading = new Date(year, monthIndex, 1).getDay()
   const count = new Date(year, monthIndex + 1, 0).getDate()
   const [today] = useState(() => dateKey(new Date()))
+  const setEndpoint = (endpoint: keyof DateRange, key: string) => {
+    if (!parseDate(key) || key < dateKey(min)) return
+    onChange(endpoint === 'start'
+      ? { start: key, end: value.end && value.end >= key ? value.end : key }
+      : { start: value.start && value.start <= key ? value.start : key, end: key })
+    const date = parseDate(key)!
+    setMonth(new Date(date.getFullYear(), date.getMonth(), 1))
+    setChoosingEnd(false)
+  }
   const selectDate = (key: string) => {
     if (!choosingEnd || !value.start) {
       onChange({ start: key, end: key })
@@ -159,6 +168,20 @@ export default function Calendar({ value, onChange, minDateValue }: CalendarProp
           ? '종료일을 선택해 주세요.'
           : '날짜를 누른 채 드래그해 기간을 선택하세요. 시작일·종료일을 끌어 조정할 수 있어요.'}
       </p>
+      <div className="calendar-endpoint-settings">
+        {(['start', 'end'] as const).map((endpoint) => (
+          <div className="calendar-endpoint-setting" key={endpoint}>
+            <label htmlFor={`period-${endpoint}`}>{endpoint === 'start' ? '시작일' : '종료일'}</label>
+            <input
+              id={`period-${endpoint}`}
+              type="date"
+              min={endpoint === 'end' && value.start ? value.start : dateKey(min)}
+              value={value[endpoint]}
+              onChange={(event) => setEndpoint(endpoint, event.target.value)}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

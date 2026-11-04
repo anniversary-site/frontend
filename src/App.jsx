@@ -526,7 +526,7 @@ export default function App() {
                     />
                     <span
                       className={
-                        caption.length >= (sheet.kind === 'photos' ? 40 : 15)
+                        caption.length > (sheet.kind === 'photos' ? 40 : 15)
                           ? 'counter-limit'
                           : undefined
                       }

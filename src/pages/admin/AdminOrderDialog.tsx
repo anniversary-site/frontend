@@ -291,6 +291,7 @@ export default function AdminOrderDialog({
           {tab === 'content' && (
             <section className="admin-detail-content">
               <h3>문구</h3>
+              {content.mainText && <p>메인 문구: {content.mainText}</p>}
               <p>특별한 날: {content.specialDay || '-'}</p>
               <p>특별한 장소: {content.specialPlace || '-'}</p>
               <p>기념일: {content.specialOccasion || '-'}</p>

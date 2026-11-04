@@ -49,13 +49,17 @@ export const mockOrderConfig = {
 // 외부 이미지 서버 없이 표시하는 목업용 안내 이미지입니다.
 const image = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><rect width="600" height="400" fill="#f3e8ec"/><text x="300" y="200" text-anchor="middle" fill="#775566" font-size="24">URLUV Preview</text></svg>')}`
 const guide = { imageUrl: image, highlight: { x: 0.2, y: 0.25, width: 0.6, height: 0.1 } }
-export const mockTemplates = ['크리스마스', '우리의 순간', '마음의 편지'].map((name, index) => ({
+export const mockTemplates = ['일반', '빼빼로', '크리스마스'].map((name, index) => ({
+  formType: index === 1 ? 'PEPERO' : 'STANDARD',
+  extraMediaFees: index !== 1,
+  minLeadDays: index === 1 ? 0 : 7,
+  captionMaxLength: index === 1 ? 10 : 50,
   templateId: index + 1,
   name,
   description: '소중한 순간을 담는 기념일 페이지',
   thumbnailUrl: image,
   sampleSiteUrl: null,
-  basePrice: index === 0 ? 6900 : 30000,
+  basePrice: index === 0 ? 6900 : index === 1 ? 1111 : 30000,
 }))
 const fail = (status, code, message, details = []) => {
   throw Object.assign(new Error(message), { status, code, details })
@@ -69,9 +73,9 @@ function templateDetail(templateId) {
     documents: [
       {
         documentNo: 1,
-        photoSlots: 50,
-        videoSlots: 5,
-        minPhotos: 5,
+        photoSlots: template.formType === 'PEPERO' ? 8 : 50,
+        videoSlots: template.formType === 'PEPERO' ? 0 : 5,
+        minPhotos: template.formType === 'PEPERO' ? 3 : 5,
         minVideos: 0,
         photoGuide: guide,
         videoGuide: guide,
@@ -96,16 +100,17 @@ function draftView(draft) {
   const videoCount = draft.documents.reduce((sum, doc) => sum + doc.videos.length, 0)
   const basePrice = mockTemplates.find(item => item.templateId === draft.template?.templateId)?.basePrice ?? 0
   const periodFee = Math.ceil(Math.max(0, usageDays - pricing.freePeriodDays) / pricing.freePeriodDays) * pricing.extraPeriodPrice
-  const photoFee = Math.ceil(Math.max(0, photoCount - pricing.includedPhotos) / pricing.extraPhotoUnit) * pricing.extraPhotoUnitPrice
-  const videoFee = Math.max(0, videoCount - pricing.includedVideos) * pricing.extraVideoPrice
+  const photoFee = draft.template?.templateId === 2 ? 0 : Math.ceil(Math.max(0, photoCount - pricing.includedPhotos) / pricing.extraPhotoUnit) * pricing.extraPhotoUnitPrice
+  const videoFee = draft.template?.templateId === 2 ? 0 : Math.max(0, videoCount - pricing.includedVideos) * pricing.extraVideoPrice
   return copy({ ...draft, letter: draft.letterChoice === 'AI' ? draft.letterAi : draft.letterInput, price: { basePrice, usageDays, periodFee, photoCount, photoFee, videoCount, videoFee, totalPrice: basePrice + periodFee + photoFee + videoFee } })
 }
 function validate(draft, step, code = 'VALIDATION_FAILED') {
+  const pepero = draft.template?.templateId === 2
   const details = []
   const missing = (field, value) => details.push({ field, reason: 'REQUIRED', value })
   if (step >= 1) {
     if (!draft.template) missing('templateId', 1)
-    if (!mockOrderConfig.anniversaryTypes.some((item) => item.code === draft.anniversaryType))
+    if (!pepero && !mockOrderConfig.anniversaryTypes.some((item) => item.code === draft.anniversaryType))
       missing('anniversaryType', 1)
     if (draft.anniversaryType === 'ETC' && !draft.anniversaryEtcText?.trim())
       missing('anniversaryEtcText', 1)
@@ -113,13 +118,17 @@ function validate(draft, step, code = 'VALIDATION_FAILED') {
   if (step >= 2) {
     if (!draft.customerName?.trim()) missing('customerName', 2)
     if (!/^01\d{8,9}$/.test(draft.phone ?? '')) missing('phone', 2)
-    if (!draft.recipientName?.trim()) missing('recipientName', 2)
+    if (!pepero && !draft.recipientName?.trim()) missing('recipientName', 2)
     if (!draft.sitePasswordSet) missing('sitePassword', 2)
     if (!draft.sitePasswordHint?.trim()) missing('sitePasswordHint', 2)
     if (!draft.useStartDate) missing('useStartDate', 2)
     if (!draft.useEndDate) missing('useEndDate', 2)
   }
-  if (step >= 3) {
+  if (step >= 3 && pepero) {
+    if (!draft.mainText?.trim()) missing('mainText', 3)
+    if (draft.documents[0].photos.length < 3) details.push({ field: 'documents[1].photos', reason: 'MIN_PHOTOS', value: 3 })
+  }
+  if (step >= 3 && !pepero) {
     for (const field of ['specialDay', 'specialPlace', 'specialOccasion', 'linkUrl'])
       if (!draft[field]?.trim()) missing(field, 3)
     if (draft.letterChoice === 'AI' && !draft.letterAi?.trim()) missing('letterAi', 3)
@@ -182,6 +191,7 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
     tokens.set(draftId, draftToken)
     drafts.set(draftId, {
       draftId,
+      mainText: null,
       orderNo: null,
       status: 'DRAFT',
       currentStep: 1,
@@ -255,6 +265,7 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
         'useStartDate',
         'useEndDate',
         'specialDay',
+        'mainText',
         'specialPlace',
         'specialOccasion',
         'letterInput',
@@ -264,7 +275,7 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
         'musics',
       ])
         if (body[key] !== undefined) candidate[key] = body[key]
-      if (candidate.useStartDate && candidate.useStartDate < dateAfter(7))
+      if (candidate.useStartDate && candidate.useStartDate < dateAfter(candidate.template?.templateId === 2 ? 0 : 7))
         fail(
           400,
           'INVALID_USE_START_DATE',
@@ -284,6 +295,10 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
         candidate.sitePasswordSet = true
       }
       candidate.musics ??= []
+      if (candidate.mainText != null) {
+        candidate.mainText = candidate.mainText.trim()
+        if (candidate.mainText.length > 50) fail(400, 'TEXT_TOO_LONG', '메인 문구는 50자 이내로 입력해 주세요.', [{ field: 'mainText', value: 50 }])
+      }
       for (const [field, max] of [['specialPlace', 100], ['specialOccasion', 50], ['letterInput', 2000], ['letterAi', 2000], ['linkUrl', 500]])
         if ((candidate[field]?.length ?? 0) > max) fail(400, 'TEXT_TOO_LONG', '글자 수를 확인해 주세요.')
       if (candidate.linkUrl) {
@@ -348,6 +363,7 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
       }
     }
     if (parts[2] === 'ai-letter' && method === 'POST') {
+      if (draft.template?.templateId === 2) fail(400, 'AI_NOT_SUPPORTED', '빼빼로에서는 AI 생성을 지원하지 않아요.')
       const input = body.letterInput?.trim() ?? ''
       if (input.length < 10)
         fail(400, 'LETTER_INPUT_TOO_SHORT', '편지에 담을 말을 조금 더 적어 주세요.')
@@ -370,7 +386,7 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
         const type = body.get('type')
         const documentNo = Number(body.get('documentNo'))
         const slot = Number(body.get('slot'))
-        if (!draft.template || documentNo !== 1 || !Number.isInteger(slot) || slot < 1 || slot > (type === 'PHOTO' ? 50 : 5))
+        if (!draft.template || documentNo !== 1 || !Number.isInteger(slot) || slot < 1 || slot > (type === 'PHOTO' ? (draft.template.templateId === 2 ? 8 : 50) : (draft.template.templateId === 2 ? 0 : 5)))
           fail(400, 'INVALID_SLOT', '템플릿과 파일 위치를 확인해 주세요.')
         if (!['PHOTO', 'VIDEO'].includes(type))
           fail(400, 'UNSUPPORTED_FILE_TYPE', '파일 종류를 확인해 주세요.')
@@ -425,7 +441,7 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
             fail(400, 'VALIDATION_FAILED', '미디어 문구를 확인해 주세요.')
           const max =
             field === 'caption'
-              ? mockOrderConfig.limits.captionMaxLength
+              ? (draft.template.templateId === 2 ? 10 : mockOrderConfig.limits.captionMaxLength)
               : mockOrderConfig.limits.videoTitleMaxLength
           if (body[field].length > max) fail(400, 'TEXT_TOO_LONG', '글자 수를 초과했어요.')
           list[index][field] = body[field]
@@ -440,7 +456,7 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
     if (parts.length === 1 && method === 'POST') {
       if (orders.has(draft.draftId)) return copy(orders.get(draft.draftId))
       validate(draft, 3, 'DRAFT_INCOMPLETE')
-      if (draft.useStartDate < dateAfter(7))
+      if (draft.useStartDate < dateAfter(draft.template?.templateId === 2 ? 0 : 7))
         fail(400, 'INVALID_USE_START_DATE', '희망 수령일을 다시 선택해 주세요.')
       draft.status = 'SUBMITTED'
       draft.orderNo = `UL${dateAfter(0).replaceAll('-', '').slice(2)}-${draft.draftId}`
