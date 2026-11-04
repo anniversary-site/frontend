@@ -133,6 +133,7 @@ const details = new Map<number, AdminDetail>(
         deliveredAt: sample.status === 'DELIVERED' ? timestamp() : null,
       },
       content: {
+        mainText: null,
         draftId: sample.orderId,
         orderNo: sample.orderNo,
         status: sample.status,

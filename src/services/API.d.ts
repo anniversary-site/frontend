@@ -3,6 +3,10 @@ export interface Guide {
   highlight: { x: number; y: number; width: number; height: number }
 }
 export interface Template {
+  formType: 'STANDARD' | 'PEPERO'
+  extraMediaFees: boolean
+  minLeadDays: number
+  captionMaxLength: number
   templateId: number
   name: string
   description: string
@@ -81,6 +85,7 @@ export interface Media {
   title: string | null
 }
 export interface Draft {
+  mainText: string | null
   draftId: number
   orderNo: string | null
   status: string
@@ -109,6 +114,7 @@ export interface Draft {
   updatedAt: string
 }
 export interface DraftFields {
+  mainText?: string | null
   templateId?: number | null
   anniversaryType?: string | null
   anniversaryEtcText?: string | null
@@ -226,6 +232,7 @@ export interface SiteLock {
 export type SiteContent = Pick<
   Draft,
   | 'recipientName'
+  | 'mainText'
   | 'specialDay'
   | 'specialPlace'
   | 'specialOccasion'
