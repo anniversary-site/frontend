@@ -94,6 +94,9 @@ export default function App() {
   const [config, setConfig] = useState<OrderConfig | null>(null)
   const [templates, setTemplates] = useState<Template[]>([])
   const [templateDetail, setTemplateDetail] = useState<TemplateDetail | null>(null)
+  const captionLimit = templateDetail?.formType === 'PEPERO'
+    ? 10
+    : (templateDetail?.captionMaxLength ?? config?.limits.captionMaxLength ?? 50)
   // 기본 포함 개수를 넘겨 사용자가 직접 연 사진·영상 칸 수 (document별)
   const [extraSlots, setExtraSlots] = useState<Record<MediaKind, Record<number, number>>>({
     photos: {},
@@ -1069,7 +1072,7 @@ export default function App() {
                       onChange={(e) => setCaption(e.target.value)}
                       maxLength={
                         sheet.kind === 'photos'
-                          ? templateDetail?.captionMaxLength ?? config?.limits.captionMaxLength
+                          ? captionLimit
                           : config?.limits.videoTitleMaxLength
                       }
                       placeholder={
@@ -1082,7 +1085,7 @@ export default function App() {
                       className={
                         caption.length >=
                         (sheet.kind === 'photos'
-                          ? (config?.limits.captionMaxLength ?? 50)
+                          ? captionLimit
                           : (config?.limits.videoTitleMaxLength ?? 30))
                           ? 'counter-limit'
                           : undefined
@@ -1090,7 +1093,7 @@ export default function App() {
                     >
                       {caption.length}/
                       {sheet.kind === 'photos'
-                        ? config?.limits.captionMaxLength
+                        ? captionLimit
                         : config?.limits.videoTitleMaxLength}
                     </span>
                   </div>
