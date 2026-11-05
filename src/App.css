@@ -343,19 +343,20 @@ textarea {
 .template-card.closed:disabled {
   opacity: 1;
 }
-.template-card.closed .template-placeholder {
-  opacity: 0.45;
-}
 .template-card.closed .template-check {
   display: none;
 }
-.template-closed-message {
-  display: block;
-  margin-top: var(--space-8);
+.template-closed-cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-12);
+  background: var(--color-grey-200);
+  color: var(--color-grey-700);
   font: var(--text-caption);
-  font-style: normal;
   font-weight: 600;
-  color: var(--color-primary);
+  text-align: center;
+  word-break: keep-all;
 }
 .template-placeholder {
   display: block;
