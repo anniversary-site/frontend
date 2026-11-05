@@ -102,7 +102,9 @@ export default function AdminCalendar({
                 <strong>{order.customerName}</strong>
                 <small>{order.templateName}</small>
               </span>
-              <span className="admin-deadline-status">{adminStatusLabels[order.status]}</span>
+              <span className={`admin-deadline-status admin-deadline-${order.status.toLowerCase()}`}>
+                {adminStatusLabels[order.status]}
+              </span>
             </button>
           ))}
           {!deadlines.length && <p className="admin-empty">이번 주 마감 일정이 없어요.</p>}
