@@ -126,6 +126,7 @@ const details = new Map<number, AdminDetail>(
         depositorName: sample.customerName,
         paidAt: sample.payStatus === 'CONFIRMED' ? timestamp() : null,
         siteKey: `sample-${sample.orderId}`,
+        defaultSiteUrl: `https://urluv.shop/cupid/sample-${sample.orderId}`,
         sitePasswordSet: true,
         siteUrl: null,
         adminMemo: null,
@@ -412,6 +413,15 @@ export async function adminMockRequest(
   if (parts[0] === 'orders' && parts[1]) {
     const detail = detailOf(Number(parts[1]))
     if (method === 'GET') return clone(detail)
+    if (parts[2] === 'site-preview') {
+      if (!detail.order.defaultSiteUrl || ['DRAFT', 'CANCELED'].includes(detail.order.status))
+        fail(409, 'INVALID_ORDER_STATE', '미리볼 수 있는 사이트가 없어요.')
+      return {
+        url: `${detail.order.defaultSiteUrl}#preview=mock-preview`,
+        previewToken: 'mock-preview',
+        expiresAt: new Date(Date.now() + 30 * 60_000).toISOString(),
+      }
+    }
     if (!Number.isInteger(body.expectedVersion))
       fail(400, 'VALIDATION_FAILED', '주문 버전이 필요해요.', 'expectedVersion')
     if (body.expectedVersion !== detail.order.version)
@@ -441,6 +451,9 @@ export async function adminMockRequest(
       if (body.status === 'DELIVERED') {
         if (previous !== 'IN_PROGRESS')
           fail(409, 'INVALID_ORDER_STATE', '제작 중인 주문만 납품할 수 있어요.')
+        // 서버처럼 비워 보내면 템플릿 사이트 주소로 채웁니다.
+        if ((typeof body.siteUrl !== 'string' || !body.siteUrl.trim()) && detail.order.defaultSiteUrl)
+          body.siteUrl = detail.order.defaultSiteUrl
         if (
           typeof body.siteUrl !== 'string' ||
           body.siteUrl.length > 500 ||

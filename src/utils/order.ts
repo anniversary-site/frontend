@@ -31,6 +31,10 @@ export function parseInformation(value: string): InformationFields {
 export const serializeInformation = ({ specialDay, specialPlace, story }: InformationFields) =>
   `특별한 날: ${specialDay}\n특별한 장소: ${specialPlace}\n우리의 이야기: ${story}`
 
+/** 사이트 비밀번호 규칙. 빼빼로 사이트는 숫자 4자리, 그 밖은 공백 없이 4~20자. */
+export const isValidSitePassword = (password: string, formType = 'STANDARD') =>
+  formType === 'PEPERO' ? /^[0-9]{4}$/.test(password) : /^[^\s]{4,20}$/.test(password)
+
 export function canProceed(page: Page, data: OrderData, earliestDate = '', formType = 'STANDARD') {
   const pepero = formType === 'PEPERO'
   if (page === 'template')
@@ -40,8 +44,8 @@ export function canProceed(page: Page, data: OrderData, earliestDate = '', formT
       data.name.trim() &&
       /^01\d-\d{3,4}-\d{4}$/.test(data.phone) &&
       (pepero || Boolean(data.recipientName.trim())) &&
-      (data.sitePasswordSet || /^[^\s]{4,20}$/.test(data.sitePassword)) &&
-      (!data.sitePassword || /^[^\s]{4,20}$/.test(data.sitePassword)) &&
+      (data.sitePasswordSet || isValidSitePassword(data.sitePassword, formType)) &&
+      (!data.sitePassword || isValidSitePassword(data.sitePassword, formType)) &&
       Boolean(data.sitePasswordHint.trim()) &&
       isValidPeriod(data, earliestDate),
     )

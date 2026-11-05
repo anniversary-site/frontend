@@ -51,12 +51,14 @@ const image = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w
 const guide = { imageUrl: image, highlight: { x: 0.2, y: 0.25, width: 0.6, height: 0.1 } }
 export const mockTemplates = ['일반', '빼빼로', '크리스마스'].map((name, index) => ({
   formType: index === 1 ? 'PEPERO' : 'STANDARD',
+  closedMessage: index === 2 ? 'Coming Soon!' : null,
   extraMediaFees: index !== 1,
   minLeadDays: index === 1 ? 0 : 7,
-  captionMaxLength: index === 1 ? 10 : 50,
+  // 일반·빼빼로는 캡션 10자, 크리스마스는 공통값 50자
+  captionMaxLength: index === 2 ? 50 : 10,
   templateId: index + 1,
   name,
-  description: '소중한 순간을 담는 기념일 페이지',
+  description: ['소중한 날을 기록해요', '달콤한 순간을 담아요', '마음을 전하는 연말'][index],
   thumbnailUrl: image,
   sampleSiteUrl: null,
   basePrice: index === 0 ? 6900 : index === 1 ? 1111 : 30000,
@@ -251,6 +253,8 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
       const candidate = copy(draft)
       if (body.templateId !== undefined) {
         const template = body.templateId === null ? null : templateDetail(body.templateId)
+        if (template?.closedMessage)
+          fail(409, 'TEMPLATE_CLOSED', '아직 신청을 받지 않는 템플릿이에요. 다른 템플릿을 골라 주세요.')
         candidate.template = template
           ? { templateId: template.templateId, name: template.name }
           : null
@@ -441,7 +445,7 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
             fail(400, 'VALIDATION_FAILED', '미디어 문구를 확인해 주세요.')
           const max =
             field === 'caption'
-              ? (draft.template.templateId === 2 ? 10 : mockOrderConfig.limits.captionMaxLength)
+              ? (mockTemplates.find((t) => t.templateId === draft.template.templateId)?.captionMaxLength ?? mockOrderConfig.limits.captionMaxLength)
               : mockOrderConfig.limits.videoTitleMaxLength
           if (body[field].length > max) fail(400, 'TEXT_TOO_LONG', '글자 수를 초과했어요.')
           list[index][field] = body[field]

@@ -157,9 +157,25 @@
 .admin-deadline-status {
   flex-shrink: 0;
   color: var(--color-primary);
+  background: var(--color-primary-weak);
+  border-radius: 999px;
+  padding: 2px 8px;
   font-size: 11px;
   line-height: 17px;
   font-weight: 600;
+}
+/* 마감 일정 상태별 색: 입금 대기 주황, 제작중 파랑(기본), 완료 초록, 취소 회색 */
+.admin-deadline-submitted {
+  color: #c25e00;
+  background: #fff3e0;
+}
+.admin-deadline-delivered {
+  color: #13824b;
+  background: #e6f7ee;
+}
+.admin-deadline-canceled {
+  color: var(--color-grey-600);
+  background: var(--color-grey-100);
 }
 .admin-calendar-heading {
   min-height: 64px;
@@ -218,14 +234,18 @@
   color: var(--color-error);
 }
 .admin-calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
   border-top: 1px solid var(--color-grey-200);
   border-left: 1px solid var(--color-grey-200);
 }
-.admin-calendar-cell {
-  min-width: 0;
+/* 한 주 = 한 줄. 날짜 칸은 세로 전체를 채우고, 기간 막대는 그 위에 여러 칸을 가로질러 놓입니다. */
+.admin-calendar-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   min-height: 118px;
+}
+.admin-calendar-cell {
+  grid-row: 1 / -1;
+  min-width: 0;
   padding: 10px;
   border-right: 1px solid var(--color-grey-200);
   border-bottom: 1px solid var(--color-grey-200);
@@ -246,11 +266,6 @@
 .admin-calendar-cell .admin-is-today {
   background: var(--color-primary);
   color: var(--color-white);
-}
-.admin-day-orders {
-  display: grid;
-  gap: var(--space-4);
-  padding-top: 6px;
 }
 .admin-order-chip {
   display: flex;
@@ -430,7 +445,6 @@
 }
 .admin-order-chip.admin-period-continues {
   border-radius: 0;
-  border-left: 2px solid var(--color-primary);
 }
 .admin-order-chip.admin-period-end {
   border-radius: 0 8px 8px 0;
@@ -749,13 +763,28 @@
     padding: 24px;
   }
 }
-.admin-calendar-grid .admin-order-chip {
-  width: calc(100% + 20px);
-  margin-left: -10px;
-  padding-inline: 10px;
+.admin-calendar-grid .admin-period-bar {
   position: relative;
+  z-index: 1;
+  min-width: 0;
+  min-height: 28px;
+  margin: 2px 4px;
+  overflow: hidden;
+  white-space: nowrap;
 }
-.admin-period-spacer {
-  display: block;
-  min-height: 30px;
+/* 앞뒤 주로 이어지는 막대는 그쪽 끝을 칸 경계까지 붙여 이어져 보이게 합니다. */
+.admin-calendar-grid .admin-period-bar:not(.admin-period-start) {
+  margin-left: 0;
+}
+.admin-calendar-grid .admin-period-bar:not(.admin-period-end) {
+  margin-right: 0;
+}
+.admin-period-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.admin-period-label small {
+  font-weight: 500;
+  opacity: 0.7;
 }
