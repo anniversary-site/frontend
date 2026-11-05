@@ -7,6 +7,8 @@ export interface Template {
   extraMediaFees: boolean
   minLeadDays: number
   captionMaxLength: number
+  /** 아직 신청을 받지 않으면 띄울 문구. null이면 고를 수 있음 */
+  closedMessage: string | null
   templateId: number
   name: string
   description: string
