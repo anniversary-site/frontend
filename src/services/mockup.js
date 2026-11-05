@@ -58,7 +58,7 @@ export const mockTemplates = ['일반', '빼빼로', '크리스마스'].map((nam
   captionMaxLength: index === 2 ? 50 : 10,
   templateId: index + 1,
   name,
-  description: '소중한 순간을 담는 기념일 페이지',
+  description: ['소중한 날을 기록해요', '달콤한 순간을 담아요', '마음을 전하는 연말'][index],
   thumbnailUrl: image,
   sampleSiteUrl: null,
   basePrice: index === 0 ? 6900 : index === 1 ? 1111 : 30000,
