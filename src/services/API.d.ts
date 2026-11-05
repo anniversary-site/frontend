@@ -12,6 +12,8 @@ export interface Template {
   description: string
   thumbnailUrl: string
   sampleSiteUrl: string | null
+  /** 웹사이트 미리보기 팝업 사진(카드 사진과 별도). 없으면 null */
+  previewImageUrl?: string | null
   basePrice: number
 }
 export interface TemplateDetail extends Template {
