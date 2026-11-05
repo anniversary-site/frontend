@@ -346,7 +346,7 @@ textarea {
 .template-card.closed .template-check {
   display: none;
 }
-.template-closed-cover {
+.template-placeholder.template-closed-cover {
   display: flex;
   align-items: center;
   justify-content: center;
