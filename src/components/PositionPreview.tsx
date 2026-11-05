@@ -58,23 +58,25 @@ function SitePreview({ onClose }: { onClose: () => void }) {
         </button>
       </header>
 
-      <div className="preview-modal-body" style={{ overflow: 'auto' }}>
+      <div className="preview-modal-body site-preview-list">
         {list.map((template) => (
-          <article key={template.templateId}>
+          <article key={template.templateId} className="site-preview-card">
             <h3>{template.name}</h3>
-            {template.previewImageUrl && (
+            {template.previewImageUrl ? (
               <img
+                className="site-preview-image"
                 src={template.previewImageUrl}
                 alt={`${template.name} 웹사이트 미리보기`}
-                style={{ display: 'block', width: '100%', borderRadius: 12 }}
               />
+            ) : (
+              <div className="site-preview-image site-preview-soon">
+                Coming Soon!
+              </div>
             )}
-            {template.sampleSiteUrl ? (
+            {template.sampleSiteUrl && (
               <a href={template.sampleSiteUrl} target="_blank" rel="noreferrer">
                 샘플 사이트 보기
               </a>
-            ) : (
-              !template.previewImageUrl && <p>샘플 사이트 준비 중</p>
             )}
           </article>
         ))}

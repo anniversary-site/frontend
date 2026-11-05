@@ -1999,3 +1999,49 @@ a.logo,
   background: var(--color-white);
   color: var(--color-grey-900);
 }
+
+/* 웹사이트 미리보기 팝업: 템플릿별 카드 */
+.site-preview-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+.site-preview-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  padding: var(--space-16) var(--space-16) var(--space-24);
+  border-radius: var(--radius-20);
+  background: var(--color-white);
+}
+.site-preview-card h3 {
+  margin: 0;
+  padding: 0 var(--space-4);
+  font: var(--text-body-strong);
+  color: var(--color-grey-900);
+}
+.site-preview-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1600 / 970;
+  object-fit: cover;
+  border-radius: var(--radius-16);
+  border: 1px solid var(--color-grey-200);
+  box-sizing: border-box;
+}
+.site-preview-soon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-grey-200);
+  color: var(--color-primary);
+  font: var(--text-subtitle);
+  font-weight: 700;
+}
+.site-preview-card a {
+  align-self: flex-start;
+  padding: 0 var(--space-4);
+  color: var(--color-primary);
+  font: var(--text-caption);
+  font-weight: 600;
+}
