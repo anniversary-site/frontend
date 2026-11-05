@@ -126,6 +126,7 @@ const details = new Map<number, AdminDetail>(
         depositorName: sample.customerName,
         paidAt: sample.payStatus === 'CONFIRMED' ? timestamp() : null,
         siteKey: `sample-${sample.orderId}`,
+        defaultSiteUrl: `https://urluv.shop/cupid/sample-${sample.orderId}`,
         sitePasswordSet: true,
         siteUrl: null,
         adminMemo: null,
@@ -441,6 +442,9 @@ export async function adminMockRequest(
       if (body.status === 'DELIVERED') {
         if (previous !== 'IN_PROGRESS')
           fail(409, 'INVALID_ORDER_STATE', '제작 중인 주문만 납품할 수 있어요.')
+        // 서버처럼 비워 보내면 템플릿 사이트 주소로 채웁니다.
+        if ((typeof body.siteUrl !== 'string' || !body.siteUrl.trim()) && detail.order.defaultSiteUrl)
+          body.siteUrl = detail.order.defaultSiteUrl
         if (
           typeof body.siteUrl !== 'string' ||
           body.siteUrl.length > 500 ||

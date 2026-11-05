@@ -197,7 +197,11 @@ export default function AdminOrderDialog({
               <button
                 className="admin-primary"
                 disabled={busy}
-                onClick={() => setAction('DELIVERED')}
+                onClick={() => {
+                  // 템플릿 사이트 주소를 미리 채웁니다. 다른 주소로 바꿀 수도 있어요.
+                  setSiteUrl(order.defaultSiteUrl ?? '')
+                  setAction('DELIVERED')
+                }}
               >
                 납품 완료
               </button>
@@ -238,14 +242,17 @@ export default function AdminOrderDialog({
                   완성 사이트 주소
                   <input
                     type="url"
-                    required
+                    required={!order.defaultSiteUrl}
                     pattern="https?://.*"
                     maxLength={500}
                     value={siteUrl}
                     onChange={(event) => setSiteUrl(event.target.value)}
                     aria-invalid={invalidFields.includes('siteUrl') || undefined}
-                    placeholder="https://"
+                    placeholder={order.defaultSiteUrl ?? 'https://'}
                   />
+                  {order.defaultSiteUrl && (
+                    <small>템플릿 사이트 주소를 자동으로 채웠어요. 비워 두어도 이 주소로 납품돼요.</small>
+                  )}
                 </label>
               )}
               <label className="admin-field">

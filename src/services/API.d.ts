@@ -226,6 +226,7 @@ export interface SiteSession {
 }
 /** 잠금 화면에 띄울 정보. 비밀번호 없이 받습니다. */
 export interface SiteLock {
+  templateId?: number | null
   recipientName: string | null
   passwordHint: string | null
 }

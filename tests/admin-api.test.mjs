@@ -69,7 +69,11 @@ test('입금 확인·납품은 버전 충돌을 막고 문자·처리 기록을 
   assert.equal(paid.notifications[0].type, 'PAID')
   assert.equal(paid.notifications[0].sendStatus, 'PENDING')
   await assert.rejects(
-    api.changeAdminOrderStatus(id, { status: 'DELIVERED', expectedVersion: paid.order.version }),
+    api.changeAdminOrderStatus(id, {
+      status: 'DELIVERED',
+      expectedVersion: paid.order.version,
+      siteUrl: 'javascript:alert(1)',
+    }),
     (error) => error.code === 'VALIDATION_FAILED',
   )
   assert.equal((await api.getAdminOrder(id)).order.version, paid.order.version)
