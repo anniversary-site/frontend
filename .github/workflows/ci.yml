@@ -1,0 +1,34 @@
+name: Develop CI
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      VITE_USE_BACKEND: 'false'
+      VITE_USE_ADMIN: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run lint -- --deny-warnings
+      - run: npm run typecheck
+      - run: node --test tests/*.test.mjs
+      - run: npm run build
