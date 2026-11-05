@@ -27,7 +27,8 @@ export default function AdminOrderDialog({
     [revision, setRevision] = useState(0)
   // 납품 전에 운영자가 완성 사이트를 직접 열어 봐야 납품 완료를 누를 수 있어요.
   const [previewed, setPreviewed] = useState(false),
-    [previewing, setPreviewing] = useState(false)
+    [previewing, setPreviewing] = useState(false),
+    [blockedPreviewUrl, setBlockedPreviewUrl] = useState('')
   const operation = useRef(false)
   useEffect(() => {
     const element = dialog.current
@@ -59,11 +60,13 @@ export default function AdminOrderDialog({
     if (tab) tab.opener = null
     setPreviewing(true)
     setError('')
+    setBlockedPreviewUrl('')
     try {
       const { url } = await api.getAdminSitePreview(orderId)
-      if (tab) tab.location.href = url
-      else window.location.assign(url)
-      setPreviewed(true)
+      if (tab) {
+        tab.location.href = url
+        setPreviewed(true)
+      } else setBlockedPreviewUrl(url) // 팝업이 막히면 링크를 직접 누르게 합니다.
     } catch (cause) {
       tab?.close()
       setError(cause instanceof Error ? cause.message : '미리보기를 열지 못했어요.')
@@ -202,6 +205,17 @@ export default function AdminOrderDialog({
           {order.siteUrl && /^https?:\/\//.test(order.siteUrl) && (
             <a className="admin-text-button" href={order.siteUrl} target="_blank" rel="noreferrer">
               완성 사이트 보기
+            </a>
+          )}
+          {blockedPreviewUrl && (
+            <a
+              className="admin-text-button"
+              href={blockedPreviewUrl}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => setPreviewed(true)}
+            >
+              새 탭이 막혔어요. 여기를 눌러 미리보기를 열어주세요.
             </a>
           )}
           {order.status === 'IN_PROGRESS' && !previewed && (
