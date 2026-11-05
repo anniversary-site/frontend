@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   adminStatusLabels,
   calendarDate,
@@ -53,8 +54,8 @@ function weekBars(
 export default function AdminCalendar({
   today,
   month,
-  orders,
-  weekOrders,
+  orders: allOrders,
+  weekOrders: allWeekOrders,
   loading,
   onMonthChange,
   onSelect,
@@ -67,6 +68,12 @@ export default function AdminCalendar({
   onMonthChange: (month: string) => void
   onSelect: (orderId: number) => void
 }) {
+  const [filters, setFilters] = useState({ delivered: false, ongoing: true, canceled: false })
+  const visible = (order: AdminSchedule) => order.status === 'DELIVERED'
+    ? filters.delivered
+    : order.status === 'CANCELED' ? filters.canceled : filters.ongoing
+  const orders = allOrders.filter(visible)
+  const weekOrders = allWeekOrders.filter(visible)
   const [year, monthNumber] = month.split('-').map(Number)
   const monthIndex = monthNumber - 1
   const leading = new Date(year, monthIndex, 1).getDay()
@@ -130,9 +137,21 @@ export default function AdminCalendar({
             </button>
           </nav>
         </div>
-        <p className="admin-calendar-legend">
-          기간막대는 사용기간입니다
-        </p>
+        <div className="admin-calendar-toolbar">
+          <p className="admin-calendar-legend">기간막대는 사용기간입니다</p>
+          <fieldset className="admin-calendar-filters" aria-label="주문 상태 필터">
+            {([
+              ['delivered', '납품완료'],
+              ['ongoing', '진행 중'],
+              ['canceled', '주문 취소'],
+            ] as const).map(([key, label]) => (
+              <label key={key}>
+                <input type="checkbox" checked={filters[key]} onChange={(event) => setFilters((current) => ({ ...current, [key]: event.target.checked }))} />
+                {label}
+              </label>
+            ))}
+          </fieldset>
+        </div>
         {loading && (
           <p role="status" className="admin-empty">
             일정을 불러오는 중이에요.
@@ -165,7 +184,10 @@ export default function AdminCalendar({
                 <div
                   key={week}
                   className="admin-calendar-week"
-                  style={{ gridTemplateRows: `44px repeat(${lanes}, 32px) minmax(12px, 1fr)` }}
+                  style={{
+                    gridTemplateRows: ['44px', ...Array(lanes).fill('36px'), 'minmax(12px, 1fr)'].join(' '),
+                    minHeight: Math.max(118, 44 + lanes * 36 + 12),
+                  }}
                 >
                   {Array.from({ length: 7 }, (_, column) => {
                     const index = week * 7 + column

@@ -62,10 +62,12 @@ export default function AdminPage({ onLogout }: { onLogout: () => void }) {
       api.getAdminSchedule(
         `${month}-01`,
         calendarDate(year, monthNumber - 1, new Date(year, monthNumber, 0).getDate()),
+        true,
       ),
       api.getAdminSchedule(
         weekStart.toISOString().slice(0, 10),
         weekEnd.toISOString().slice(0, 10),
+        true,
       ),
     ])
       .then(([monthly, weekly]) => {
