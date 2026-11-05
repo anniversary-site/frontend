@@ -225,7 +225,7 @@ export default function AdminCalendar({
                     return (
                       <button
                         key={order.orderId}
-                        className={`admin-order-chip admin-period-bar ${startsHere ? 'admin-period-start' : 'admin-period-continues'} ${endsHere ? 'admin-period-end' : ''} ${deadline && startsHere ? 'admin-is-deadline' : ''}`}
+                        className={`admin-order-chip admin-period-bar admin-period-${order.status.toLowerCase()} ${startsHere ? 'admin-period-start' : 'admin-period-continues'} ${endsHere ? 'admin-period-end' : ''} ${deadline && startsHere ? 'admin-is-deadline' : ''}`}
                         style={{ gridColumn: `${start + 1} / ${end + 2}`, gridRow: lane + 2 }}
                         onClick={() => onSelect(order.orderId)}
                         title={`${order.customerName} · ${order.templateName} · 사용 기간 ${period}`}
