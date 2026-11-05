@@ -1,6 +1,7 @@
 export interface Guide {
   imageUrl: string
-  highlight: { x: number; y: number; width: number; height: number }
+  /** 강조 박스(비율). 없으면 이미지만 보여줍니다 */
+  highlight?: { x: number; y: number; width: number; height: number } | null
 }
 export interface Template {
   formType: 'STANDARD' | 'PEPERO'
@@ -19,7 +20,8 @@ export interface Template {
   basePrice: number
 }
 export interface TemplateDetail extends Template {
-  guides: { memoryTitle?: Guide; memoryStory?: Guide }
+  /** 주문서 위치 예시 이미지. 일반: information/letter/url/music, 빼빼로: mainText */
+  guides?: Partial<Record<'information' | 'letter' | 'url' | 'music' | 'mainText', Guide>> | null
   documents: {
     documentNo: number
     photoSlots: number
