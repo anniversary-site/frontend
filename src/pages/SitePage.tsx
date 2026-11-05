@@ -9,9 +9,30 @@ export default function SitePage() {
   return <SiteView key={siteKey} siteKey={siteKey} />
 }
 
+/**
+ * 운영자 미리보기: 관리자 화면이 연 주소 끝의 #preview={토큰}. 주소창에서는 바로 지우고 이 탭에만 기억합니다.
+ * 토큰은 30분 뒤 서버가 거절합니다.
+ */
+function previewTokenOf(siteKey: string) {
+  const key = `urluv-site-preview-${siteKey}`
+  const fromHash = new URLSearchParams(window.location.hash.slice(1)).get('preview')
+  try {
+    if (fromHash) {
+      sessionStorage.setItem(key, fromHash)
+      history.replaceState(null, '', window.location.pathname + window.location.search)
+      return fromHash
+    }
+    return sessionStorage.getItem(key)
+  } catch {
+    return fromHash
+  }
+}
+
 function SiteView({ siteKey }: { siteKey: string }) {
   const storageKey = `urluv-site-${siteKey}`
+  const [previewToken] = useState(() => previewTokenOf(siteKey))
   const [session, setSession] = useState<SiteSession | null>(() => {
+    if (previewToken) return { siteAccessToken: previewToken, expiresAt: '' }
     try {
       const saved = JSON.parse(sessionStorage.getItem(storageKey) || 'null')
       return saved?.siteAccessToken && Date.parse(saved.expiresAt) > Date.now() ? saved : null
@@ -53,7 +74,11 @@ function SiteView({ siteKey }: { siteKey: string }) {
       .catch((cause) => {
         if (!active) return
         setContent(null)
-        setError(cause.message)
+        setError(
+          previewToken && cause instanceof api.ApiError && cause.status === 401
+            ? '미리보기 링크가 만료됐어요. 관리자 화면에서 다시 열어주세요.'
+            : cause.message,
+        )
         if (cause instanceof api.ApiError && [401, 404, 410].includes(cause.status)) {
           setSession(null)
           try {
@@ -67,9 +92,14 @@ function SiteView({ siteKey }: { siteKey: string }) {
     return () => {
       active = false
     }
-  }, [session, siteKey, storageKey])
+  }, [previewToken, session, siteKey, storageKey])
   return (
     <main className="delivered-site">
+      {previewToken && (
+        <p className="site-admin-preview" role="status">
+          관리자 미리보기 · 고객에게는 비밀번호 화면부터 보여요
+        </p>
+      )}
       {error && <p role="alert">{error}</p>}
       {!content ? (
         <form

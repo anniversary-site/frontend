@@ -25,6 +25,9 @@ export default function AdminOrderDialog({
   const [siteUrl, setSiteUrl] = useState(''),
     [note, setNote] = useState(''),
     [revision, setRevision] = useState(0)
+  // 납품 전에 운영자가 완성 사이트를 직접 열어 봐야 납품 완료를 누를 수 있어요.
+  const [previewed, setPreviewed] = useState(false),
+    [previewing, setPreviewing] = useState(false)
   const operation = useRef(false)
   useEffect(() => {
     const element = dialog.current
@@ -48,6 +51,25 @@ export default function AdminOrderDialog({
   const refresh = () => {
     setRevision((value) => value + 1)
     onChanged()
+  }
+  const openPreview = async () => {
+    if (previewing) return
+    // 팝업 차단을 피하려고 클릭하자마자 새 탭을 먼저 엽니다.
+    const tab = window.open('', '_blank')
+    if (tab) tab.opener = null
+    setPreviewing(true)
+    setError('')
+    try {
+      const { url } = await api.getAdminSitePreview(orderId)
+      if (tab) tab.location.href = url
+      else window.location.assign(url)
+      setPreviewed(true)
+    } catch (cause) {
+      tab?.close()
+      setError(cause instanceof Error ? cause.message : '미리보기를 열지 못했어요.')
+    } finally {
+      setPreviewing(false)
+    }
   }
   const processOrder = async () => {
     if (!detail || !action || operation.current) return
@@ -182,8 +204,24 @@ export default function AdminOrderDialog({
               완성 사이트 보기
             </a>
           )}
+          {order.status === 'IN_PROGRESS' && !previewed && (
+            <p className="admin-section-note">
+              사이트 미리보기로 사진·편지까지 확인한 뒤 납품 완료를 누를 수 있어요.
+            </p>
+          )}
           {order.adminMemo && <p className="admin-readonly-note">관리자 메모: {order.adminMemo}</p>}
           <div className="admin-button-row">
+            {order.siteKey && ['SUBMITTED', 'IN_PROGRESS', 'DELIVERED'].includes(order.status) && (
+              <button
+                className="admin-secondary"
+                type="button"
+                disabled={previewing}
+                onClick={() => void openPreview()}
+                title="비밀번호 없이 30분 동안 열려요"
+              >
+                {previewing ? '여는 중…' : previewed ? '사이트 다시 미리보기' : '사이트 미리보기'}
+              </button>
+            )}
             {order.status === 'SUBMITTED' && order.payStatus === 'PENDING' && (
               <button
                 className="admin-primary"
@@ -196,7 +234,8 @@ export default function AdminOrderDialog({
             {order.status === 'IN_PROGRESS' && (
               <button
                 className="admin-primary"
-                disabled={busy}
+                disabled={busy || !previewed}
+                title={previewed ? undefined : '사이트 미리보기로 내용을 확인한 뒤 누를 수 있어요'}
                 onClick={() => {
                   // 템플릿 사이트 주소를 미리 채웁니다. 다른 주소로 바꿀 수도 있어요.
                   setSiteUrl(order.defaultSiteUrl ?? '')

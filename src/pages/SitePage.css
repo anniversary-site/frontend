@@ -36,3 +36,14 @@
   line-height: 1.9;
   margin-top: 24px;
 }
+
+/* 운영자 미리보기 안내 (고객 화면에는 나오지 않음) */
+.site-admin-preview {
+  margin: 0 0 16px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #222;
+  color: #fff;
+  font-size: 14px;
+  text-align: center;
+}
