@@ -413,6 +413,15 @@ export async function adminMockRequest(
   if (parts[0] === 'orders' && parts[1]) {
     const detail = detailOf(Number(parts[1]))
     if (method === 'GET') return clone(detail)
+    if (parts[2] === 'site-preview') {
+      if (!detail.order.defaultSiteUrl || ['DRAFT', 'CANCELED'].includes(detail.order.status))
+        fail(409, 'INVALID_ORDER_STATE', '미리볼 수 있는 사이트가 없어요.')
+      return {
+        url: `${detail.order.defaultSiteUrl}#preview=mock-preview`,
+        previewToken: 'mock-preview',
+        expiresAt: new Date(Date.now() + 30 * 60_000).toISOString(),
+      }
+    }
     if (!Number.isInteger(body.expectedVersion))
       fail(400, 'VALIDATION_FAILED', '주문 버전이 필요해요.', 'expectedVersion')
     if (body.expectedVersion !== detail.order.version)
