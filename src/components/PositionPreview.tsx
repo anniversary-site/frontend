@@ -1,5 +1,8 @@
+import { useEffect, useState } from 'react'
 import Icon from './Icon'
 import { useOrder } from '../context/OrderContext'
+import * as api from '../services/API'
+import type { Template } from '../services/API'
 import { OrderFormGuide } from '../orderForms/registry'
 import type { PreviewTarget } from '../types/order'
 
@@ -10,7 +13,7 @@ interface PositionPreviewProps {
 }
 
 export default function PositionPreview({ target, documentNo, onClose }: PositionPreviewProps) {
-  const { data, templates } = useOrder()
+  const { data } = useOrder()
   if (target)
     return (
       <OrderFormGuide
@@ -20,6 +23,27 @@ export default function PositionPreview({ target, documentNo, onClose }: Positio
         onClose={onClose}
       />
     )
+  return <SitePreview onClose={onClose} />
+}
+
+/** 메인 화면에서는 템플릿 목록을 아직 안 불러왔을 수 있어서, 비어 있으면 여기서 불러옵니다. */
+function SitePreview({ onClose }: { onClose: () => void }) {
+  const { templates } = useOrder()
+  const [fetched, setFetched] = useState<Template[]>([])
+  useEffect(() => {
+    if (templates.length) return
+    let active = true
+    api
+      .getTemplates()
+      .then((list) => {
+        if (active) setFetched(list)
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [templates.length])
+  const list = templates.length ? templates : fetched
   return (
     <>
       <header className="preview-modal-header">
@@ -35,7 +59,7 @@ export default function PositionPreview({ target, documentNo, onClose }: Positio
       </header>
 
       <div className="preview-modal-body" style={{ overflow: 'auto' }}>
-        {templates.map((template) => (
+        {list.map((template) => (
           <article key={template.templateId}>
             <h3>{template.name}</h3>
             {template.previewImageUrl && (
