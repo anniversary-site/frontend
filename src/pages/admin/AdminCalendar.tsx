@@ -131,7 +131,7 @@ export default function AdminCalendar({
           </nav>
         </div>
         <p className="admin-calendar-legend">
-          기간 막대는 사용 기간, 마감 표시는 제작 마감일이에요.
+          기간막대는 사용기간입니다
         </p>
         {loading && (
           <p role="status" className="admin-empty">
