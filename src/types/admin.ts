@@ -56,6 +56,8 @@ export interface AdminDetail {
     depositorName: string
     paidAt: string | null
     siteKey: string | null
+    /** 납품 때 주소를 비우면 들어갈 템플릿 사이트 주소. 사이트 키가 없으면 null */
+    defaultSiteUrl?: string | null
     sitePasswordSet: boolean
     siteUrl: string | null
     adminMemo: string | null

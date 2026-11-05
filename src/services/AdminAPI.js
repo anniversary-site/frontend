@@ -120,6 +120,8 @@ export const getAdminSchedule = (from, to, includeCanceled = false) =>
 // A10~A11: 충돌 시 같은 요청을 자동으로 재전송하지 않습니다.
 export const confirmAdminPayment = (orderId, expectedVersion, note) =>
   request(`/orders/${orderId}/payment/confirm`, 'POST', { expectedVersion, note })
+// 납품 전 완성 사이트 미리보기 링크(비밀번호 없이 30분)
+export const getAdminSitePreview = (orderId) => request(`/orders/${orderId}/site-preview`, 'POST')
 export const changeAdminOrderStatus = (orderId, fields) =>
   request(`/orders/${orderId}/status`, 'POST', fields)
 // A12~A13: 문자를 실제로 발송하지 않고 기록의 상태만 변경합니다.

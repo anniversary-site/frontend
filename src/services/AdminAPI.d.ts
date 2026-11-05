@@ -35,6 +35,9 @@ export function confirmAdminPayment(
   expectedVersion: number,
   note?: string,
 ): Promise<AdminDetail>
+export function getAdminSitePreview(
+  orderId: number,
+): Promise<{ url: string; previewToken: string; expiresAt: string }>
 export function changeAdminOrderStatus(
   orderId: number,
   fields: {

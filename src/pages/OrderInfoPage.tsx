@@ -1,6 +1,6 @@
 import { useOrder } from '../context/OrderContext'
 import Calendar from '../components/Calendar'
-import { formatPhone, dateKey, minDate } from '../utils/order'
+import { formatPhone, dateKey, minDate, isValidSitePassword } from '../utils/order'
 import { addDays } from '../utils/period'
 import { periodPrice } from '../utils/period'
 
@@ -9,6 +9,9 @@ export default function OrderInfoPage() {
   const leadDays = templateDetail?.minLeadDays ?? 7
   const earliestDate = addDays(dateKey(minDate()), leadDays - 7)
   const pricing = periodPrice(data.date, data.endDate)
+  const pepero = templateDetail?.formType === 'PEPERO'
+  const passwordRule = pepero ? '숫자 4자리' : '공백 없이 4~20자'
+  const passwordInvalid = Boolean(data.sitePassword && !isValidSitePassword(data.sitePassword, templateDetail?.formType))
   if (!config) return <p role="status">주문 설정을 불러오는 중이에요.</p>
   return (
     <>
@@ -112,17 +115,18 @@ export default function OrderInfoPage() {
           className="text-input"
           type="password"
           autoComplete="new-password"
-          placeholder={data.sitePasswordSet ? '변경할 때만 입력해 주세요' : '공백 없이 4~20자'}
+          placeholder={data.sitePasswordSet ? '변경할 때만 입력해 주세요' : passwordRule}
           minLength={4}
-          maxLength={20}
+          maxLength={pepero ? 4 : 20}
+          inputMode={pepero ? 'numeric' : undefined}
           value={data.sitePassword}
-          onChange={(event) => update('sitePassword', event.target.value)}
-          aria-invalid={Boolean(data.sitePassword && !/^[^\s]{4,20}$/.test(data.sitePassword))}
+          onChange={(event) =>
+            update('sitePassword', pepero ? event.target.value.replace(/\D/g, '').slice(0, 4) : event.target.value)
+          }
+          aria-invalid={passwordInvalid}
           required={!data.sitePasswordSet}
         />
-        {data.sitePassword && !/^[^\s]{4,20}$/.test(data.sitePassword) && (
-          <small className="field-error">공백 없이 4~20자로 입력해 주세요.</small>
-        )}
+        {passwordInvalid && <small className="field-error">{passwordRule}로 입력해 주세요.</small>}
       </label>
       <label className="password-hint-field field-label">
         <span>

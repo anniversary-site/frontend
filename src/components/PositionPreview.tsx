@@ -37,7 +37,6 @@ export default function PositionPreview({ target, documentNo, onClose }: Positio
       <div className="preview-modal-body" style={{ overflow: 'auto' }}>
         {templates.map((template) => (
           <article key={template.templateId}>
-            <img src={template.thumbnailUrl} alt={template.name} style={{ maxWidth: '100%' }} />
             <h3>{template.name}</h3>
             {template.sampleSiteUrl ? (
               <a href={template.sampleSiteUrl} target="_blank" rel="noreferrer">
