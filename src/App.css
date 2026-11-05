@@ -352,7 +352,7 @@ textarea {
   justify-content: center;
   padding: var(--space-12);
   background: var(--color-grey-200);
-  color: var(--color-grey-700);
+  color: var(--color-primary);
   font: var(--text-caption);
   font-weight: 600;
   text-align: center;
