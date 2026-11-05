@@ -356,7 +356,10 @@ export default function App() {
       setSuggestions({})
       setData({
         ...INITIAL,
-        template: peperoTemplate?.templateId ?? templates[0]?.templateId ?? -1,
+        template:
+          peperoTemplate?.templateId ??
+          templates.find((item) => !item.closedMessage)?.templateId ??
+          -1,
         date: config?.minUseStartDate ?? '',
         endDate: addDays(config?.minUseStartDate ?? '', 6),
       })

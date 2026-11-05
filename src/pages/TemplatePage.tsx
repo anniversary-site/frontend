@@ -18,11 +18,12 @@ export default function TemplatePage() {
           {templates.map((template) => (
             <button
               type="button"
-              className={`template-card ${data.template === template.templateId ? 'selected' : ''}`}
+              className={`template-card ${data.template === template.templateId ? 'selected' : ''} ${template.closedMessage ? 'closed' : ''}`}
               key={template.templateId}
               onClick={() => update('template', template.templateId)}
+              disabled={!!template.closedMessage}
               aria-pressed={data.template === template.templateId}
-              aria-label={template.name}
+              aria-label={template.closedMessage ? `${template.name}, ${template.closedMessage}` : template.name}
             >
               <img
                 className="template-placeholder"
@@ -33,6 +34,9 @@ export default function TemplatePage() {
               <span className="template-text">
                 <strong>{template.name}</strong>
                 <small>{template.description}</small>
+                {template.closedMessage && (
+                  <em className="template-closed-message">{template.closedMessage}</em>
+                )}
               </span>
               <span className="template-check">
                 {data.template === template.templateId && <Icon name="check" small />}

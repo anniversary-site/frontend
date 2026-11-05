@@ -339,6 +339,24 @@ textarea {
   border-color: var(--color-primary);
   background: var(--color-primary-weak);
 }
+/* 공개 전 템플릿: 보이지만 고를 수 없음 */
+.template-card.closed:disabled {
+  opacity: 1;
+}
+.template-card.closed .template-placeholder {
+  opacity: 0.45;
+}
+.template-card.closed .template-check {
+  display: none;
+}
+.template-closed-message {
+  display: block;
+  margin-top: var(--space-8);
+  font: var(--text-caption);
+  font-style: normal;
+  font-weight: 600;
+  color: var(--color-primary);
+}
 .template-placeholder {
   display: block;
   width: 100%;
