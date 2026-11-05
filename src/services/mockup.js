@@ -53,7 +53,8 @@ export const mockTemplates = ['일반', '빼빼로', '크리스마스'].map((nam
   formType: index === 1 ? 'PEPERO' : 'STANDARD',
   extraMediaFees: index !== 1,
   minLeadDays: index === 1 ? 0 : 7,
-  captionMaxLength: index === 1 ? 10 : 50,
+  // 일반·빼빼로는 캡션 10자, 크리스마스는 공통값 50자
+  captionMaxLength: index === 2 ? 50 : 10,
   templateId: index + 1,
   name,
   description: '소중한 순간을 담는 기념일 페이지',
@@ -441,7 +442,7 @@ export async function mockRequest(path, { method = 'GET', token, body } = {}) {
             fail(400, 'VALIDATION_FAILED', '미디어 문구를 확인해 주세요.')
           const max =
             field === 'caption'
-              ? (draft.template.templateId === 2 ? 10 : mockOrderConfig.limits.captionMaxLength)
+              ? (mockTemplates.find((t) => t.templateId === draft.template.templateId)?.captionMaxLength ?? mockOrderConfig.limits.captionMaxLength)
               : mockOrderConfig.limits.videoTitleMaxLength
           if (body[field].length > max) fail(400, 'TEXT_TOO_LONG', '글자 수를 초과했어요.')
           list[index][field] = body[field]
