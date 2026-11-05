@@ -8,6 +8,48 @@ import type { AdminSchedule } from '../../types/admin'
 
 const weekdays = ['일', '월', '화', '수', '목', '금', '토']
 
+const shortDate = (date: string) => `${Number(date.slice(5, 7))}/${Number(date.slice(8, 10))}`
+const dayOffset = (from: string, to: string) =>
+  Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 864e5)
+
+/**
+ * 한 주(이번 달 안쪽 [weekStart, weekEnd])에 걸친 주문을 막대로 바꿉니다.
+ * firstColumn은 weekStart의 요일 칸, span은 weekEnd까지 남은 날 수입니다.
+ * 겹치지 않는 주문은 같은 줄을 나눠 써서 빈 줄이 생기지 않게 합니다.
+ */
+function weekBars(
+  orders: AdminSchedule[],
+  weekStart: string,
+  weekEnd: string,
+  firstColumn: number,
+  span: number,
+) {
+  const bars = orders
+    .filter(
+      (order) =>
+        order.useStartDate <= weekEnd && (order.useEndDate ?? order.useStartDate) >= weekStart,
+    )
+    .map((order) => {
+      const end = order.useEndDate ?? order.useStartDate
+      return {
+        order,
+        start: firstColumn + Math.max(0, dayOffset(weekStart, order.useStartDate)),
+        end: firstColumn + Math.min(span, dayOffset(weekStart, end)),
+        startsHere: order.useStartDate >= weekStart,
+        endsHere: end <= weekEnd,
+        lane: 0,
+      }
+    })
+    .sort((a, b) => a.start - b.start || b.end - a.end || a.order.orderId - b.order.orderId)
+  const laneEnds: number[] = []
+  for (const bar of bars) {
+    const lane = laneEnds.findIndex((laneEnd) => laneEnd < bar.start)
+    bar.lane = lane === -1 ? laneEnds.length : lane
+    laneEnds[bar.lane] = bar.end
+  }
+  return bars
+}
+
 export default function AdminCalendar({
   today,
   month,
@@ -106,59 +148,74 @@ export default function AdminCalendar({
             ))}
           </div>
           <div className="admin-calendar-grid">
-            {Array.from({ length: 42 }, (_, index) => {
-              const day = index - leading + 1
-              if (day < 1 || day > days)
-                return (
-                  <div
-                    key={index}
-                    className="admin-calendar-cell admin-outside"
-                    aria-hidden="true"
-                  />
-                )
-              const date = calendarDate(year, monthIndex, day)
-              const weekStart = calendarDate(year, monthIndex, Math.max(1, day - (index % 7)))
-              const weekEnd = calendarDate(year, monthIndex, Math.min(days, day + 6 - (index % 7)))
-              const items = orders.filter(
-                (order) =>
-                  order.useStartDate <= weekEnd &&
-                  (order.useEndDate ?? order.useStartDate) >= weekStart,
-              )
+            {Array.from({ length: 6 }, (_, week) => {
+              // 이번 주(이번 달 안쪽)에 걸친 주문을 한 줄짜리 막대로 그립니다.
+              const firstDay = Math.max(1, week * 7 - leading + 1)
+              const lastDay = Math.min(days, week * 7 - leading + 7)
+              const weekStart = calendarDate(year, monthIndex, firstDay)
+              const weekEnd = calendarDate(year, monthIndex, lastDay)
+              const bars =
+                firstDay <= lastDay
+                  ? weekBars(orders, weekStart, weekEnd, (firstDay + leading - 1) % 7, lastDay - firstDay)
+                  : []
+              const lanes = bars.reduce((count, bar) => Math.max(count, bar.lane + 1), 0)
               return (
                 <div
-                  key={index}
-                  className={`admin-calendar-cell ${index % 7 === 0 ? 'admin-sunday' : ''}`}
+                  key={week}
+                  className="admin-calendar-week"
+                  style={{ gridTemplateRows: `44px repeat(${lanes}, 32px) minmax(12px, 1fr)` }}
                 >
-                  <time
-                    dateTime={date}
-                    className={`admin-day ${date === today ? 'admin-is-today' : ''}`}
-                    aria-current={date === today ? 'date' : undefined}
-                  >
-                    {day}
-                  </time>
-                  <div className="admin-day-orders">
-                    {items.map((order) =>
-                      order.useStartDate > date ||
-                      (order.useEndDate ?? order.useStartDate) < date ? (
-                        <span
-                          key={order.orderId}
-                          className="admin-period-spacer"
+                  {Array.from({ length: 7 }, (_, column) => {
+                    const index = week * 7 + column
+                    const day = index - leading + 1
+                    const style = { gridColumn: column + 1 }
+                    if (day < 1 || day > days)
+                      return (
+                        <div
+                          key={index}
+                          className="admin-calendar-cell admin-outside"
+                          style={style}
                           aria-hidden="true"
                         />
-                      ) : (
-                        <button
-                          key={order.orderId}
-                          className={`admin-order-chip ${date === order.useStartDate || index % 7 === 0 || day === 1 ? 'admin-period-start' : 'admin-period-continues'} ${date === (order.useEndDate ?? order.useStartDate) || index % 7 === 6 || day === days ? 'admin-period-end' : ''} ${order.dueDate === date ? 'admin-is-deadline' : ''}`}
-                          onClick={() => onSelect(order.orderId)}
-                          aria-label={`${monthNumber}월 ${day}일 ${order.customerName}, ${order.dueDate === date ? '제작 마감일, ' : ''}${adminStatusLabels[order.status]}, 주문 상세 보기`}
+                      )
+                    const date = calendarDate(year, monthIndex, day)
+                    return (
+                      <div
+                        key={index}
+                        className={`admin-calendar-cell ${column === 0 ? 'admin-sunday' : ''}`}
+                        style={style}
+                      >
+                        <time
+                          dateTime={date}
+                          className={`admin-day ${date === today ? 'admin-is-today' : ''}`}
+                          aria-current={date === today ? 'date' : undefined}
                         >
-                          <span aria-hidden="true" className="admin-order-dot" />
-                          {order.dueDate === date ? '마감 · ' : ''}
+                          {day}
+                        </time>
+                      </div>
+                    )
+                  })}
+                  {bars.map(({ order, start, end, lane, startsHere, endsHere }) => {
+                    const deadline = order.dueDate >= weekStart && order.dueDate <= weekEnd
+                    const period = `${shortDate(order.useStartDate)} ~ ${shortDate(order.useEndDate ?? order.useStartDate)}`
+                    return (
+                      <button
+                        key={order.orderId}
+                        className={`admin-order-chip admin-period-bar ${startsHere ? 'admin-period-start' : 'admin-period-continues'} ${endsHere ? 'admin-period-end' : ''} ${deadline && startsHere ? 'admin-is-deadline' : ''}`}
+                        style={{ gridColumn: `${start + 1} / ${end + 2}`, gridRow: lane + 2 }}
+                        onClick={() => onSelect(order.orderId)}
+                        title={`${order.customerName} · ${order.templateName} · 사용 기간 ${period}`}
+                        aria-label={`${order.customerName}, 사용 기간 ${period}, ${deadline ? `제작 마감 ${shortDate(order.dueDate)}, ` : ''}${adminStatusLabels[order.status]}, 주문 상세 보기`}
+                      >
+                        <span aria-hidden="true" className="admin-order-dot" />
+                        <span className="admin-period-label">
+                          {deadline && startsHere ? '마감 · ' : ''}
                           {order.customerName}
-                        </button>
-                      ),
-                    )}
-                  </div>
+                          <small> {order.templateName}</small>
+                        </span>
+                      </button>
+                    )
+                  })}
                 </div>
               )
             })}
