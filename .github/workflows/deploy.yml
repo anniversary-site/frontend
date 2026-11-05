@@ -46,10 +46,33 @@ jobs:
       - run: npm run lint
       - run: node --test tests/*.test.mjs
       - run: npm run build
+      - name: Diagnose OIDC identity (no token output)
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          const endpoint = new URL(process.env.ACTIONS_ID_TOKEN_REQUEST_URL);
+          endpoint.searchParams.set('audience', 'sts.amazonaws.com');
+          const response = await fetch(endpoint, {
+            headers: { Authorization: `Bearer ${process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN}` }
+          });
+          if (!response.ok) throw new Error(`OIDC request failed: ${response.status}`);
+          const { value } = await response.json();
+          if (!value) throw new Error('OIDC response has no token');
+          const claims = JSON.parse(Buffer.from(value.split('.')[1], 'base64url').toString());
+          console.log(JSON.stringify({
+            roleArn: process.env.AWS_ROLE_ARN,
+            repository: process.env.GITHUB_REPOSITORY,
+            ref: process.env.GITHUB_REF,
+            issuer: claims.iss,
+            subject: claims.sub,
+            audience: claims.aud
+          }, null, 2));
+          NODE
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+          retry-max-attempts: 2
       # Keep old hashed assets so already-open tabs can still load their chunks.
       - name: Upload hashed assets first
         run: aws s3 sync dist/assets/ "s3://$S3_BUCKET/assets/" --cache-control "public,max-age=31536000,immutable"
