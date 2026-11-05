@@ -25,18 +25,22 @@ export default function TemplatePage() {
               aria-pressed={data.template === template.templateId}
               aria-label={template.closedMessage ? `${template.name}, ${template.closedMessage}` : template.name}
             >
-              <img
-                className="template-placeholder"
-                src={template.thumbnailUrl}
-                alt={template.name}
-                style={{ objectFit: 'cover', width: '100%' }}
-              />
+              {template.closedMessage ? (
+                // 공개 전 템플릿: 사진 대신 회색 칸에 안내 문구
+                <span className="template-placeholder template-closed-cover">
+                  {template.closedMessage}
+                </span>
+              ) : (
+                <img
+                  className="template-placeholder"
+                  src={template.thumbnailUrl}
+                  alt={template.name}
+                  style={{ objectFit: 'cover', width: '100%' }}
+                />
+              )}
               <span className="template-text">
                 <strong>{template.name}</strong>
                 <small>{template.description}</small>
-                {template.closedMessage && (
-                  <em className="template-closed-message">{template.closedMessage}</em>
-                )}
               </span>
               <span className="template-check">
                 {data.template === template.templateId && <Icon name="check" small />}
