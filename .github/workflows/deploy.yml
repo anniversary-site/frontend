@@ -1,0 +1,59 @@
+name: Deploy production to AWS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aws-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AWS_REGION: ap-northeast-2
+      S3_BUCKET: urluv-frontend
+      DISTRIBUTION_ID: E23JG24TYCZW1N
+      VITE_API_URL: ${{ vars.VITE_API_URL }}
+      VITE_ADMIN_BACK_URL: ${{ vars.VITE_ADMIN_BACK_URL }}
+      VITE_USE_BACKEND: 'true'
+      VITE_USE_ADMIN: 'true'
+      AWS_ROLE_ARN: ${{ vars.AWS_ROLE_ARN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Validate production configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$AWS_ROLE_ARN" || { echo 'Missing AWS_ROLE_ARN'; exit 1; }
+          [[ "$VITE_API_URL" == https://* ]] || { echo 'VITE_API_URL must use HTTPS'; exit 1; }
+          [[ "$VITE_ADMIN_BACK_URL" == https://* ]] || { echo 'VITE_ADMIN_BACK_URL must use HTTPS'; exit 1; }
+      - run: npm ci
+      - run: npm run lint
+      - run: node --test tests/*.test.mjs
+      - run: npm run build
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      # Keep old hashed assets so already-open tabs can still load their chunks.
+      - name: Upload hashed assets first
+        run: aws s3 sync dist/assets/ "s3://$S3_BUCKET/assets/" --cache-control "public,max-age=31536000,immutable"
+      - name: Upload entry and public files
+        run: aws s3 cp dist/ "s3://$S3_BUCKET/" --recursive --exclude "assets/*" --cache-control "no-cache,max-age=0,must-revalidate"
+      - name: Refresh CloudFront cache
+        run: aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths "/*"
