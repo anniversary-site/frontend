@@ -19,7 +19,6 @@ export default function ZoomablePreview({
   const zoom = useRef(100)
   const viewport = useRef<HTMLDivElement>(null)
   const image = useRef<HTMLDivElement>(null)
-  const drag = useRef<{ id: number; x: number; y: number; left: number; top: number } | null>(null)
 
   useEffect(() => {
     const view = viewport.current
@@ -122,27 +121,6 @@ export default function ZoomablePreview({
       role="region"
       aria-label={label}
       tabIndex={0}
-      onPointerDown={(event) => {
-        if (zoom.current === 100 || event.pointerType === 'touch' || event.button !== 0) return
-        const view = event.currentTarget
-        drag.current = {
-          id: event.pointerId,
-          x: event.clientX,
-          y: event.clientY,
-          left: view.scrollLeft,
-          top: view.scrollTop,
-        }
-        view.setPointerCapture(event.pointerId)
-      }}
-      onPointerMove={(event) => {
-        const start = drag.current
-        if (start?.id !== event.pointerId) return
-        event.currentTarget.scrollLeft = start.left + start.x - event.clientX
-        event.currentTarget.scrollTop = start.top + start.y - event.clientY
-      }}
-      onLostPointerCapture={() => {
-        drag.current = null
-      }}
       onDragStart={(event) => event.preventDefault()}
     >
       <div ref={image} className="zoom-preview-content">
