@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import Icon from './Icon'
+import PreviewModalBody from './PreviewModalBody'
 import ZoomablePreview from './ZoomablePreview'
 import { useOrder } from '../context/OrderContext'
 import * as api from '../services/API'
@@ -64,7 +65,7 @@ function SitePreview({ onClose }: { onClose: () => void }) {
         </button>
       </header>
 
-      <div className="preview-modal-body site-preview-list">
+      <PreviewModalBody className="site-preview-list">
         {list.map((template) => {
           const siteUrl = template.sampleSiteUrl || templateSiteUrls[template.templateId]
           return (
@@ -91,7 +92,7 @@ function SitePreview({ onClose }: { onClose: () => void }) {
             </article>
           )
         })}
-      </div>
+      </PreviewModalBody>
 
       <footer className="preview-modal-footer">
         <button type="button" className="button primary" onClick={onClose}>

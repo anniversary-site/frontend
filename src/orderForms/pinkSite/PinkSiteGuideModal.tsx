@@ -1,4 +1,5 @@
 import Icon from '../../components/Icon'
+import PreviewModalBody from '../../components/PreviewModalBody'
 import ZoomablePreview from '../../components/ZoomablePreview'
 import { useOrder } from '../../context/OrderContext'
 import type { Guide } from '../../services/API'
@@ -73,7 +74,7 @@ export default function PinkSiteGuideModal({ target, documentNo, onClose }: Orde
           <Icon name="close" />
         </button>
       </header>
-      <div className="preview-modal-body order-form-guide">
+      <PreviewModalBody className="order-form-guide">
         {textGuide && <GuideImage label={label} guide={textGuide} />}
         {!textGuide && (target === 'story' || target === 'main' || target === 'sub') && (
           <div className="folder-example information-example">
@@ -104,7 +105,7 @@ export default function PinkSiteGuideModal({ target, documentNo, onClose }: Orde
         )}
         {target === 'photos' && <GuideImage label="사진" guide={document?.photoGuide} />}
         {target === 'videos' && <GuideImage label="영상" guide={document?.videoGuide} />}
-      </div>
+      </PreviewModalBody>
       <footer className="preview-modal-footer">
         <button type="button" className="button primary" onClick={onClose}>
           확인

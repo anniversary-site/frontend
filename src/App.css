@@ -1193,10 +1193,14 @@ a.logo,
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  scrollbar-width: none;
   overscroll-behavior: contain;
   padding: var(--space-32);
   background: var(--color-grey-100);
   scroll-padding: var(--space-32);
+}
+.preview-modal-body::-webkit-scrollbar {
+  display: none;
 }
 .preview-modal-footer {
   display: flex;
@@ -1908,7 +1912,11 @@ a.logo,
   touch-action: pan-x pan-y;
   max-height: 55vh;
   overflow: auto;
+  scrollbar-width: none;
   cursor: grab;
+}
+.zoom-preview-viewport::-webkit-scrollbar {
+  display: none;
 }
 .zoom-preview-viewport:active {
   cursor: grabbing;
