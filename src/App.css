@@ -1179,6 +1179,11 @@ a.logo,
 .preview-modal-header h2 {
   font: var(--text-subtitle);
 }
+.preview-modal-hint {
+  margin: 4px 0 0;
+  font: var(--text-caption);
+  color: var(--color-grey-600);
+}
 .preview-close {
   width: var(--size-touch-min);
   height: var(--size-touch-min);
@@ -1914,6 +1919,15 @@ a.logo,
   overflow: auto;
   scrollbar-width: none;
   cursor: grab;
+}
+.preview-sheet.is-expanded .preview-modal-body {
+  container-type: size;
+}
+.preview-sheet.is-expanded .zoom-preview-viewport {
+  max-height: 100cqh;
+}
+.preview-sheet.is-expanded .guide-image-section .zoom-preview-viewport {
+  height: 100cqh;
 }
 .zoom-preview-viewport::-webkit-scrollbar {
   display: none;

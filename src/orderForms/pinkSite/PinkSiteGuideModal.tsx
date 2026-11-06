@@ -60,11 +60,20 @@ export default function PinkSiteGuideModal({ target, documentNo, onClose }: Orde
             : undefined
   const title = target === 'main' && pepero ? '문구 위치 및 예시' : titles[target]
   const label = title.replace(' 위치 및 예시', '')
+  const imageGuide =
+    target === 'photos' ? document?.photoGuide : target === 'videos' ? document?.videoGuide : textGuide
 
   return (
     <>
       <header className="preview-modal-header">
-        <h2 id="sheet-heading">{title}</h2>
+        <div>
+          <h2 id="sheet-heading">{title}</h2>
+          {imageGuide && (
+            <p className="preview-modal-hint">
+              두 손가락으로 확대·축소할 수 있어요.
+            </p>
+          )}
+        </div>
         <button
           type="button"
           className="preview-close"
