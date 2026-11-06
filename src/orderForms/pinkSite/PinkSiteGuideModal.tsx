@@ -1,4 +1,5 @@
 import Icon from '../../components/Icon'
+import ZoomablePreview from '../../components/ZoomablePreview'
 import { useOrder } from '../../context/OrderContext'
 import type { Guide } from '../../services/API'
 import type { OrderFormGuideProps } from '../types'
@@ -19,20 +20,22 @@ function GuideImage({ label, guide }: { label: string; guide?: Guide }) {
   return (
     <section className="guide-image-section">
       <h3>{label}</h3>
-      <div className="guide-image-wrap">
-        <img src={guide.imageUrl} alt={`${label} 위치 안내`} />
-        {guide.highlight && guide.highlight.width > 0 && guide.highlight.height > 0 && (
-          <span
-            aria-label={`${label} 표시 위치`}
-            style={{
-              left: `${guide.highlight.x * 100}%`,
-              top: `${guide.highlight.y * 100}%`,
-              width: `${guide.highlight.width * 100}%`,
-              height: `${guide.highlight.height * 100}%`,
-            }}
-          />
-        )}
-      </div>
+      <ZoomablePreview key={guide.imageUrl} label={`${label} 위치 안내`}>
+        <div className="guide-image-wrap">
+          <img src={guide.imageUrl} alt={`${label} 위치 안내`} />
+          {guide.highlight && guide.highlight.width > 0 && guide.highlight.height > 0 && (
+            <span
+              aria-label={`${label} 표시 위치`}
+              style={{
+                left: `${guide.highlight.x * 100}%`,
+                top: `${guide.highlight.y * 100}%`,
+                width: `${guide.highlight.width * 100}%`,
+                height: `${guide.highlight.height * 100}%`,
+              }}
+            />
+          )}
+        </div>
+      </ZoomablePreview>
     </section>
   )
 }
