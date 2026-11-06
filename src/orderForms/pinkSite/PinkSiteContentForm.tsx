@@ -164,6 +164,9 @@ export default function PinkSiteContentForm() {
           />
         </div>
         <div className="letter-actions">
+          <p id="letter-ai-minimum" className="letter-choice-status letter-ai-minimum">
+            AI 생성은 최소 {letterMin}자부터 가능해요.
+          </p>
           <button
             type="button"
             className={`small-button letter-choice-button${data.letterChoice === 'ORIGINAL' ? ' is-selected' : ''}`}
@@ -180,6 +183,7 @@ export default function PinkSiteContentForm() {
             type="button"
             className="small-button letter-choice-button"
             disabled={letterGenerating || data.letterInput.trim().length < letterMin}
+            aria-describedby="letter-ai-minimum"
             onClick={() => void generateLetter()}
           >
             {letterGenerating ? '생성 중…' : data.letterAi ? 'AI 문장 다시 생성' : 'AI 문장 생성'}
@@ -265,7 +269,7 @@ export default function PinkSiteContentForm() {
 
       <section className="content-section url-section">
         <div className="section-heading">
-          <h2>URL 작성 <span className="required-mark" aria-label="필수">*</span></h2>
+          <h2>인터넷 아이콘에 연결할 링크 <span className="required-mark" aria-label="필수">*</span></h2>
           <button
             type="button"
             className="link-button"
@@ -275,7 +279,7 @@ export default function PinkSiteContentForm() {
           </button>
         </div>
         <p className="description">
-          웹사이트 하단의 INTERNET 아이콘을 누르면 연결될 사이트 링크를 넣어주세요.
+          완성된 웹사이트에서 인터넷 아이콘을 누르면 열릴 주소를 입력해 주세요.
         </p>
         <input
           className="text-input url-input"
@@ -284,8 +288,8 @@ export default function PinkSiteContentForm() {
           autoComplete="url"
           maxLength={500}
           value={data.linkUrl}
-          placeholder="https://youtube.com/..."
-          aria-label="연결할 사이트 URL"
+          placeholder="예: https://www.youtube.com/watch?v=…"
+          aria-label="인터넷 아이콘에 연결할 링크"
           required
           onChange={(event) => update('linkUrl', event.target.value)}
         />
