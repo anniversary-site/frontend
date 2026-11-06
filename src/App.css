@@ -1904,6 +1904,30 @@ a.logo,
   margin-bottom: var(--space-12);
   font: var(--text-body-strong);
 }
+.zoom-preview-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.zoom-preview-controls button {
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 8px;
+  background: var(--color-primary-weak);
+  color: var(--color-primary);
+}
+.zoom-preview-controls button:disabled {
+  opacity: 0.45;
+}
+.zoom-preview-viewport {
+  max-height: 55vh;
+  overflow: auto;
+  cursor: grab;
+}
+.zoom-preview-viewport:active {
+  cursor: grabbing;
+}
 .guide-image-wrap {
   position: relative;
   overflow: hidden;
