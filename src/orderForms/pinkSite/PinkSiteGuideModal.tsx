@@ -1,4 +1,6 @@
 import Icon from '../../components/Icon'
+import PreviewModalBody from '../../components/PreviewModalBody'
+import ZoomablePreview from '../../components/ZoomablePreview'
 import { useOrder } from '../../context/OrderContext'
 import type { Guide } from '../../services/API'
 import type { OrderFormGuideProps } from '../types'
@@ -18,21 +20,22 @@ function GuideImage({ label, guide }: { label: string; guide?: Guide }) {
   if (!guide) return <p className="guide-empty">{label} 안내 이미지가 아직 등록되지 않았어요.</p>
   return (
     <section className="guide-image-section">
-      <h3>{label}</h3>
-      <div className="guide-image-wrap">
-        <img src={guide.imageUrl} alt={`${label} 위치 안내`} />
-        {guide.highlight && guide.highlight.width > 0 && guide.highlight.height > 0 && (
-          <span
-            aria-label={`${label} 표시 위치`}
-            style={{
-              left: `${guide.highlight.x * 100}%`,
-              top: `${guide.highlight.y * 100}%`,
-              width: `${guide.highlight.width * 100}%`,
-              height: `${guide.highlight.height * 100}%`,
-            }}
-          />
-        )}
-      </div>
+      <ZoomablePreview key={guide.imageUrl} label={`${label} 위치 안내`}>
+        <div className="guide-image-wrap">
+          <img src={guide.imageUrl} alt={`${label} 위치 안내`} />
+          {guide.highlight && guide.highlight.width > 0 && guide.highlight.height > 0 && (
+            <span
+              aria-label={`${label} 표시 위치`}
+              style={{
+                left: `${guide.highlight.x * 100}%`,
+                top: `${guide.highlight.y * 100}%`,
+                width: `${guide.highlight.width * 100}%`,
+                height: `${guide.highlight.height * 100}%`,
+              }}
+            />
+          )}
+        </div>
+      </ZoomablePreview>
     </section>
   )
 }
@@ -57,11 +60,20 @@ export default function PinkSiteGuideModal({ target, documentNo, onClose }: Orde
             : undefined
   const title = target === 'main' && pepero ? '문구 위치 및 예시' : titles[target]
   const label = title.replace(' 위치 및 예시', '')
+  const imageGuide =
+    target === 'photos' ? document?.photoGuide : target === 'videos' ? document?.videoGuide : textGuide
 
   return (
     <>
       <header className="preview-modal-header">
-        <h2 id="sheet-heading">{title}</h2>
+        <div>
+          <h2 id="sheet-heading">{title}</h2>
+          {imageGuide && (
+            <p className="preview-modal-hint">
+              두 손가락으로 확대·축소할 수 있어요.
+            </p>
+          )}
+        </div>
         <button
           type="button"
           className="preview-close"
@@ -71,7 +83,7 @@ export default function PinkSiteGuideModal({ target, documentNo, onClose }: Orde
           <Icon name="close" />
         </button>
       </header>
-      <div className="preview-modal-body order-form-guide">
+      <PreviewModalBody className="order-form-guide">
         {textGuide && <GuideImage label={label} guide={textGuide} />}
         {!textGuide && (target === 'story' || target === 'main' || target === 'sub') && (
           <div className="folder-example information-example">
@@ -102,7 +114,7 @@ export default function PinkSiteGuideModal({ target, documentNo, onClose }: Orde
         )}
         {target === 'photos' && <GuideImage label="사진" guide={document?.photoGuide} />}
         {target === 'videos' && <GuideImage label="영상" guide={document?.videoGuide} />}
-      </div>
+      </PreviewModalBody>
       <footer className="preview-modal-footer">
         <button type="button" className="button primary" onClick={onClose}>
           확인

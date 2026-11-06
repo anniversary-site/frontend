@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import Icon from './Icon'
+import PreviewModalBody from './PreviewModalBody'
+import ZoomablePreview from './ZoomablePreview'
 import { useOrder } from '../context/OrderContext'
 import * as api from '../services/API'
 import type { Template } from '../services/API'
@@ -10,6 +12,11 @@ interface PositionPreviewProps {
   target?: PreviewTarget
   documentNo?: number
   onClose: () => void
+}
+
+const templateSiteUrls: Partial<Record<number, string>> = {
+  1: 'https://cupid.urluv.shop/',
+  2: 'https://pepero.urluv.shop/',
 }
 
 export default function PositionPreview({ target, documentNo, onClose }: PositionPreviewProps) {
@@ -58,29 +65,34 @@ function SitePreview({ onClose }: { onClose: () => void }) {
         </button>
       </header>
 
-      <div className="preview-modal-body site-preview-list">
-        {list.map((template) => (
-          <article key={template.templateId} className="site-preview-card">
-            <h3>{template.name}</h3>
-            {template.previewImageUrl ? (
-              <img
-                className="site-preview-image"
-                src={template.previewImageUrl}
-                alt={`${template.name} 웹사이트 미리보기`}
-              />
-            ) : (
-              <div className="site-preview-image site-preview-soon">
-                Coming Soon!
-              </div>
-            )}
-            {template.sampleSiteUrl && (
-              <a href={template.sampleSiteUrl} target="_blank" rel="noreferrer">
-                샘플 사이트 보기
-              </a>
-            )}
-          </article>
-        ))}
-      </div>
+      <PreviewModalBody className="site-preview-list">
+        {list.map((template) => {
+          const siteUrl = template.sampleSiteUrl || templateSiteUrls[template.templateId]
+          return (
+            <article key={template.templateId} className="site-preview-card">
+              {template.previewImageUrl ? (
+                <ZoomablePreview
+                  key={template.previewImageUrl}
+                  label={`${template.name} 웹사이트 미리보기`}
+                >
+                  <img
+                    className="site-preview-image"
+                    src={template.previewImageUrl}
+                    alt={`${template.name} 웹사이트 미리보기`}
+                  />
+                </ZoomablePreview>
+              ) : (
+                <div className="site-preview-image site-preview-soon">Coming Soon!</div>
+              )}
+              {siteUrl && (
+                <a href={siteUrl} target="_blank" rel="noreferrer">
+                  템플릿 사이트 보기
+                </a>
+              )}
+            </article>
+          )
+        })}
+      </PreviewModalBody>
 
       <footer className="preview-modal-footer">
         <button type="button" className="button primary" onClick={onClose}>
