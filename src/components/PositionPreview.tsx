@@ -69,7 +69,6 @@ function SitePreview({ onClose }: { onClose: () => void }) {
           const siteUrl = template.sampleSiteUrl || templateSiteUrls[template.templateId]
           return (
             <article key={template.templateId} className="site-preview-card">
-              <h3>{template.name}</h3>
               {template.previewImageUrl ? (
                 <ZoomablePreview
                   key={template.previewImageUrl}

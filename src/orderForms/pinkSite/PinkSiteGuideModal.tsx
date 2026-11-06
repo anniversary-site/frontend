@@ -19,7 +19,6 @@ function GuideImage({ label, guide }: { label: string; guide?: Guide }) {
   if (!guide) return <p className="guide-empty">{label} 안내 이미지가 아직 등록되지 않았어요.</p>
   return (
     <section className="guide-image-section">
-      <h3>{label}</h3>
       <ZoomablePreview key={guide.imageUrl} label={`${label} 위치 안내`}>
         <div className="guide-image-wrap">
           <img src={guide.imageUrl} alt={`${label} 위치 안내`} />
