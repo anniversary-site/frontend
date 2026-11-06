@@ -459,6 +459,25 @@
 .admin-order-chip.admin-period-bar {
   box-shadow: inset 0 0 0 1px var(--color-primary);
 }
+.admin-order-chip.admin-period-submitted {
+  color: #c25e00;
+  background: #fff3e0;
+  box-shadow: inset 0 0 0 1px #c25e00;
+}
+.admin-period-submitted .admin-order-dot { background: #c25e00; }
+.admin-order-chip.admin-period-delivered {
+  color: #13824b;
+  background: #e6f7ee;
+  box-shadow: inset 0 0 0 1px #13824b;
+}
+.admin-period-delivered .admin-order-dot { background: #13824b; }
+.admin-order-chip.admin-period-canceled {
+  color: var(--color-grey-600);
+  background: var(--color-grey-100);
+  border: 0;
+  box-shadow: none;
+}
+.admin-period-canceled .admin-order-dot { background: var(--color-grey-600); }
 .admin-content-layout {
   max-width: 1280px;
   margin: 0 auto;

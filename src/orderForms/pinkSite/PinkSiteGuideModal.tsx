@@ -21,15 +21,17 @@ function GuideImage({ label, guide }: { label: string; guide?: Guide }) {
       <h3>{label}</h3>
       <div className="guide-image-wrap">
         <img src={guide.imageUrl} alt={`${label} 위치 안내`} />
-        <span
-          aria-label={`${label} 표시 위치`}
-          style={{
-            left: `${guide.highlight.x * 100}%`,
-            top: `${guide.highlight.y * 100}%`,
-            width: `${guide.highlight.width * 100}%`,
-            height: `${guide.highlight.height * 100}%`,
-          }}
-        />
+        {guide.highlight && guide.highlight.width > 0 && guide.highlight.height > 0 && (
+          <span
+            aria-label={`${label} 표시 위치`}
+            style={{
+              left: `${guide.highlight.x * 100}%`,
+              top: `${guide.highlight.y * 100}%`,
+              width: `${guide.highlight.width * 100}%`,
+              height: `${guide.highlight.height * 100}%`,
+            }}
+          />
+        )}
       </div>
     </section>
   )
@@ -40,11 +42,26 @@ export default function PinkSiteGuideModal({ target, documentNo, onClose }: Orde
   const document =
     templateDetail?.documents.find((item) => item.documentNo === documentNo) ??
     templateDetail?.documents[0]
+  const pepero = templateDetail?.formType === 'PEPERO'
+  // 문구 항목의 예시 이미지(관리자가 DB guides에 넣음). 없으면 아래 글 예시를 보여 줍니다.
+  const guides = templateDetail?.guides ?? {}
+  const textGuide =
+    target === 'main' && pepero
+      ? guides.mainText
+      : target === 'main' || target === 'sub' || target === 'story'
+        ? guides.information
+        : target === 'letters'
+          ? guides.letter
+          : target === 'url' || target === 'music'
+            ? guides[target]
+            : undefined
+  const title = target === 'main' && pepero ? '문구 위치 및 예시' : titles[target]
+  const label = title.replace(' 위치 및 예시', '')
 
   return (
     <>
       <header className="preview-modal-header">
-        <h2 id="sheet-heading">{titles[target]}</h2>
+        <h2 id="sheet-heading">{title}</h2>
         <button
           type="button"
           className="preview-close"
@@ -55,19 +72,20 @@ export default function PinkSiteGuideModal({ target, documentNo, onClose }: Orde
         </button>
       </header>
       <div className="preview-modal-body order-form-guide">
-        {(target === 'story' || target === 'main' || target === 'sub') && (
+        {textGuide && <GuideImage label={label} guide={textGuide} />}
+        {!textGuide && (target === 'story' || target === 'main' || target === 'sub') && (
           <div className="folder-example information-example">
             <span>INFORMATION</span>
             <p>{`특별한 날: 2026.01.12\n특별한 장소: 서강대학교 AS관 라운지\n우리의 이야기: 데모데이 개발`}</p>
           </div>
         )}
-        {target === 'letters' && (
+        {!textGuide && target === 'letters' && (
           <div className="folder-example letter-example">
             <span>LETTER</span>
             <p>주고받은 편지나 기억에 남는 마음이 이 영역에 표시돼요.</p>
           </div>
         )}
-        {target === 'music' && (
+        {!textGuide && target === 'music' && (
           <div className="folder-example music-example">
             <span>MUSIC</span>
             <strong>음악 제목</strong>
@@ -75,7 +93,7 @@ export default function PinkSiteGuideModal({ target, documentNo, onClose }: Orde
             <small>YouTube 링크가 있으면 음악을 바로 열 수 있어요.</small>
           </div>
         )}
-        {target === 'url' && (
+        {!textGuide && target === 'url' && (
           <div className="folder-example url-example">
             <span>INTERNET</span>
             <strong>외부 사이트로 이동</strong>

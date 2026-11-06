@@ -1,5 +1,8 @@
+import { useEffect, useState } from 'react'
 import Icon from './Icon'
 import { useOrder } from '../context/OrderContext'
+import * as api from '../services/API'
+import type { Template } from '../services/API'
 import { OrderFormGuide } from '../orderForms/registry'
 import type { PreviewTarget } from '../types/order'
 
@@ -10,7 +13,7 @@ interface PositionPreviewProps {
 }
 
 export default function PositionPreview({ target, documentNo, onClose }: PositionPreviewProps) {
-  const { data, templates } = useOrder()
+  const { data } = useOrder()
   if (target)
     return (
       <OrderFormGuide
@@ -20,6 +23,27 @@ export default function PositionPreview({ target, documentNo, onClose }: Positio
         onClose={onClose}
       />
     )
+  return <SitePreview onClose={onClose} />
+}
+
+/** 메인 화면에서는 템플릿 목록을 아직 안 불러왔을 수 있어서, 비어 있으면 여기서 불러옵니다. */
+function SitePreview({ onClose }: { onClose: () => void }) {
+  const { templates } = useOrder()
+  const [fetched, setFetched] = useState<Template[]>([])
+  useEffect(() => {
+    if (templates.length) return
+    let active = true
+    api
+      .getTemplates()
+      .then((list) => {
+        if (active) setFetched(list)
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [templates.length])
+  const list = templates.length ? templates : fetched
   return (
     <>
       <header className="preview-modal-header">
@@ -34,16 +58,25 @@ export default function PositionPreview({ target, documentNo, onClose }: Positio
         </button>
       </header>
 
-      <div className="preview-modal-body" style={{ overflow: 'auto' }}>
-        {templates.map((template) => (
-          <article key={template.templateId}>
+      <div className="preview-modal-body site-preview-list">
+        {list.map((template) => (
+          <article key={template.templateId} className="site-preview-card">
             <h3>{template.name}</h3>
-            {template.sampleSiteUrl ? (
+            {template.previewImageUrl ? (
+              <img
+                className="site-preview-image"
+                src={template.previewImageUrl}
+                alt={`${template.name} 웹사이트 미리보기`}
+              />
+            ) : (
+              <div className="site-preview-image site-preview-soon">
+                Coming Soon!
+              </div>
+            )}
+            {template.sampleSiteUrl && (
               <a href={template.sampleSiteUrl} target="_blank" rel="noreferrer">
                 샘플 사이트 보기
               </a>
-            ) : (
-              <p>샘플 사이트 준비 중</p>
             )}
           </article>
         ))}
