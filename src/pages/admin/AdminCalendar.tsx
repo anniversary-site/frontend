@@ -6,6 +6,7 @@ import {
   ordersThisWeek,
 } from '../../services/adminMockup'
 import type { AdminSchedule } from '../../types/admin'
+import AdminPendingMessages from './AdminPendingMessages'
 
 const weekdays = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -59,6 +60,7 @@ export default function AdminCalendar({
   loading,
   onMonthChange,
   onSelect,
+  revision = 0,
 }: {
   today: string
   month: string
@@ -67,6 +69,7 @@ export default function AdminCalendar({
   loading: boolean
   onMonthChange: (month: string) => void
   onSelect: (orderId: number) => void
+  revision?: number
 }) {
   const [filters, setFilters] = useState({ delivered: false, ongoing: true, canceled: false })
   const visible = (order: AdminSchedule) => order.status === 'DELIVERED'
@@ -86,6 +89,7 @@ export default function AdminCalendar({
 
   return (
     <main className="admin-layout">
+      <div className="admin-sidebar">
       <aside className="admin-deadlines" aria-labelledby="deadline-title">
         <div className="admin-deadline-heading">
           <div>
@@ -117,6 +121,8 @@ export default function AdminCalendar({
           {!deadlines.length && <p className="admin-empty">이번 주 마감 일정이 없어요.</p>}
         </div>
       </aside>
+        <AdminPendingMessages revision={revision} onSelect={onSelect} />
+      </div>
       <section className="admin-calendar" aria-labelledby="admin-month-title">
         <div className="admin-calendar-heading">
           <h2 id="admin-month-title" aria-live="polite">

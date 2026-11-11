@@ -10,6 +10,14 @@ import type {
 } from '../types/admin'
 export type { AdminOrder } from '../types/admin'
 
+export const notificationTypeLabels: Record<string, string> = {
+  SUBMITTED: '접수 안내',
+  PAID: '입금 확인 안내',
+  IN_PROGRESS: '제작 시작 안내',
+  DELIVERED: '납품 안내',
+  REQUEST_DONE: '요청 처리 안내',
+}
+
 // 관리자 API와 같은 상태 전이·충돌 규칙을 재현하는 메모리 목업입니다.
 export const adminStatusLabels: Record<AdminOrderStatus, string> = {
   DRAFT: '작성 중',
