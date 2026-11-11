@@ -36,7 +36,7 @@ import { PAGE_PATHS, pageFromPath } from './routes/paths'
 import AppRoutes from './routes/AppRoutes'
 import { addDays, FREE_PERIOD_DAYS } from './utils/period'
 import { videoMetadata } from './utils/video'
-import { webpToPng } from './utils/image'
+import { imageToPng } from './utils/image'
 
 // 화면 시연에 사용하는 초기 데이터와 날짜 유틸리티
 const INITIAL: OrderData = {
@@ -520,10 +520,18 @@ export default function App() {
       if (
         photo &&
         (file.type === 'image/webp' ||
-          (/\.webp$/i.test(file.name) &&
+          file.type === 'image/svg+xml' ||
+          (/\.(webp|svg)$/i.test(file.name) &&
             (!file.type || file.type === 'application/octet-stream')))
       ) {
-        file = await webpToPng(file)
+        // SVG는 타입이 비어 있어도 이미지로 읽을 수 있도록 명시합니다.
+        if (/\.svg$/i.test(file.name) && file.type !== 'image/svg+xml') {
+          file = new File([file], file.name, {
+            type: 'image/svg+xml',
+            lastModified: file.lastModified,
+          })
+        }
+        file = await imageToPng(file)
       }
       if (!(photo ? limits.photoTypes : limits.videoTypes).includes(file.type))
         throw new Error('파일 형식을 확인해 주세요.')
@@ -783,7 +791,7 @@ export default function App() {
                         <span className="sr-only">{kind === 'photos' ? '사진' : '영상'} 추가</span>
                         <input
                           type="file"
-                          accept={kind === 'photos' ? [...(config?.limits.photoTypes ?? []), 'image/webp', '.webp', '.heic'].join(',') : 'video/*'}
+                          accept={kind === 'photos' ? [...(config?.limits.photoTypes ?? []), 'image/webp', 'image/svg+xml', '.webp', '.svg', '.heic'].join(',') : 'video/*'}
                           aria-label={`${kind === 'photos' ? '사진' : '영상'} ${index + 1} 추가`}
                           onChange={(event) => {
                             upload(kind, index, event.target.files?.[0])
@@ -805,7 +813,7 @@ export default function App() {
                           파일 변경
                           <input
                             type="file"
-                            accept={kind === 'photos' ? [...(config?.limits.photoTypes ?? []), 'image/webp', '.webp', '.heic'].join(',') : 'video/*'}
+                            accept={kind === 'photos' ? [...(config?.limits.photoTypes ?? []), 'image/webp', 'image/svg+xml', '.webp', '.svg', '.heic'].join(',') : 'video/*'}
                             onChange={(event) => upload(kind, index, event.target.files?.[0])}
                           />
                         </label>
