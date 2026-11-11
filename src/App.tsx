@@ -12,7 +12,7 @@ import type {
   Sheet,
   TouchedFields,
 } from './types/order'
-import { useEffect, useEffectEvent, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from 'react'
 import './App.css'
 import Icon from './components/Icon'
 import Button from './components/Button'
@@ -387,11 +387,25 @@ export default function App() {
     setPreviewExpanded(false)
     opener.current?.focus()
   }
+  // DOM에서 교체된 주소만 해제합니다. 다음 파일 선택 전에 정리를 끝내야
+  // 새로 생성했지만 아직 렌더링하지 않은 주소를 해제하지 않습니다.
+  useLayoutEffect(() => {
+    const activeUrls = new Set(
+      [...files.photos, ...files.videos].flatMap((item) => item ? [item.url] : []),
+    )
+    for (const url of urls.current) {
+      if (!activeUrls.has(url)) {
+        URL.revokeObjectURL(url)
+        urls.current.delete(url)
+      }
+    }
+  }, [files])
   useEffect(() => {
     const created = urls.current
     const activeTimers = timers.current
     return () => {
       created.forEach((u) => URL.revokeObjectURL(u))
+      created.clear()
       activeTimers.forEach(clearTimeout)
     }
   }, [])
