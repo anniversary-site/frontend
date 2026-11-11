@@ -1,5 +1,16 @@
 import type { OrderData, Page } from '../types/order'
+import type { ApiError } from '../services/API'
 import { isValidPeriod } from './period'
+
+export function validationErrorPage(error: Pick<ApiError, 'code' | 'details'>): Page | null {
+  if (error.code !== 'VALIDATION_FAILED') return null
+  const stage = error.details.find(
+    (detail) =>
+      ['REQUIRED', 'MIN_PHOTOS', 'MIN_VIDEOS'].includes(detail.reason) &&
+      [1, 2, 3].includes(detail.value ?? 0),
+  )?.value
+  return stage === 1 ? 'template' : stage === 2 ? 'info' : stage === 3 ? 'content' : null
+}
 
 export function formatPhone(value: string) {
   const digits = value.replace(/\D/g, '').slice(0, 11)

@@ -29,14 +29,15 @@ import type {
   Template,
   TemplateDetail,
 } from './services/API'
-import { canProceed, mediaDuration, dateKey, minDate, formatPhone } from './utils/order'
-import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { canProceed, mediaDuration, dateKey, minDate, formatPhone, validationErrorPage } from './utils/order'
+import { Link, Navigate, useLocation, useNavigate, useNavigationType } from 'react-router-dom'
 import { OrderContext } from './context/OrderContext'
 import { PAGE_PATHS, pageFromPath } from './routes/paths'
 import AppRoutes from './routes/AppRoutes'
 import { addDays, FREE_PERIOD_DAYS } from './utils/period'
 import { videoMetadata } from './utils/video'
 import { imageToPng } from './utils/image'
+import { canResumeTab, readTabOrder, restoreTabFields, saveTabOrder } from './services/tabOrder'
 
 // 화면 시연에 사용하는 초기 데이터와 날짜 유틸리티
 const INITIAL: OrderData = {
@@ -67,8 +68,8 @@ const INITIAL: OrderData = {
 const OCCASIONS: Occasion[] = ['연애 기념일', '생일', '결혼 기념일', '기타']
 const emptyFiles = (): MediaFiles => ({ photos: Array(4).fill(null), videos: Array(4).fill(null) })
 const SESSION_KEY = `urluv-session-${import.meta.env.VITE_USE_BACKEND === 'true' ? 'backend' : 'mock'}`
-// 브라우저에 남아 있는 주문 세션의 자동 복원은 현재 사용하지 않습니다.
-// 이름과 전화번호를 이용한 주문서 불러오기 화면에서만 기존 주문을 복원합니다.
+const TAB_ORDER_KEY = `${SESSION_KEY}-tab-v1`
+const ORDER_PAGES: Page[] = ['template', 'info', 'content', 'review', 'done']
 const occasionCodes: Record<Occasion, string> = {
   '연애 기념일': 'COUPLE',
   생일: 'BIRTHDAY',
@@ -80,7 +81,14 @@ export default function App() {
   // 페이지와 입력 상태
   const location = useLocation()
   const navigate = useNavigate()
+  const historyAction = useNavigationType()
   const page = pageFromPath(location.pathname)
+  const [resume] = useState(() => {
+    const navigation = (performance.getEntriesByType('navigation')[0] as
+      PerformanceNavigationTiming | undefined)?.type ?? 'navigate'
+    return ORDER_PAGES.includes(page) &&
+      canResumeTab(navigation, historyAction, location.key) ? readTabOrder(TAB_ORDER_KEY) : null
+  })
   const [data, setData] = useState<OrderData>({ ...INITIAL })
   const [files, setFiles] = useState<MediaFiles>(emptyFiles)
   const [suggestions, setSuggestions] = useState<PhraseValues>({})
@@ -151,8 +159,7 @@ export default function App() {
     sessionRef.current = value
     setSession(value)
     try {
-      if (value) localStorage.setItem(SESSION_KEY, JSON.stringify(value))
-      else localStorage.removeItem(SESSION_KEY)
+      if (!value) sessionStorage.removeItem(TAB_ORDER_KEY)
     } catch {
       setToast('이 브라우저에서는 주문서 접근 정보를 보관할 수 없어요.')
     }
@@ -168,8 +175,8 @@ export default function App() {
       } else if (cause.code === 'INVALID_USE_START_DATE' || cause.code === 'INVALID_USE_END_DATE') {
         go('info')
       } else {
-        const stage = cause.details?.find((detail) => detail.value)?.value
-        if (stage) go(stage === 1 ? 'template' : stage === 2 ? 'info' : 'content')
+        const target = validationErrorPage(cause)
+        if (target) go(target)
       }
     }
     setError(message)
@@ -189,8 +196,9 @@ export default function App() {
         slot: i + 1,
       })),
     )
-  const applyDraft = async (draft: Draft) => {
+  const applyDraft = async (draft: Draft, active = () => true) => {
     const detail = draft.template ? await api.getTemplate(draft.template.templateId) : null
+    if (!active()) return
     setTemplateDetail(detail)
     const restored: MediaFiles = { photos: [], videos: [] }
     for (const kind of ['photos', 'videos'] as const) {
@@ -268,6 +276,32 @@ export default function App() {
     ...(data.sitePassword ? { sitePassword: data.sitePassword } : {}),
   })
   const needsOrderData = page !== 'main'
+  useLayoutEffect(() => {
+    if (!session || !initialized) return
+    try {
+      saveTabOrder(TAB_ORDER_KEY, session, data)
+    } catch {
+      // 저장소가 제한된 환경에서도 현재 화면의 주문 작성은 계속합니다.
+    }
+  }, [session, data, initialized])
+  const restoreOrder = useEffectEvent(async (active: () => boolean, availableTemplates: Template[]) => {
+    if (!resume || sessionRef.current || !ORDER_PAGES.includes(page)) return
+    const draft = await api.getDraft(resume.session.draftId, resume.session.draftToken)
+    if (!active()) return
+    await applyDraft(draft, active)
+    if (!active()) return
+    if (draft.status === 'DRAFT') {
+      setData((current) => restoreTabFields(
+        current, resume.data, availableTemplates.map((template) => template.templateId),
+      ))
+    } else {
+      const result = await api.getOrder(resume.session.draftId, resume.session.draftToken)
+      if (!active()) return
+      setOrder(result)
+      go('done')
+    }
+    rememberSession(resume.session)
+  })
   useEffect(() => {
     if (!needsOrderData) return
     let active = true
@@ -281,7 +315,7 @@ export default function App() {
           date: current.date || settings.minUseStartDate,
           endDate: current.endDate || addDays(settings.minUseStartDate, 6),
         }))
-        // 로컬 스토리지 세션을 이용한 자동 불러오기는 임시 비활성화했습니다.
+        await restoreOrder(() => active, list)
       })
       .catch((cause) => {
         if (active) reportEffectError(cause)
@@ -925,8 +959,13 @@ export default function App() {
       </section>
     ))
   // 세션이 없는 직접 접속은 주문 화면을 렌더링하기 전에 시작 화면으로 보냅니다.
-  if (['template', 'info', 'content', 'review', 'done'].includes(page) && !session) {
+  if (ORDER_PAGES.includes(page) && !session && !resume) {
     return <Navigate to={PAGE_PATHS.start} replace />
+  }
+  if (ORDER_PAGES.includes(page) && resume && !session && initialized) {
+    return <main className="order-content"><p role="alert">
+      {error || '주문서를 복원하지 못했어요. 새로고침하여 다시 시도해 주세요.'}
+    </p></main>
   }
   return (
     <OrderContext.Provider
