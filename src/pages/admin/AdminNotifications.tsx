@@ -2,13 +2,9 @@ import { useEffect, useState } from 'react'
 import * as api from '../../services/AdminAPI.js'
 import type { AdminNotification, AdminPageResult, NotificationStatus } from '../../types/admin'
 import { formatPhone } from '../../utils/order'
+import { notificationTypeLabels as typeLabels } from '../../services/adminMockup'
 
 const notificationLabels = { PENDING: '아직 안 보냄', SENT: '보냄', FAILED: '실패' }
-const typeLabels: Record<string, string> = {
-  SUBMITTED: '접수 안내',
-  PAID: '입금 확인 안내',
-  DELIVERED: '납품 안내',
-}
 export function NotificationCard({
   item,
   onChanged,

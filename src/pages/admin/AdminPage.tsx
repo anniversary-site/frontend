@@ -134,6 +134,7 @@ export default function AdminPage({ onLogout }: { onLogout: () => void }) {
       )}
       {tab === 'calendar' && (
         <AdminCalendar
+          revision={revision}
           today={today}
           month={month}
           orders={orders}

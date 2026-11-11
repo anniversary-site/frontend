@@ -59,6 +59,11 @@
   gap: var(--space-24);
   align-items: start;
 }
+.admin-sidebar {
+  display: grid;
+  gap: var(--space-24);
+  min-width: 0;
+}
 .admin-deadlines,
 .admin-calendar {
   border: 1px solid var(--color-grey-200);
@@ -77,7 +82,8 @@
   line-height: 20px;
   color: var(--color-grey-500);
 }
-.admin-deadline-heading h1 {
+.admin-deadline-heading h1,
+.admin-deadline-heading h2 {
   font-size: 20px;
   line-height: 28px;
   font-weight: 600;
