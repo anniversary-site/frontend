@@ -36,6 +36,7 @@ import { PAGE_PATHS, pageFromPath } from './routes/paths'
 import AppRoutes from './routes/AppRoutes'
 import { addDays, FREE_PERIOD_DAYS } from './utils/period'
 import { videoMetadata } from './utils/video'
+import { webpToPng } from './utils/image'
 
 // 화면 시연에 사용하는 초기 데이터와 날짜 유틸리티
 const INITIAL: OrderData = {
@@ -483,6 +484,16 @@ export default function App() {
   }
   const upload = async (kind: MediaKind, index: number, file: File | undefined) => {
     if (!file || !templateDetail || !config) return
+    if (
+      kind === 'photos' &&
+      /\.heic$/i.test(file.name) &&
+      (!file.type || file.type === 'application/octet-stream')
+    ) {
+      file = new File([file], file.name, {
+        type: 'image/heic',
+        lastModified: file.lastModified,
+      })
+    }
     const position = slotsFor(templateDetail, kind)[index]
     if (!position) return
     const url = objectUrl(file)
@@ -506,6 +517,14 @@ export default function App() {
       const saved = requireSession()
       const limits = config.limits
       const photo = kind === 'photos'
+      if (
+        photo &&
+        (file.type === 'image/webp' ||
+          (/\.webp$/i.test(file.name) &&
+            (!file.type || file.type === 'application/octet-stream')))
+      ) {
+        file = await webpToPng(file)
+      }
       if (!(photo ? limits.photoTypes : limits.videoTypes).includes(file.type))
         throw new Error('파일 형식을 확인해 주세요.')
       if (file.size > (photo ? limits.photoMaxSizeMb : limits.videoMaxSizeMb) * 1024 * 1024)
@@ -764,7 +783,7 @@ export default function App() {
                         <span className="sr-only">{kind === 'photos' ? '사진' : '영상'} 추가</span>
                         <input
                           type="file"
-                          accept={kind === 'photos' ? 'image/*' : 'video/*'}
+                          accept={kind === 'photos' ? [...(config?.limits.photoTypes ?? []), 'image/webp', '.webp', '.heic'].join(',') : 'video/*'}
                           aria-label={`${kind === 'photos' ? '사진' : '영상'} ${index + 1} 추가`}
                           onChange={(event) => {
                             upload(kind, index, event.target.files?.[0])
@@ -786,7 +805,7 @@ export default function App() {
                           파일 변경
                           <input
                             type="file"
-                            accept={kind === 'photos' ? 'image/*' : 'video/*'}
+                            accept={kind === 'photos' ? [...(config?.limits.photoTypes ?? []), 'image/webp', '.webp', '.heic'].join(',') : 'video/*'}
                             onChange={(event) => upload(kind, index, event.target.files?.[0])}
                           />
                         </label>
