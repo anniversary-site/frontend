@@ -524,14 +524,16 @@ export default function App() {
           (/\.(webp|svg)$/i.test(file.name) &&
             (!file.type || file.type === 'application/octet-stream')))
       ) {
-        // SVG는 타입이 비어 있어도 이미지로 읽을 수 있도록 명시합니다.
-        if (/\.svg$/i.test(file.name) && file.type !== 'image/svg+xml') {
+        // 브라우저가 형식을 생략하면 확장자로 MIME 타입을 보완합니다.
+        if (!file.type || file.type === 'application/octet-stream') {
           file = new File([file], file.name, {
-            type: 'image/svg+xml',
+            type: /\.svg$/i.test(file.name) ? 'image/svg+xml' : 'image/webp',
             lastModified: file.lastModified,
           })
         }
-        file = await imageToPng(file)
+        if (!limits.photoTypes.includes(file.type)) {
+          file = await imageToPng(file)
+        }
       }
       if (!(photo ? limits.photoTypes : limits.videoTypes).includes(file.type))
         throw new Error('파일 형식을 확인해 주세요.')
