@@ -37,7 +37,7 @@ import AppRoutes from './routes/AppRoutes'
 import { addDays, FREE_PERIOD_DAYS } from './utils/period'
 import { videoMetadata } from './utils/video'
 import { imageToPng } from './utils/image'
-import { canResumeTab, readTabOrder, restoreTabFields, saveTabOrder } from './services/tabOrder'
+import { canResumeTab, historyOrderSession, readTabOrder, restoreTabFields, saveTabOrder } from './services/tabOrder'
 
 // 화면 시연에 사용하는 초기 데이터와 날짜 유틸리티
 const INITIAL: OrderData = {
@@ -86,8 +86,10 @@ export default function App() {
   const [resume] = useState(() => {
     const navigation = (performance.getEntriesByType('navigation')[0] as
       PerformanceNavigationTiming | undefined)?.type ?? 'navigate'
+    const fromHistory = historyAction === 'POP' && historyOrderSession(location.state)
     return ORDER_PAGES.includes(page) &&
-      canResumeTab(navigation, historyAction, location.key) ? readTabOrder(TAB_ORDER_KEY) : null
+      (canResumeTab(navigation, historyAction, location.key) || fromHistory)
+      ? readTabOrder(TAB_ORDER_KEY, location.state) : null
   })
   const [data, setData] = useState<OrderData>({ ...INITIAL })
   const [files, setFiles] = useState<MediaFiles>(emptyFiles)
@@ -153,7 +155,9 @@ export default function App() {
     setDirection(pages.indexOf(p) < pages.indexOf(page) ? 'backward' : 'forward')
     setError('')
     const path = PAGE_PATHS[p] || PAGE_PATHS.main
-    navigate(location.pathname.startsWith('/pepero/') && path.startsWith('/order') ? `/pepero${path}` : path)
+    navigate(location.pathname.startsWith('/pepero/') && path.startsWith('/order') ? `/pepero${path}` : path, {
+      state: sessionRef.current ? { orderSession: sessionRef.current } : null,
+    })
   }
   const rememberSession = (value: Session | null) => {
     sessionRef.current = value
@@ -318,7 +322,13 @@ export default function App() {
         await restoreOrder(() => active, list)
       })
       .catch((cause) => {
-        if (active) reportEffectError(cause)
+        if (active) {
+          reportEffectError(cause)
+          if (resume && !sessionRef.current) {
+            rememberSession(null)
+            navigateFromEffect('start')
+          }
+        }
       })
       .finally(() => {
         if (active) setInitialized(true)
@@ -326,7 +336,7 @@ export default function App() {
     return () => {
       active = false
     }
-  }, [needsOrderData])
+  }, [needsOrderData, resume])
   useEffect(() => {
     if (!initialized || page !== 'done' || !session || order) return
     let active = true

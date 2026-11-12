@@ -8,7 +8,24 @@ export function canResumeTab(navigation: string, historyAction: string, location
   )
 }
 
-export function readTabOrder(key: string) {
+export function historyOrderSession(state: unknown): Session | null {
+  if (!state || typeof state !== 'object') return null
+  const session = (state as { orderSession?: Partial<Session> }).orderSession
+  return session &&
+    Number.isInteger(session.draftId) &&
+    (session.draftId ?? 0) > 0 &&
+    typeof session.draftToken === 'string' &&
+    session.draftToken
+    ? { draftId: session.draftId as number, draftToken: session.draftToken }
+    : null
+}
+
+export function readTabOrder(key: string, state?: unknown) {
+  const historySession = historyOrderSession(state)
+  if (state && typeof state === 'object' && 'orderSession' in state && !historySession) return null
+  const fallback = historySession
+    ? { version: 1 as const, session: historySession, data: {} }
+    : null
   try {
     const stored = JSON.parse(sessionStorage.getItem(key) ?? 'null')
     if (
@@ -21,10 +38,16 @@ export function readTabOrder(key: string) {
       typeof stored.data !== 'object' ||
       Array.isArray(stored.data)
     )
+      return fallback
+    if (
+      historySession &&
+      (stored.session.draftId !== historySession.draftId ||
+        stored.session.draftToken !== historySession.draftToken)
+    )
       return null
     return stored as { version: 1; session: Session; data: Record<string, unknown> }
   } catch {
-    return null
+    return fallback
   }
 }
 
