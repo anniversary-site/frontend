@@ -8,9 +8,8 @@ const server = await createServer({
 })
 after(() => server.close())
 const { validationErrorPage } = await server.ssrLoadModule('/src/utils/order.ts')
-const { canResumeTab, readTabOrder, saveTabOrder, restoreTabFields } = await server.ssrLoadModule(
-  '/src/services/tabOrder.ts',
-)
+const { canResumeTab, historyOrderSession, readTabOrder, saveTabOrder, restoreTabFields } =
+  await server.ssrLoadModule('/src/services/tabOrder.ts')
 
 test('새로고침과 뒤로가기에서만 현재 탭 복원을 허용한다', () => {
   assert.equal(canResumeTab('reload', 'POP', 'default'), true)
@@ -84,12 +83,45 @@ test('탭 보관 데이터는 비밀번호를 제외하고 서버 상태를 유�
     assert.deepEqual(invalid, current)
     storage.set('tab', '{')
     assert.equal(readTabOrder('tab'), null)
+    assert.deepEqual(readTabOrder('tab', { orderSession: session }), {
+      version: 1,
+      session,
+      data: {},
+    })
     storage.set('tab', JSON.stringify({ version: 1, session: { draftId: -1 }, data: {} }))
     assert.equal(readTabOrder('tab'), null)
+    storage.delete('tab')
+    assert.deepEqual(readTabOrder('tab', { orderSession: session })?.session, session)
+    saveTabOrder('tab', { draftId: 8, draftToken: 'other-order' }, data)
+    assert.equal(readTabOrder('tab', { orderSession: session }), null)
+    const rotated = { draftId: session.draftId, draftToken: 'new-token' }
+    saveTabOrder('tab', rotated, data)
+    assert.equal(readTabOrder('tab', { orderSession: session }), null)
+    assert.equal(readTabOrder('tab', { orderSession: {} }), null)
+    assert.deepEqual(readTabOrder('tab', { orderSession: rotated }).session, rotated)
   } finally {
     if (descriptor) Object.defineProperty(globalThis, 'sessionStorage', descriptor)
     else delete globalThis.sessionStorage
   }
+})
+
+test('방문 기록은 유효한 주문 세션만 사용한다', () => {
+  for (const state of [
+    null,
+    {},
+    { orderSession: {} },
+    { orderSession: { draftId: 0, draftToken: 'token' } },
+    { orderSession: { draftId: 1, draftToken: '' } },
+    { orderSession: { draftId: '1', draftToken: 'token' } },
+  ]) {
+    assert.equal(historyOrderSession(state), null)
+  }
+  assert.deepEqual(
+    historyOrderSession({
+      orderSession: { draftId: 9, draftToken: 'token', unused: 'ignored' },
+    }),
+    { draftId: 9, draftToken: 'token' },
+  )
 })
 
 test('글자 수·용량·횟수 제한값으로 주문 단계를 이동하지 않는다', () => {
