@@ -51,9 +51,9 @@ const image = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w
 const guide = { imageUrl: image, highlight: { x: 0.2, y: 0.25, width: 0.6, height: 0.1 } }
 export const mockTemplates = ['일반', '빼빼로', '크리스마스'].map((name, index) => ({
   formType: index === 1 ? 'PEPERO' : 'STANDARD',
-  closedMessage: index === 2 ? 'Coming Soon!' : null,
+  closedMessage: null,
   extraMediaFees: index !== 1,
-  minLeadDays: index === 1 ? 0 : 7,
+  minLeadDays: index === 1 ? 0 : index === 2 ? 1 : 7,
   // 일반·빼빼로는 캡션 10자, 크리스마스는 공통값 50자
   captionMaxLength: index === 2 ? 50 : 10,
   templateId: index + 1,

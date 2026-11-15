@@ -17,6 +17,7 @@ interface PositionPreviewProps {
 const templateSiteUrls: Partial<Record<number, string>> = {
   1: 'https://cupid.urluv.shop/',
   2: 'https://pepero.urluv.shop/',
+  3: 'https://santa.urluv.shop/',
 }
 
 export default function PositionPreview({ target, documentNo, onClose }: PositionPreviewProps) {
