@@ -17,7 +17,14 @@ export interface Template {
   sampleSiteUrl: string | null
   /** 웹사이트 미리보기 팝업 사진(카드 사진과 별도). 없으면 null */
   previewImageUrl?: string | null
+  /** 지금 받는 기본 가격(할인 중이면 할인 가격) */
   basePrice: number
+  /** 할인 전 원래 가격 */
+  regularPrice?: number
+  /** 할인 중이면 할인 이름(예: "얼리버드"), 아니면 null */
+  saleLabel?: string | null
+  /** 할인이 끝나는 시각(ISO, UTC). 할인 중일 때만 */
+  saleEndsAt?: string | null
 }
 export interface TemplateDetail extends Template {
   /** 주문서 위치 예시 이미지. 일반: information/letter/url/music, 빼빼로: mainText */
@@ -60,6 +67,10 @@ export interface OrderConfig {
 }
 export interface Price {
   basePrice: number
+  /** 할인 전 원래 기본 가격. 할인이 없으면 basePrice와 같음 */
+  regularBasePrice?: number
+  /** 할인 중이면 할인 이름(예: "얼리버드") */
+  saleLabel?: string | null
   usageDays: number
   periodFee: number
   photoCount: number

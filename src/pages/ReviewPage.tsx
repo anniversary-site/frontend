@@ -38,7 +38,19 @@ export default function ReviewPage() {
       <div className="payment">
         <div>
           <span>기본 가격</span>
-          <strong>{(data.price?.basePrice ?? 0).toLocaleString('ko-KR')}원</strong>
+          {data.price?.saleLabel && (data.price.regularBasePrice ?? 0) > data.price.basePrice ? (
+            <>
+              <em className="sale-badge">{data.price.saleLabel} 할인</em>
+              <strong className="sale-price">
+                <s aria-label={`원래 가격 ${data.price.regularBasePrice!.toLocaleString('ko-KR')}원`}>
+                  {data.price.regularBasePrice!.toLocaleString('ko-KR')}원
+                </s>
+                {data.price.basePrice.toLocaleString('ko-KR')}원
+              </strong>
+            </>
+          ) : (
+            <strong>{(data.price?.basePrice ?? 0).toLocaleString('ko-KR')}원</strong>
+          )}
         </div>
         {(data.price?.periodFee ?? 0) > 0 && (
           <div>
