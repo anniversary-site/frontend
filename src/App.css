@@ -409,12 +409,19 @@ textarea {
   color: var(--color-grey-500);
   text-decoration-thickness: 1.5px;
 }
-/* 할인 끝나는 날 배지: 썸네일 오른쪽 위 */
+/* 할인 배지: 썸네일 아래쪽 오른편 (위쪽은 체크 표시 자리) */
+.template-thumb {
+  position: relative;
+  display: block;
+}
 .template-sale-badge {
   position: absolute;
-  top: var(--space-16);
-  right: var(--space-16);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  right: var(--space-8);
+  bottom: var(--space-8);
+  max-width: calc(100% - 16px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
 }
 .sale-badge {
   display: inline-block;

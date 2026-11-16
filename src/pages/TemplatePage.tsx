@@ -50,21 +50,25 @@ export default function TemplatePage() {
                   {template.closedMessage}
                 </span>
               ) : (
-                <img
-                  className="template-placeholder"
-                  src={template.thumbnailUrl}
-                  alt={template.name}
-                  style={{ objectFit: 'cover', width: '100%' }}
-                />
+                <span className="template-thumb">
+                  <img
+                    className="template-placeholder"
+                    src={template.thumbnailUrl}
+                    alt={template.name}
+                    style={{ objectFit: 'cover', width: '100%' }}
+                  />
+                  {onSale(template) && (
+                    <span className="sale-badge template-sale-badge">
+                      {saleBadge(template.saleLabel, template.saleEndsAt!)}
+                    </span>
+                  )}
+                </span>
               )}
               <span className="template-text">
                 <strong>{template.name}</strong>
                 <small>{template.description}</small>
                 {!template.closedMessage && <TemplatePrice template={template} />}
               </span>
-              {!template.closedMessage && onSale(template) && (
-                <span className="sale-badge template-sale-badge">{saleBadge(template.saleLabel, template.saleEndsAt!)}</span>
-              )}
               <span className="template-check">
                 {data.template === template.templateId && <Icon name="check" small />}
               </span>
