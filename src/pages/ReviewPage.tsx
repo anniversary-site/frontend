@@ -1,11 +1,13 @@
 import { useOrder } from '../context/OrderContext'
 import Icon from '../components/Icon'
+import { saleUntil } from '../utils/sale'
 
 export default function ReviewPage() {
   const { data, setToast, config, templates, templateDetail } = useOrder()
   const pepero = (templateDetail ?? templates.find((item) => item.templateId === data.template))?.formType === 'PEPERO'
   if (!config) return <p role="status">가격 정보를 불러오는 중이에요.</p>
   const account = config.bankAccount
+  const saleEndsAt = templates.find((item) => item.templateId === data.template)?.saleEndsAt
   return (
     <main key="review" className="order-content review-content page-transition">
       <p className="eyebrow">마지막으로 확인해 주세요</p>
@@ -40,7 +42,7 @@ export default function ReviewPage() {
           <span>기본 가격</span>
           {data.price?.saleLabel && (data.price.regularBasePrice ?? 0) > data.price.basePrice ? (
             <>
-              <em className="sale-badge">{data.price.saleLabel} 할인</em>
+              {saleEndsAt && <em className="sale-badge">{saleUntil(saleEndsAt)}</em>}
               <strong className="sale-price">
                 <s aria-label={`원래 가격 ${data.price.regularBasePrice!.toLocaleString('ko-KR')}원`}>
                   {data.price.regularBasePrice!.toLocaleString('ko-KR')}원

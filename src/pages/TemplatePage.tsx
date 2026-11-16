@@ -1,28 +1,17 @@
 import { useOrder } from '../context/OrderContext'
 import Icon from '../components/Icon'
 import type { Template } from '../services/API'
+import { saleUntil } from '../utils/sale'
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`
 
-/** 할인 끝나는 날(한국 시간). 끝나는 시각이 0시면 그 전날까지로 보여줍니다. 예: "11/22까지" */
-function saleUntil(endsAt: string) {
-  const last = new Date(new Date(endsAt).getTime() - 1)
-  const [m, d] = last
-    .toLocaleDateString('en-US', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric' })
-    .split('/')
-  return `${m}/${d}까지`
-}
-
-/** 할인 중인 템플릿만: 원래 가격에 취소선 + 할인 가격 + 할인 이름 */
+/** 할인 중인 템플릿만: 원래 가격에 취소선 + 할인 가격 + 끝나는 날 */
 function SalePrice({ template }: { template: Template }) {
   const regular = template.regularPrice ?? template.basePrice
-  if (!template.saleLabel || regular <= template.basePrice) return null
+  if (!template.saleEndsAt || regular <= template.basePrice) return null
   return (
     <span className="template-sale">
-      <span className="sale-badge">
-        {template.saleLabel}
-        {template.saleEndsAt && ` · ${saleUntil(template.saleEndsAt)}`}
-      </span>
+      <span className="sale-badge">{saleUntil(template.saleEndsAt)}</span>
       <span className="sale-price">
         <s aria-label={`원래 가격 ${won(regular)}`}>{won(regular)}</s>
         <b>{won(template.basePrice)}</b>
