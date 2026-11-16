@@ -1,6 +1,6 @@
 import { useOrder } from '../context/OrderContext'
 import Icon from '../components/Icon'
-import { saleUntil } from '../utils/sale'
+import { saleBadge } from '../utils/sale'
 
 export default function ReviewPage() {
   const { data, setToast, config, templates, templateDetail } = useOrder()
@@ -42,7 +42,7 @@ export default function ReviewPage() {
           <span>기본 가격</span>
           {data.price?.saleLabel && (data.price.regularBasePrice ?? 0) > data.price.basePrice ? (
             <>
-              {saleEndsAt && <em className="sale-badge">{saleUntil(saleEndsAt)}</em>}
+              {saleEndsAt && <em className="sale-badge">{saleBadge(data.price.saleLabel, saleEndsAt)}</em>}
               <strong className="sale-price">
                 <s aria-label={`원래 가격 ${data.price.regularBasePrice!.toLocaleString('ko-KR')}원`}>
                   {data.price.regularBasePrice!.toLocaleString('ko-KR')}원

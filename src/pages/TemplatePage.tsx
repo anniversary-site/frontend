@@ -1,7 +1,7 @@
 import { useOrder } from '../context/OrderContext'
 import Icon from '../components/Icon'
 import type { Template } from '../services/API'
-import { saleUntil } from '../utils/sale'
+import { saleBadge } from '../utils/sale'
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`
 
@@ -63,7 +63,7 @@ export default function TemplatePage() {
                 {!template.closedMessage && <TemplatePrice template={template} />}
               </span>
               {!template.closedMessage && onSale(template) && (
-                <span className="sale-badge template-sale-badge">{saleUntil(template.saleEndsAt!)}</span>
+                <span className="sale-badge template-sale-badge">{saleBadge(template.saleLabel, template.saleEndsAt!)}</span>
               )}
               <span className="template-check">
                 {data.template === template.templateId && <Icon name="check" small />}
