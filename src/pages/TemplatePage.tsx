@@ -5,17 +5,17 @@ import { saleUntil } from '../utils/sale'
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`
 
-/** 할인 중인 템플릿만: 원래 가격에 취소선 + 할인 가격 + 끝나는 날 */
-function SalePrice({ template }: { template: Template }) {
+/** 할인 중인지(끝나는 날이 있고 원래 가격보다 쌀 때) */
+const onSale = (t: Template) =>
+  !!t.saleEndsAt && (t.regularPrice ?? t.basePrice) > t.basePrice
+
+/** 카드 맨 아래 가격. 할인 중이면 원래 가격 취소선 + 할인 가격 */
+function TemplatePrice({ template }: { template: Template }) {
   const regular = template.regularPrice ?? template.basePrice
-  if (!template.saleEndsAt || regular <= template.basePrice) return null
   return (
-    <span className="template-sale">
-      <span className="sale-badge">{saleUntil(template.saleEndsAt)}</span>
-      <span className="sale-price">
-        <s aria-label={`원래 가격 ${won(regular)}`}>{won(regular)}</s>
-        <b>{won(template.basePrice)}</b>
-      </span>
+    <span className={`template-price ${onSale(template) ? 'on-sale' : ''}`}>
+      {onSale(template) && <s aria-label={`원래 가격 ${won(regular)}`}>{won(regular)}</s>}
+      <b>{won(template.basePrice)}</b>
     </span>
   )
 }
@@ -60,8 +60,11 @@ export default function TemplatePage() {
               <span className="template-text">
                 <strong>{template.name}</strong>
                 <small>{template.description}</small>
-                {!template.closedMessage && <SalePrice template={template} />}
+                {!template.closedMessage && <TemplatePrice template={template} />}
               </span>
+              {!template.closedMessage && onSale(template) && (
+                <span className="sale-badge template-sale-badge">{saleUntil(template.saleEndsAt!)}</span>
+              )}
               <span className="template-check">
                 {data.template === template.templateId && <Icon name="check" small />}
               </span>

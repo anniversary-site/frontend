@@ -379,10 +379,42 @@ textarea {
   color: var(--color-grey-600);
   margin-top: var(--space-4);
 }
-/* 기간 한정 할인(얼리버드): 할인 이름 + 원래 가격 취소선 + 할인 가격 */
-.template-sale {
-  display: block;
-  margin-top: var(--space-8);
+/* 카드 아래 가격: 카드 높이가 달라도 가격 줄이 맨 아래에 같은 높이로 맞춰짐 */
+.template-card {
+  display: flex;
+  flex-direction: column;
+}
+.template-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.template-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--space-4);
+  margin-top: auto;
+  padding-top: var(--space-8);
+}
+.template-price b {
+  font: var(--text-body-strong);
+  color: var(--color-grey-900);
+}
+.template-price.on-sale b {
+  color: var(--color-primary);
+}
+.template-price s {
+  font: var(--text-caption);
+  color: var(--color-grey-500);
+  text-decoration-thickness: 1.5px;
+}
+/* 할인 끝나는 날 배지: 썸네일 오른쪽 위 */
+.template-sale-badge {
+  position: absolute;
+  top: var(--space-16);
+  right: var(--space-16);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 .sale-badge {
   display: inline-block;
@@ -406,10 +438,6 @@ textarea {
   font: var(--text-caption);
   color: var(--color-grey-500);
   text-decoration-thickness: 1.5px;
-}
-.template-sale .sale-price b {
-  font: var(--text-body-strong);
-  color: var(--color-primary);
 }
 .payment .sale-price {
   margin-top: 0;
