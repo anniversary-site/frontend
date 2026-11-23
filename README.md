@@ -53,8 +53,8 @@ URLUV 기념일 주문서·운영자 프런트엔드
 | `VITE_USE_BACKEND`    | `true`: 사용자 실제 서버, `false` 또는 미설정: 목업 |
 | `VITE_ADMIN_BACK_URL` | 관리자 API 주소 (`/api/admin/v1` 포함)              |
 | `VITE_USE_ADMIN`      | `true`: 관리자 실제 서버, `false` 또는 미설정: 목업 |
-| `VITE_CHRISTMAS_EDITOR_URL` | 크리스마스 제작 모드 iframe 주소. 로컬 Vite 개발 서버는 같은 작업 공간의 템플릿을 자동 제공하고, 스테이징 주소(`urluv-order.vercel.app` 또는 `edit.urluv.shop`)는 `santa-edit.urluv.shop`, 운영 사이트는 `santa.urluv.shop`을 기본으로 사용합니다. 템플릿 테스트 도메인이 없다면 Vercel Preview 환경에서 실제 템플릿 Preview URL로 지정합니다. |
-| `VITE_CUPID_EDITOR_URL` | 큐피드 제작 모드 iframe 주소. 로컬에서는 같은 작업 공간의 큐피드 템플릿을 자동 제공하고, 스테이징은 `cupid-edit.urluv.shop`, 운영은 `cupid.urluv.shop`을 기본으로 사용합니다. 템플릿 테스트 도메인이 없다면 Vercel Preview 환경에서 실제 Preview URL로 지정합니다. |
+| `VITE_CHRISTMAS_EDITOR_URL` | 크리스마스 제작 모드 iframe 주소. 로컬에서는 같은 작업 공간의 템플릿을 자동 제공하고, 스테이징은 템플릿의 `develop` Vercel Preview 주소, 운영은 `santa.urluv.shop`을 기본으로 사용합니다. |
+| `VITE_CUPID_EDITOR_URL` | 큐피드 제작 모드 iframe 주소. 로컬에서는 같은 작업 공간의 큐피드 템플릿을 자동 제공하고, 스테이징은 템플릿의 `develop` Vercel Preview 주소, 운영은 `cupid.urluv.shop`을 기본으로 사용합니다. |
 
 - `.env`는 Git에서 제외합니다. 환경변수 변경 후 개발 서버 재시작 또는 재배포가 필요합니다.
 - 목업은 메모리 기반으로 새로고침 시 초기화됩니다. 관리자도 다시 로그인해야 합니다.
@@ -101,7 +101,7 @@ URLUV 기념일 주문서·운영자 프런트엔드
 ## 테스트 배포와 운영 반영
 
 - `develop`은 Vercel 미리보기 배포 대상입니다(`vercel.json`). 현재 스테이징 주소 `urluv-order.vercel.app`에서 먼저 확인합니다. `edit.urluv.shop`이 필요하면 Vercel 프로젝트의 Domains에서 Preview 환경 `develop` 브랜치에 연결하고, Vercel이 안내하는 DNS 레코드를 추가합니다.
-- 큐피드와 크리스마스 템플릿을 각각 Vercel Preview 브랜치에 배포하고 `/order-editor.js`가 200으로 응답하는지 확인합니다. 두 Preview URL을 주문 프론트 Vercel Preview 환경의 `VITE_CUPID_EDITOR_URL`, `VITE_CHRISTMAS_EDITOR_URL`에 지정한 뒤 다시 배포합니다. 고정 도메인 `cupid-edit.urluv.shop`, `santa-edit.urluv.shop`을 연결하면 환경변수 없이도 기본값으로 동작합니다.
+- 큐피드와 크리스마스 템플릿의 `develop` Vercel Preview 주소가 주문 프론트에 기본값으로 연결돼 있습니다. 두 주소의 `/order-editor.js`가 200으로 응답해야 튜토리얼이 열립니다. 현재 템플릿 Preview는 Vercel Authentication으로 보호돼 있어 로그인 페이지로 리디렉션됩니다. Vercel 프로젝트의 Deployment Protection 설정에서 스테이징 접근 방법을 결정해야 합니다. 다른 공개 주소를 쓸 때는 주문 프론트 Preview 환경의 `VITE_CUPID_EDITOR_URL`, `VITE_CHRISTMAS_EDITOR_URL`을 설정하고 재배포합니다.
 - 기존 운영 백엔드를 함께 쓰므로 서버 `FRONTEND_ORIGIN`에 `https://urluv-order.vercel.app`을 추가해야 합니다. `edit.urluv.shop`이나 `santa-edit.urluv.shop`도 실제로 쓸 때만 추가합니다. 스테이징에서 만든 주문 초안과 제출 주문은 운영 DB에 저장됩니다. 테스트 주문을 구분할 이름을 사용하고 실제 입금 확인·문자 발송 단계는 주의해 진행합니다.
 - 테스트가 끝나면 두 템플릿을 각각 운영 배포하고, 프론트 변경을 `main`에 반영합니다. 운영 프론트는 Vercel이 아니라 `main` 푸시 시 GitHub Actions가 S3·CloudFront에 배포합니다.
 
