@@ -1,0 +1,27 @@
+.christmas-tutorial-order .order-content { width: min(1440px, calc(100% - 48px)); max-width: none; padding-bottom: 48px; }
+.christmas-tutorial-order .info-content:not(:has(.christmas-editor)) { width: var(--content-max); max-width: calc(100% - 48px); }
+.christmas-editor { width: min(100%, 1440px); margin: 0 auto; padding-bottom: 24px; }
+.christmas-editor-heading { display: flex; justify-content: space-between; gap: 24px; align-items: start; margin-bottom: 18px; }
+.christmas-editor-eyebrow { display: block; margin-bottom: 7px; color: #9b4b40; font-weight: 700; font-size: 14px; }
+.christmas-editor-heading h1 { margin: 0 0 8px; font-size: clamp(25px, 3vw, 34px); }
+.christmas-editor-heading p { margin: 0; color: #554c49; line-height: 1.5; }
+.christmas-editor-progress { white-space: nowrap; padding: 8px 13px; border: 1px solid #a58673; border-radius: 999px; font-weight: 700; }
+.christmas-editor-frame-wrap { position: relative; overflow: hidden; border: 5px solid #315247; border-radius: 12px; box-shadow: 0 16px 38px #2b302b30; background: #315247; }
+.cupid-order-editor .christmas-editor-frame-wrap { border-color: #b8456b; background: #b8456b; }
+.cupid-order-editor .christmas-editor-eyebrow { color: #a63b71; }
+.christmas-editor-frame-wrap iframe { display: block; width: 100%; height: min(72vh, 760px); min-height: 520px; border: 0; }
+.christmas-editor-loading { position: absolute; z-index: 2; inset: 0; display: grid; place-items: center; margin: 0; color: white; background: #315247; }
+.cupid-order-editor .christmas-editor-loading { background: #b8456b; }
+.christmas-editor-actions { display: flex; justify-content: space-between; gap: 14px; margin-top: 18px; }
+.christmas-editor-action-right { display: flex; gap: 12px; }
+.christmas-order-details-actions { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 24px 0; padding: 18px; border-radius: 12px; background: #f7f0e8; }
+.christmas-order-details-actions p { margin: 0; }
+@media (max-width: 700px) {
+  .christmas-tutorial-order .order-content { width: calc(100% - 24px); }
+  .christmas-editor-heading { gap: 8px; }
+  .christmas-editor-heading p { font-size: 14px; }
+  .christmas-editor-frame-wrap iframe { height: min(66vh, 680px); min-height: 430px; }
+  .christmas-editor-actions, .christmas-order-details-actions { flex-direction: column; }
+  .christmas-editor-action-right { display: flex; width: 100%; }
+  .christmas-editor-actions button, .christmas-order-details-actions button { flex: 1; }
+}

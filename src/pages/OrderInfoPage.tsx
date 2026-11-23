@@ -1,18 +1,30 @@
+import { useState } from 'react'
 import { useOrder } from '../context/OrderContext'
 import Calendar from '../components/Calendar'
 import { formatPhone, dateKey, minDate, isValidSitePassword } from '../utils/order'
 import { addDays } from '../utils/period'
-import { periodPrice } from '../utils/period'
+import { isValidPeriod, periodPrice } from '../utils/period'
+import ChristmasEditor from '../orderForms/christmas/ChristmasEditor'
 
 export default function OrderInfoPage() {
-  const { data, setData, update, touched, setTouched, setError, config, templateDetail } = useOrder()
+  const [showLogin, setShowLogin] = useState(false)
+  const { data, setData, update, touched, setTouched, setError, config, templateDetail, saveDraft } = useOrder()
   const leadDays = templateDetail?.minLeadDays ?? 7
   const earliestDate = addDays(dateKey(minDate()), leadDays - 7)
   const pricing = periodPrice(data.date, data.endDate)
   const pepero = templateDetail?.formType === 'PEPERO'
+  const guidedTemplate = data.template === 1 || data.template === 3
   const passwordRule = pepero ? '숫자 4자리' : '공백 없이 4~20자'
   const passwordInvalid = Boolean(data.sitePassword && !isValidSitePassword(data.sitePassword, templateDetail?.formType))
   if (!config) return <p role="status">주문 설정을 불러오는 중이에요.</p>
+  if (guidedTemplate && showLogin) return (
+    <ChristmasEditor
+      mode="login"
+      templateId={data.template as 1 | 3}
+      onBack={() => setShowLogin(false)}
+      onComplete={() => document.querySelector<HTMLFormElement>('#order-form')?.requestSubmit()}
+    />
+  )
   return (
     <>
       <div className="page-heading">
@@ -74,7 +86,7 @@ export default function OrderInfoPage() {
           </small>
         )}
       </label>
-      {templateDetail?.formType !== 'PEPERO' && <label className="recipient-field field-label">
+      {!guidedTemplate && templateDetail?.formType !== 'PEPERO' && <label className="recipient-field field-label">
         <span>
           받는 분 이름
           <span className="required-mark" aria-label="필수">
@@ -98,7 +110,7 @@ export default function OrderInfoPage() {
         )}
       </label>
       }
-      <label className="password-field field-label">
+      {!guidedTemplate && <><label className="password-field field-label">
         <span>
           웹사이트 조회 비밀번호
           <span className="required-mark" aria-label="필수">
@@ -149,7 +161,7 @@ export default function OrderInfoPage() {
           required
         />
         
-      </label>
+      </label></>}
       <section className="calendar-section">
         <h2>
           희망 수령 기간 선택
@@ -190,6 +202,20 @@ export default function OrderInfoPage() {
           </small>
         </div>
       </section>
+      {guidedTemplate && (
+        <div className="christmas-order-details-actions">
+          <p>다음 화면에서 선물 받는 분의 로그인 화면을 직접 꾸며요.</p>
+          <button type="button" className="button secondary" onClick={() => void saveDraft()}>저장하기</button>
+          <button
+            type="button"
+            className="button primary"
+            disabled={!(data.name.trim() && /^01\d-\d{3,4}-\d{4}$/.test(data.phone) && isValidPeriod(data, earliestDate))}
+            onClick={() => setShowLogin(true)}
+          >
+            로그인 화면 꾸미기
+          </button>
+        </div>
+      )}
     </>
   )
 }

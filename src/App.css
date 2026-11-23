@@ -1019,6 +1019,13 @@ textarea {
 .guide-list li + li {
   margin-top: var(--space-12);
 }
+.template-notice-panel { max-width: 520px; }
+.template-notice-kicker { display: block; margin-bottom: 8px; color: #98604a; font-size: 13px; font-weight: 700; }
+.template-notice-title { margin: 22px 0 10px; font-size: 16px; }
+.template-notice-list { margin: 0; padding-left: 22px; line-height: 1.6; color: var(--color-grey-700); }
+.template-notice-list li + li { margin-top: 6px; }
+.template-notice-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+@media (max-width: 520px) { .template-notice-actions { flex-direction: column-reverse; } }
 .spinner {
   width: 20px;
   height: 20px;

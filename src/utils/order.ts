@@ -62,7 +62,7 @@ export function canProceed(page: Page, data: OrderData, earliestDate = '', formT
     )
   if (page === 'content') {
     if (pepero) return Boolean(data.mainText.trim() && data.mainText.length <= 50)
-    // 사이트 비밀번호는 2단계(주문자 정보)에서 검사합니다.
+    // 크리스마스 로그인 튜토리얼은 주문자 정보 단계의 두 번째 화면에서 완료합니다.
     const validMusics =
       data.musics.length > 0 &&
       data.musics.every((music) => {

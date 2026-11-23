@@ -117,6 +117,7 @@ export default function App() {
   const [busy, setBusy] = useState(false)
   const [initialized, setInitialized] = useState(false)
   const saveLock = useRef(false)
+  const noticeAccepted = useRef<number | null>(null)
   const [direction, setDirection] = useState('forward')
   const [generating, setGenerating] = useState<PhraseFlags>({})
   const [aiErrors, setAiErrors] = useState<PhraseFlags>({})
@@ -692,6 +693,10 @@ export default function App() {
   const next = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!ready || saveLock.current) return
+    if (page === 'template' && (data.template === 1 || data.template === 3) && noticeAccepted.current !== data.template) {
+      open({ type: 'template-notice', templateId: data.template })
+      return
+    }
     saveLock.current = true
     setSaving(true)
     try {
@@ -716,6 +721,7 @@ export default function App() {
     } catch (cause) {
       handleError(cause)
     } finally {
+      noticeAccepted.current = null
       saveLock.current = false
       setSaving(false)
     }
@@ -757,6 +763,22 @@ export default function App() {
       handleError(cause)
     } finally {
       setSaving(false)
+    }
+  }
+  const setMediaCaptionAt = async (kind: MediaKind, index: number, value: string) => {
+    const item = files[kind][index]
+    if (!item?.mediaId) return
+    try {
+      const saved = requireSession()
+      await api.updateMedia(
+        saved.draftId,
+        item.mediaId,
+        kind === 'photos' ? { caption: value } : { title: value },
+        saved.draftToken,
+      )
+      updateFile(kind, index, item.url, { text: value })
+    } catch (cause) {
+      handleError(cause)
     }
   }
   const submit = async () => {
@@ -1004,6 +1026,10 @@ export default function App() {
 
         reportError: handleError,
         mediaSection,
+        saveDraft: () => persistDraft(data.phone),
+        uploadMediaAt: upload,
+        removeMediaAt: removeMedia,
+        setMediaCaptionAt,
         INITIAL,
         OCCASIONS,
         emptyFiles,
@@ -1017,7 +1043,7 @@ export default function App() {
         selectDraft,
       }}
     >
-      <div className={`app page-${page} direction-${direction}`}>
+      <div className={`app page-${page} direction-${direction}${(data.template === 1 || data.template === 3) && (page === 'info' || page === 'content') ? ' christmas-tutorial-order' : ''}`}>
         {(page === 'main' || page === 'start' || page === 'load') && (
           <header className="global-header">
             <div className="global-header-inner">
@@ -1063,7 +1089,7 @@ export default function App() {
           </p>
         )}
 
-        {(step || page === 'done') && (
+        {(step || page === 'done') && !((data.template === 1 || data.template === 3) && (page === 'info' || page === 'content')) && (
           <div className="bottom-actions">
             <div className="bottom-actions-inner">
               {page === 'review' ? (
@@ -1085,7 +1111,7 @@ export default function App() {
                     form="order-form"
                     disabled={!ready || saving}
                   >
-                    다음
+                    {page === 'template' && (data.template === 1 || data.template === 3) ? '이 템플릿으로 시작하기' : '다음'}
                   </Button>
                 </>
               )}
@@ -1099,7 +1125,7 @@ export default function App() {
         )}
         {sheet && (
           <div
-            className={`sheet-overlay ${isPreview ? 'preview-overlay' : sheet.type === 'guide' || sheet.type === 'save-draft' || sheet.type === 'extra-media' ? 'dialog-overlay' : ''}`}
+            className={`sheet-overlay ${isPreview ? 'preview-overlay' : sheet.type === 'guide' || sheet.type === 'save-draft' || sheet.type === 'extra-media' || sheet.type === 'template-notice' ? 'dialog-overlay' : ''}`}
             onClick={close}
           >
             <section
@@ -1109,8 +1135,9 @@ export default function App() {
                   ? `preview-sheet${previewExpanded ? ' is-expanded' : ''}`
                   : sheet.type === 'guide' ||
                       sheet.type === 'save-draft' ||
-                      sheet.type === 'extra-media'
-                    ? 'dialog-panel'
+                      sheet.type === 'extra-media' ||
+                      sheet.type === 'template-notice'
+                    ? `dialog-panel${sheet.type === 'template-notice' ? ' template-notice-panel' : ''}`
                     : `bottom-sheet${previewExpanded ? ' is-expanded' : ''}`
               }
               role="dialog"
@@ -1195,6 +1222,33 @@ export default function App() {
                   <button className="button primary" disabled={saving} onClick={saveCaption}>
                     완료
                   </button>
+                </>
+              ) : sheet.type === 'template-notice' ? (
+                <>
+                  <span className="template-notice-kicker">템플릿 공지사항</span>
+                  <h2 id="sheet-heading">{sheet.templateId === 1 ? '큐피드' : '크리스마스'} 템플릿</h2>
+                  <p className="sheet-note">받는 분이 실제로 사용할 사이트를 단계별로 보며 주문 내용을 입력해요.</p>
+                  <h3 className="template-notice-title">사이트에서 할 수 있는 일</h3>
+                  <ul className="template-notice-list">
+                    <li>{sheet.templateId === 1 ? 'Our Story, Letter, Photo·Video, Music, Internet 아이콘을 열 수 있어요.' : '마켓에서 우리의 트리, 편지 우체국, 사진관, 캐럴 무대, 안내판을 열 수 있어요.'}</li>
+                    <li>편지는 직접 작성하거나 AI 도움을 받아 다듬을 수 있어요.</li>
+                    <li>{sheet.templateId === 1 ? '메모, 포토부스, 그림, 게임을 사용할 수 있어요.' : '마켓을 걸으며 선물 카드, 포토부스, 그림, 눈사람 게임을 사용할 수 있어요.'}</li>
+                  </ul>
+                  <h3 className="template-notice-title">입력 전 확인해 주세요</h3>
+                  <ul className="template-notice-list">
+                    <li>사이트 비밀번호와 힌트는 받는 분에게 알려줄 내용을 입력해 주세요.</li>
+                    <li>사진은 최소 {templateDetail?.documents.reduce((sum, doc) => sum + doc.minPhotos, 0) ?? 0}장을 올려야 해요. 영상은 선택 사항이에요.</li>
+                    <li>음악은 YouTube 영상 설정에 따라 사이트 안에서 재생되지 않을 수 있어요.</li>
+                    <li>{sheet.templateId === 1 ? '방문자가 남기는 메모·그림·포토부스 결과물은 사이트를 함께 보는 사람에게도 보여요.' : '방문자가 남기는 선물 카드·그림·포토부스 결과물은 사이트를 함께 보는 사람에게도 보여요.'}</li>
+                  </ul>
+                  <div className="template-notice-actions">
+                    <button type="button" className="button secondary" onClick={close}>다시 선택하기</button>
+                    <button type="button" className="button primary" onClick={() => {
+                      noticeAccepted.current = sheet.templateId
+                      close()
+                      document.querySelector<HTMLFormElement>('#order-form')?.requestSubmit()
+                    }}>확인하고 시작하기</button>
+                  </div>
                 </>
               ) : sheet.type === 'save-draft' ? (
                 <SaveDraftDialog

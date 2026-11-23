@@ -58,6 +58,7 @@ export type PhraseValues = Partial<Record<PhraseField, string>>
 export type PhraseFlags = Partial<Record<PhraseField, boolean>>
 export type TouchedFields = Partial<Record<'name' | 'phone' | 'recipientName', boolean>>
 export type Sheet =
+  | { type: 'template-notice'; templateId: 1 | 3 }
   | { type: 'caption'; kind: MediaKind; index: number }
   | { type: 'guide' }
   | { type: 'save-draft' }
@@ -106,6 +107,10 @@ export interface OrderContextValue {
   generate: (key: PhraseField) => void
   reportError: (cause: unknown) => string
   mediaSection: (kind: MediaKind) => ReactNode
+  saveDraft: () => Promise<boolean>
+  uploadMediaAt: (kind: MediaKind, index: number, file: File) => Promise<void>
+  removeMediaAt: (kind: MediaKind, index: number) => Promise<void>
+  setMediaCaptionAt: (kind: MediaKind, index: number, value: string) => Promise<void>
   INITIAL: OrderData
   OCCASIONS: readonly Occasion[]
   emptyFiles: () => MediaFiles
