@@ -96,13 +96,13 @@ URLUV 기념일 주문서·운영자 프런트엔드
 - 실제 백엔드와의 통합 검증 및 브라우저 시각 검증은 남아 있습니다.
 - 운영자 배포 도메인은 명세의 `ADMIN_FRONTEND_ORIGIN`과 맞춰야 합니다.
 - 기간 추가 요금의 서버 정책 일치 여부 확인 및 완성 기념일 웹사이트 제작이 필요합니다.
-- Vercel의 `develop` 미리보기 배포 주소는 `urluv-order.vercel.app`입니다. 필요하면 이 배포에 `edit.urluv.shop`을 별칭으로 연결합니다.
+- Vercel의 `develop` 브랜치는 `staging.urluv.shop`에 배포됩니다. `urluv-order.vercel.app`도 미리보기 주소로 사용할 수 있습니다.
 
 ## 테스트 배포와 운영 반영
 
-- `develop`은 Vercel 미리보기 배포 대상입니다(`vercel.json`). 현재 스테이징 주소 `urluv-order.vercel.app`에서 먼저 확인합니다. `edit.urluv.shop`이 필요하면 Vercel 프로젝트의 Domains에서 Preview 환경 `develop` 브랜치에 연결하고, Vercel이 안내하는 DNS 레코드를 추가합니다.
+- `develop`은 Vercel 미리보기 배포 대상입니다(`vercel.json`). 스테이징 주소 `staging.urluv.shop`에서 먼저 확인합니다.
 - 큐피드와 크리스마스 템플릿의 `develop` Vercel Preview 주소가 주문 프론트에 기본값으로 연결돼 있습니다. 두 주소의 `/order-editor.js`가 200으로 응답해야 튜토리얼이 열립니다. 현재 템플릿 Preview는 Vercel Authentication으로 보호돼 있어 로그인 페이지로 리디렉션됩니다. Vercel 프로젝트의 Deployment Protection 설정에서 스테이징 접근 방법을 결정해야 합니다. 다른 공개 주소를 쓸 때는 주문 프론트 Preview 환경의 `VITE_CUPID_EDITOR_URL`, `VITE_CHRISTMAS_EDITOR_URL`을 설정하고 재배포합니다.
-- 기존 운영 백엔드를 함께 쓰므로 서버 `FRONTEND_ORIGIN`에 `https://urluv-order.vercel.app`을 추가해야 합니다. `edit.urluv.shop`이나 `santa-edit.urluv.shop`도 실제로 쓸 때만 추가합니다. 스테이징에서 만든 주문 초안과 제출 주문은 운영 DB에 저장됩니다. 테스트 주문을 구분할 이름을 사용하고 실제 입금 확인·문자 발송 단계는 주의해 진행합니다.
+- 기존 운영 백엔드를 함께 쓰므로 서버 `FRONTEND_ORIGIN`에 `https://staging.urluv.shop`을 추가해야 합니다. `urluv-order.vercel.app` 등 다른 미리보기 주소도 실제로 쓸 때만 추가합니다. 스테이징에서 만든 주문 초안과 제출 주문은 운영 DB에 저장됩니다. 테스트 주문을 구분할 이름을 사용하고 실제 입금 확인·문자 발송 단계는 주의해 진행합니다.
 - 테스트가 끝나면 두 템플릿을 각각 운영 배포하고, 프론트 변경을 `main`에 반영합니다. 운영 프론트는 Vercel이 아니라 `main` 푸시 시 GitHub Actions가 S3·CloudFront에 배포합니다.
 
 ## 컨벤션

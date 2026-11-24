@@ -43,13 +43,13 @@ function getEditorUrl(templateId: number) {
   if (templateId === 1) return import.meta.env.VITE_CUPID_EDITOR_URL ||
     (import.meta.env.DEV
       ? `${window.location.origin}/cupid-editor/`
-      : ['edit.urluv.shop', 'urluv-order.vercel.app'].includes(window.location.hostname)
+      : ['staging.urluv.shop', 'edit.urluv.shop', 'urluv-order.vercel.app'].includes(window.location.hostname)
         ? 'https://anniversary-template-git-develop-anniversary-site.vercel.app/'
         : 'https://cupid.urluv.shop/')
   return import.meta.env.VITE_CHRISTMAS_EDITOR_URL ||
     (import.meta.env.DEV
       ? `${window.location.origin}/christmas-editor/`
-      : ['edit.urluv.shop', 'urluv-order.vercel.app'].includes(window.location.hostname)
+      : ['staging.urluv.shop', 'edit.urluv.shop', 'urluv-order.vercel.app'].includes(window.location.hostname)
         ? 'https://anniversary-template-christmas-git-develop-ts-projects4.vercel.app/'
         : 'https://santa.urluv.shop/')
 }
