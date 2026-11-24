@@ -143,7 +143,13 @@ export default function ChristmasEditor({
         photos: files.photos.map((item) => item && { name: item.file.name === 'restored' ? '저장한 사진' : item.file.name, status: item.status, text: item.text }),
         videos: files.videos.map((item) => item && { name: item.file.name === 'restored' ? '저장한 영상' : item.file.name, status: item.status, text: item.text }),
       },
-      limits: { letterMin: config?.limits.letterInputMinLength ?? 10, minPhotos, captionMaxLength: templateDetail?.captionMaxLength ?? 10 },
+      limits: {
+        letterMin: config?.limits.letterInputMinLength ?? 10,
+        minPhotos,
+        captionMaxLength: templateDetail?.captionMaxLength ?? 10,
+        photoMaxSizeMb: config?.limits.photoMaxSizeMb,
+        videoMaxSizeMb: config?.limits.videoMaxSizeMb,
+      },
     })
   }, [loaded, step, data, files, config, minPhotos, templateDetail, send])
 
@@ -167,10 +173,15 @@ export default function ChristmasEditor({
           setData((current) => ({ ...current, [field]: message.value }))
         }
       }
-      if (message.type === 'upload' && message.file instanceof File &&
+      if (message.type === 'upload' && message.bytes instanceof ArrayBuffer &&
+          typeof message.name === 'string' && typeof message.mimeType === 'string' &&
           (message.kind === 'photos' || message.kind === 'videos') && Number.isInteger(message.index) &&
           message.index >= 0 && message.index < files[message.kind as MediaKind].length) {
-        void uploadMediaAt(message.kind as MediaKind, message.index, message.file)
+        const file = new File([message.bytes], message.name, {
+          type: message.mimeType,
+          lastModified: Number.isFinite(message.lastModified) ? message.lastModified : Date.now(),
+        })
+        void uploadMediaAt(message.kind as MediaKind, message.index, file)
       }
       if (message.type === 'remove' && (message.kind === 'photos' || message.kind === 'videos') && Number.isInteger(message.index) &&
           message.index >= 0 && message.index < files[message.kind as MediaKind].length) {
