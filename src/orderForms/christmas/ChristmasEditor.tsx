@@ -222,7 +222,8 @@ export default function ChristmasEditor({
     if (!complete || working) { if (!complete) setToast('이 단계의 필수 내용을 입력해 주세요.'); return }
     if (mode === 'login') { onComplete?.(); return }
     if (index === CONTENT_STEPS.length - 1) {
-      if (files.photos.some((item) => item?.status !== 'ready') || files.videos.some((item) => item?.status !== 'ready')) {
+      if (files.photos.some((item) => item && item.status !== 'ready') ||
+          files.videos.some((item) => item && item.status !== 'ready')) {
         setToast('파일 업로드가 끝난 뒤 확인해 주세요.')
         return
       }
