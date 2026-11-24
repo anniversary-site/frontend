@@ -140,8 +140,8 @@ export default function ChristmasEditor({
         linkUrl: data.linkUrl,
       },
       media: {
-        photos: files.photos.map((item) => item && { name: item.file.name === 'restored' ? '저장한 사진' : item.file.name, status: item.status, text: item.text, url: item.url }),
-        videos: files.videos.map((item) => item && { name: item.file.name === 'restored' ? '저장한 영상' : item.file.name, status: item.status, text: item.text, url: item.url }),
+        photos: files.photos.map((item) => item && { name: item.file.name === 'restored' ? '저장한 사진' : item.file.name, status: item.status, text: item.text }),
+        videos: files.videos.map((item) => item && { name: item.file.name === 'restored' ? '저장한 영상' : item.file.name, status: item.status, text: item.text }),
       },
       limits: { letterMin: config?.limits.letterInputMinLength ?? 10, minPhotos, captionMaxLength: templateDetail?.captionMaxLength ?? 10 },
     })
