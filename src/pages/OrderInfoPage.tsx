@@ -204,7 +204,7 @@ export default function OrderInfoPage() {
       </section>
       {guidedTemplate && (
         <div className="christmas-order-details-actions">
-          <p>다음 화면에서 선물 받는 분의 로그인 화면을 직접 꾸며요.</p>
+          <p>다음 단계에서 로그인 화면을 꾸며요.</p>
           <button type="button" className="button secondary" onClick={() => void saveDraft()}>저장하기</button>
           <button
             type="button"
