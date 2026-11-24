@@ -270,12 +270,12 @@ export default function ChristmasEditor({
       </div>
       <div className="christmas-editor-actions">
         <button type="button" className="button secondary" onClick={previous}>
-          이전 단계
+          이전
         </button>
         <div className="christmas-editor-action-right">
-          <button type="button" className="button secondary" onClick={() => void saveDraft()} disabled={working}>저장하기</button>
+          <button type="button" className="button secondary" onClick={() => void saveDraft()} disabled={working}>저장</button>
           <button id="christmas-editor-next" type="button" className="button primary" onClick={() => void next()} disabled={!complete || working || !loaded}>
-            {mode === 'content' && index === CONTENT_STEPS.length - 1 ? '완성 모습 확인' : '다음 단계'}
+            {mode === 'content' && index === CONTENT_STEPS.length - 1 ? '주문서 검토' : '다음'}
           </button>
         </div>
       </div>

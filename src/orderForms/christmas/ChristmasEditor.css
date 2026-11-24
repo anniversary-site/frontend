@@ -1,27 +1,49 @@
-.christmas-tutorial-order .order-content { width: min(1440px, calc(100% - 48px)); max-width: none; padding-bottom: 48px; }
-.christmas-tutorial-order .info-content:not(:has(.christmas-editor)) { width: var(--content-max); max-width: calc(100% - 48px); }
-.christmas-editor { width: min(100%, 1440px); margin: 0 auto; padding-bottom: 24px; }
-.christmas-editor-heading { display: flex; justify-content: space-between; gap: 24px; align-items: start; margin-bottom: 18px; }
-.christmas-editor-eyebrow { display: block; margin-bottom: 7px; color: #9b4b40; font-weight: 700; font-size: 14px; }
-.christmas-editor-heading h1 { margin: 0 0 8px; font-size: clamp(25px, 3vw, 34px); }
+.christmas-tutorial-order .order-content { width: min(90rem, calc(100% - 3rem)); max-width: none; padding-bottom: 3rem; }
+.christmas-tutorial-order .info-content:not(:has(.christmas-editor)) { width: var(--content-max); max-width: calc(100% - 3rem); }
+.christmas-editor { width: min(100%, 90rem); margin: 0 auto; padding-bottom: 1.5rem; }
+.christmas-editor-heading { display: flex; justify-content: space-between; gap: 1.5rem; align-items: start; margin-bottom: 1.125rem; }
+.christmas-editor-eyebrow { display: block; margin-bottom: 0.4375rem; color: #9b4b40; font-weight: 700; font-size: 0.875rem; }
+.christmas-editor-heading h1 { margin: 0 0 0.5rem; font-size: clamp(1.5625rem, 3vw, 2.125rem); }
 .christmas-editor-heading p { margin: 0; color: #554c49; line-height: 1.5; }
-.christmas-editor-progress { white-space: nowrap; padding: 8px 13px; border: 1px solid #a58673; border-radius: 999px; font-weight: 700; }
-.christmas-editor-frame-wrap { position: relative; overflow: hidden; border: 5px solid #315247; border-radius: 12px; box-shadow: 0 16px 38px #2b302b30; background: #315247; }
+.christmas-editor-progress { white-space: nowrap; padding: 0.5rem 0.8125rem; border: 0.0625rem solid #a58673; border-radius: 62.4375rem; font-weight: 700; }
+.christmas-editor-frame-wrap { position: relative; overflow: hidden; border: 0.3125rem solid #315247; border-radius: 0.75rem; box-shadow: 0 1rem 2.375rem #2b302b30; background: #315247; }
 .cupid-order-editor .christmas-editor-frame-wrap { border-color: #b8456b; background: #b8456b; }
 .cupid-order-editor .christmas-editor-eyebrow { color: #a63b71; }
-.christmas-editor-frame-wrap iframe { display: block; width: 100%; height: min(72vh, 760px); min-height: 520px; border: 0; }
+.christmas-editor-frame-wrap iframe { display: block; width: 100%; height: min(72vh, 47.5rem); min-height: 32.5rem; border: 0; }
 .christmas-editor-loading { position: absolute; z-index: 2; inset: 0; display: grid; place-items: center; margin: 0; color: white; background: #315247; }
 .cupid-order-editor .christmas-editor-loading { background: #b8456b; }
-.christmas-editor-actions { display: flex; justify-content: space-between; gap: 14px; margin-top: 18px; }
-.christmas-editor-action-right { display: flex; gap: 12px; }
-.christmas-order-details-actions { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 24px 0; padding: 18px; border-radius: 12px; background: #f7f0e8; }
+.christmas-editor-actions { display: flex; justify-content: space-between; gap: 0.875rem; margin-top: 1.125rem; }
+.christmas-editor-action-right { display: flex; gap: 0.75rem; }
+.christmas-order-details-actions { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin: 1.5rem 0; padding: 1.125rem; border-radius: 0.75rem; background: #f7f0e8; }
 .christmas-order-details-actions p { margin: 0; }
-@media (max-width: 700px) {
-  .christmas-tutorial-order .order-content { width: calc(100% - 24px); }
-  .christmas-editor-heading { gap: 8px; }
-  .christmas-editor-heading p { font-size: 14px; }
-  .christmas-editor-frame-wrap iframe { height: min(66vh, 680px); min-height: 430px; }
-  .christmas-editor-actions, .christmas-order-details-actions { flex-direction: column; }
-  .christmas-editor-action-right { display: flex; width: 100%; }
+@media (max-width: 43.75rem) {
+  .christmas-tutorial-order .order-content { width: calc(100% - 1.5rem); }
+  .christmas-editor-heading { gap: 0.5rem; }
+  .christmas-editor-heading p { font-size: 0.875rem; }
+  .christmas-editor-frame-wrap iframe { height: min(66vh, 42.5rem); min-height: 26.875rem; }
+  .christmas-order-details-actions { flex-direction: column; }
+  .christmas-editor-action-right { flex: 3; }
   .christmas-editor-actions button, .christmas-order-details-actions button { flex: 1; }
 }
+
+.christmas-editor-heading > div { min-width: 0; }
+.christmas-editor-heading h1,
+.christmas-editor-heading p { overflow-wrap: anywhere; }
+.christmas-editor-actions { align-items: stretch; gap: clamp(.375rem, 1.5vw, .875rem); }
+.christmas-editor-actions > button { flex: 1; }
+.christmas-editor-action-right { flex: 3; min-width: 0; gap: clamp(.375rem, 1.5vw, .75rem); }
+.christmas-editor-actions .button {
+  width: auto;
+  min-width: 0;
+  min-height: 2.75em;
+  height: auto;
+  flex: 1;
+  padding: .65em clamp(.375rem, 1.5vw, 1rem);
+  font-size: clamp(.75rem, 2.5vw, 1rem);
+  line-height: 1.35;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+.christmas-editor-action-right .button:last-child { flex: 1.5; }
+.christmas-editor-frame-wrap iframe { min-height: min(32.5rem, 65dvh); height: 72dvh; }
